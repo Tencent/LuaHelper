@@ -72,9 +72,9 @@ Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其�
 插件安装方法：
 1. 点击Vs Code应用市场图标
 2. 在输入框中搜索 luahelper
-3. 点击安装
+3. 点击安装Lua Helper
 
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/install.png)
+![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/Install.gif)
 
 ## Acknowledgements
 * [luago-books](https://github.com/zxh0/luago-book), go语言生成lua的AST，修改了源码（对AST的每个节点增加了列的属性，同时也优化了性能）。
