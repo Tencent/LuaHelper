@@ -86,6 +86,6 @@ Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其�
  [yinfei](https://github.com/yinfei8), [Handsome Lee](https://github.com/badboylikeit)
  
 ## Support
-如有问题先参阅 [FAQ](./Docs/Manual/FAQ.md) ，如有问题建议使用 [issues](https://github.com/yinfei8/LuaHelper/issues) ，我们会关注和回复。
+如有问题先参阅 [FAQ](./docs/manual/FAQ.md) ，如有问题建议使用 [issues](https://github.com/yinfei8/LuaHelper/issues) ，我们会关注和回复。
 
 QQ群：747590892
