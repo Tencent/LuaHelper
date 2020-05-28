@@ -21,7 +21,8 @@ Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其�
 * [Semantic Check/语义检测](#SemanticCheck)
 * [Quick Analysis/快速增量分析](#QuickAnalysis)
 
-
+## Documentation
+[告警配置](./docs/manual/config.md)
 ## Feature Detail
 ###  <span id="DefintionFind">Defintion Find/定义跳转</span>
 > **支持局部、全局文件定义查询跳转**
