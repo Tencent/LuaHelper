@@ -1,0 +1,48 @@
+{
+    "BaseDir":"./",
+    "ShowWarnFlag":          1,
+    "ShareSymbolsFlag":      1,
+    "ReferMatchPathFlag":    0,
+    "GvalTipFlag":           1,
+    "IgnoreFileNameVarFlag": 0,
+    "ProjectFiles":[
+    ],
+    "IgnoreModules":["hive", "import"],
+    "IgnoreFileVars": [
+        {
+            "File": "port/gm.lua",
+            "Vars": ["bb", "cc"]
+        },
+         {
+            "File": "port/ss.lua",
+            "Vars": ["aa", "dd"]
+        }
+    ],
+    "IgnoreReadFiles": [
+        "config/port.lua",
+		"config/act.lua"
+    ],
+    "IgnoreErrorTypes": [
+        4
+	],
+	"IgnoreFileOrFloder": [
+		"port/on.*lua",
+		"tests/",
+		"one.lua"
+	],
+    "IgnoreFileErr": [
+       "port/add.lua",
+       "common/test.lua"
+	],
+    "IgnoreFileErrTypes": [
+        {
+            "File": "port/bbb.lua",
+            "Types": [4]
+        },
+        {
+            "File": "port/ss.lua",
+            "Types": [4, 5]
+        }
+    ],
+    "ProtocolVars": []
+}
