@@ -5,8 +5,7 @@
     "ReferMatchPathFlag":    0,
     "GvalTipFlag":           1,
     "IgnoreFileNameVarFlag": 0,
-    "ProjectFiles":[
-    ],
+    "ProjectFiles":[],
     "IgnoreModules":["hive", "import"],
     "IgnoreFileVars": [
         {
@@ -22,9 +21,7 @@
         "config/port.lua",
 		"config/act.lua"
     ],
-    "IgnoreErrorTypes": [
-        4
-	],
+    "IgnoreErrorTypes": [4],
 	"IgnoreFileOrFloder": [
 		"port/on.*lua",
 		"tests/",
