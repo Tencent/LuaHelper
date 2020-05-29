@@ -1,8 +1,27 @@
-[TOC]
+
 # 代码检查配置
 
-## 代码检查种类
-### 1 语法错误
+* 1 [代码检查种类](#代码检查种类)
+  * 1.1 [语法错误](#syntaxErr)
+  * 1.2 [变量未找到定义](#noDefineErr)
+  * 1.3 [全局变量先使用，后定义](#cycleDefineErr)
+  * 1.4 [局部变量定义了，未使用](#localNoUse)
+  * 1.5 [table定义构造中有重复的key](#tableDuplicateKey)
+  * 1.6 [加载其他的lua文件，未找到文件义](#referFileErr)
+  * 1.7 [赋值语句参数个数不匹配](#assignParamErr)
+  * 1.8 [局部变量定义参数个数不匹配](#localParamErr)
+  * 1.9 [goto用法未找到对应的lable标记](#gotoErr)
+  * 1.10 [函数调用参数个数大于定义参数的个数](#funCallParamErr)
+  * 1.11 [import其他的lua文件，成员变量未定义](#importVarErr)
+  * 1.12 [if not包含的代码块有误](#ifCheckErr)
+  * 1.13 [函数定义的参数是否重复](#funcParamDuplicateErr)
+  * 1.14 [二元表达式，左右两边的表达式一样](#duplicateExpErr)
+* 2 [代码检查配置文件](#代码检查配置文件)
+  * 2.1 [配置文件说明](#配置文件说明)
+  * 2.2 [配置文件模板下载](#配置文件模板下载)
+
+## 1 代码检查种类<span id="代码检查种类"></span>
+### 1.1 语法错误<span id="syntaxErr"></span>
 告警类型：1, 提示前缀 [Warn type:1]</br>
 指不满足lua的语法，例如if 语句没有匹配的then等等。
 ```lua
@@ -11,7 +30,7 @@ if a            -- 没有匹配的then，语法错误
 end
 ```
 
-### 2 变量未找到定义
+### 1.2 变量未找到定义<span id="noDefineErr"></span>
 告警类型：2, 提示前缀 [Warn type:2]</br>
 lua是比较灵活的语言，使用变量之前没有定义的概念，未定义的变量默认为nil值。下面的代码段，在lua语法内是合法的。
 
@@ -21,7 +40,7 @@ local b = a1 + 3  --al之前没有定义，这里会为nil，这里会进行告�
 print(b)
 ```
 但是上面写法，会容易出现笔误，原本是希望输入a，但是输入了a1。代码在运行期间为报错。变量未找到定义检查，上面会提示a1未找到定义，进行告警。
-### 3 全局变量先使用，后定义
+### 3 全局变量先使用，后定义<span id="全局变量先使用"></span>
 告警类型：3, 提示前缀 [Warn type:3]</br>
 全局变量在项目中也会出现使用在前，定义在后。
 
@@ -29,12 +48,12 @@ print(b)
 print(a)    --先使用，这里会告警
 a = 1       --后定义
 ```
-### 4 局部变量定义了，未使用
+### 4 局部变量定义了，未使用<span id="localNoUse"></span>
 告警类型：4, 提示前缀 [Warn type:4]</br>
 ```lua
 local a = 1 --这里定义了a局部变量，但是后面没有使用到，告警
 ```
-### 5 table定义构造中有重复的key
+### 5 table定义构造中有重复的key<span id="tableDuplicateKey"></span>
 告警类型：5, 提示前缀 [Warn type:5]
 ```lua
 local a = {
@@ -42,12 +61,12 @@ local a = {
     b = 2,  --再次定义了成员b，重复了，告警
 }
 ```
-### 6 加载其他的lua文件，未找到文件
+### 6 加载其他的lua文件，未找到文件<span id="referFileErr"></span>
 告警类型：6, 提示前缀 [Warn type:6]
 ```lua
 local a = require("test") --目录中不存在test.lua或是test库文件，进行告警
 ```
-### 7 赋值语句参数个数不匹配
+### 7 赋值语句参数个数不匹配<span id="assignParamErr"></span>
 告警类型：7, 提示前缀 [Warn type:7]
 ```lua
 local a = 1
@@ -56,14 +75,14 @@ local c
 c = a, b   -- 赋值语句左边只有一个变量，右边赋值了两个值，右边的个数大于左边的，进行告警
 ```
 
-### 8 局部变量定义参数个数不匹配
+### 8 局部变量定义参数个数不匹配<span id="localParamErr"></span>
 告警类型：8, 提示前缀 [Warn type:8]
 ```lua
 local a = 1
 local b = 2
 local c = a, b   -- 局部变量定义左右只有一个变量，右边赋值了两个值，右边的个数大于左边的，进行告警
 ```
-### 9 goto用法未找到对应的lable标记
+### 9 goto用法未找到对应的lable标记<span id="gotoErr"></span>
 告警类型：9, 提示前缀 [Warn type:9]
 ```lua
 local array = {1, 2, 3}
@@ -75,7 +94,7 @@ for k, v in pairs(array) do
     ::continue::
 end
 ```                
-### 10 函数调用参数个数大于定义参数的个数
+### 10 函数调用参数个数大于定义参数的个数<span id="funCallParamErr"></span>
 告警类型：10, 提示前缀 [Warn type:10]
 ```lua
 -- add two value
@@ -85,28 +104,28 @@ end
 
 calcAdd(1, 2, 3)      -- 函数只定义了两个参数，这里调用的参数有三个，进行告警
 ``` 
-### 11 import其他的lua文件，成员变量未定义
+### 11 import其他的lua文件，成员变量未定义<span id="importVarErr"></span>
 告警类型：11, 提示前缀 [Warn type:11]</br>
 这个是项目组特有的引入了hive框架，封装import引用另外一个lua文件
 ```lua
 local test = import("test.lua") -- hive框架，import引入了test.lua文件
 test.CalcTest() -- 若test.lua不存在全局变量函数 CalcTest，进行告警
 ``` 
-### 12 if not包含的代码块有误
+### 12 if not包含的代码块有误<span id="ifCheckErr"></span>
 告警类型：12, 提示前缀 [Warn type:12]</br>
 ```lua
 if not ss then
     print(ss.name)  -- ss这里判断为 nil，调用 name成员，进行告警
 end
 ``` 
-### 13 函数定义的参数是否重复
+### 13 函数定义的参数是否重复<span id="funcParamDuplicateErr"></span>
 告警类型：13, 提示前缀 [Warn type:13]</br>
 ```lua
 function CalcAdd(one, one) -- 函数定义的重复的参数one，进行告警
     print(one)
 end
 ``` 
-### 14 二元表达式，左右两边的表达式是否一样
+### 14 二元表达式，左右两边的表达式是否一样<span id="duplicateExpErr"></span>
 告警类型：14, 提示前缀 [Warn type:14]</br>
 当调用or、and、<、<=、>、>=、==、~= 二元表达式，左右两边一样进行告警
 ```lua
@@ -115,8 +134,8 @@ local b = 1
 local c = a and a  -- and表达式左右两边一样，都是 a，进行告警
 ``` 
 
-## 代码检查配置文件
-### 配置文件说明
+## 2代码检查配置文件
+### 2.1 配置文件说明
 由于Lua需要调用到C或是其他语言导入的符号，这些导入的符号是未定义的，因此需要忽略这些符号的告警。有时，也需要屏蔽分析的文件夹或文件，忽略指定的文件的告警等，这些都需要特定的配置文件。
 
 配置文件的名字是固定的：luahelper.json，在vscode工程目录下。这样有利于一个项目组共用一份相同的配置文件，配置文件也放在项目的git或是svn管理。
@@ -291,7 +310,7 @@ lua工程经常需要调用C++等其他宿主语言导入的符号，这里需�
    为笔者后台项目定制的协议前缀提示，默认可以忽略。
 
 
-### 配置文件模板下载
+### 2.2 配置文件模板下载
 
   [luahelper.json模板](./../jsonconfig/luahelper.json "luahelper.json配置文件")
   
