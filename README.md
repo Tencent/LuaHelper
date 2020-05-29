@@ -2,7 +2,20 @@
 
 ## Introduction
 
-Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其生态并不完善，IDE开发工具及配套支持较少，一定程度上影响了Lua的开发效率及质量。LuaHelper遵从微软Language Server Protocol协议，是采用go语言开发的一种跨平台Lua代码编辑及检测工具。具有多种类编辑辅助、检测种类丰富、实时性高、内存占用少等特性。
+Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其生态并不完善，IDE开发工具及配套支持较少，一定程度上影响了Lua的开发效率及质量。LuaHelper遵从微软Language Server Protocol协议，是采用go语言开发的一种跨平台Lua代码编辑及检测工具。
+
+相较目前市面其他Lua插件，具有以下**改进**：
+
+- [X] 1.协程开发，实时检测，毫秒级输出检测结果
+- [X] 2.支持大型Lua项目，完美支持1000+文件项目工程的编辑与检测
+- [X] 3.全面的错误类型检测，包括：语法检测、语义检测
+- [X] 4.多种类引用查找，包括：多文件引用查找、多层引用查找
+- [X] 5.丰富的可配置项，包括：多种告警信息配置、可忽略文件设定
+- [X] 6.内存消耗低，低性能机器仍可流畅运行
+
+## Documentation
+[项目背景](./docs/manual/introduction.md "项目背景介绍") | [检查配置](./docs/manual/config.md "检查配置")
+
 
 ## Feature Summary
 
@@ -12,7 +25,7 @@ Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其�
 * [Document Symbols/文件符号表查询](#DocumentSymbols)
 * [Workspace Symbols/工程符号表查询](#WorkspaceSymbols)
 * [Auto Code Completion/自动代码补全](#AutoCodeCompletion)
-* [Reformat Code/代码格式化](#ReformatCode)
+* [Reformat Code/代码格式化](#FormatCode)
 * [Hover/代码悬停](#Hover)
 * [Hightlight Global Var/全局变量着色](#HightlightGlobalVar)
 
@@ -21,51 +34,49 @@ Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其�
 * [Semantic Check/语义检测](#SemanticCheck)
 * [Quick Analysis/快速增量分析](#QuickAnalysis)
 
-## Documentation
-[告警配置](./docs/manual/config.md)
 ## Feature Detail
 ###  <span id="DefintionFind">Defintion Find/定义跳转</span>
-> **支持局部、全局文件定义查询跳转**
+**支持局部、全局文件定义查询跳转**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/GotoDefinition.gif)
 
 ###  <span id="FindAllReferences">Find All References/引用查找</span>
-> **支持基于作用域的各类型引用查找**
+**支持基于作用域的各类型引用查找**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/FindReferences.gif)
 
 ###  <span id="DocumentSymbols">Document Symbols/文件符号表查询</span>
-> **支持文件域符号表查询，在搜索栏输入@**
+**支持文件域符号表查询，在搜索栏输入@**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/DocmentSymbol.gif)
 
 ###  <span id="WorkspaceSymbols">Workspace Symbols/工程符号表查询</span>
-> **支持工程域符号表查询，在搜索栏输入#**
+**支持工程域符号表查询，在搜索栏输入#**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/WorkspaceSymbol.gif)
 
 ###  <span id="AutoCodeCompletion">Auto Code Completion/自动代码补全</span>
-> **支持变量、函数的自动输入提示**
+**支持变量、函数的自动输入提示**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/CodeCompletion.gif)
 
-###  <span id="ReformatCode">Reformat Code/代码格式化</span>
-> **支持代码格式化**
+###  <span id="FormatCode">Format Code/代码格式化</span>
+**支持代码格式化**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/Format.gif)
 
 ###  <span id="Hover">Hover/代码悬停</span>
-> **支持代码悬停提示**
+**支持代码悬停提示**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/Hover.gif)
 
 ###  <span id="HightlightGlobalVar">Hightlight Global Var/全局变量着色</span>
-> **支持全局变量高亮着色**
+**支持全局变量高亮着色**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/GlobalColor.gif)
 
 ###  <span id="SyntaxCheck">Syntax Check/语法检测</span>
-> **提供丰富的语法错误检测类型**
+**提供丰富的语法错误检测类型**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/SyntaxCheck.gif)
 
 ###  <span id="SemanticCheck">Semantic Check/语义检测</span>
-> **支持多种类型的语义检测**
+**支持多种类型的语义检测**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/SemanticCheck.gif)
 
 ###  <span id="QuickAnalysis">Quick Analysis/快速增量分析</span>
-> **支持增量变化分析，分析结果诊断输出**
+**支持增量变化分析，分析结果诊断输出**
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/RealTimeCheck.gif)
 
 
