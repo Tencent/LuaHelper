@@ -36,9 +36,10 @@ Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其�
 
 ### 代码调试
 调试功能集成了腾讯开源[LuaPanda](https://github.com/Tencent/LuaPanda)的调试组件，采用了[Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/)调试协议。debugger主体使用lua语言开发，调试程序只要引入LuaPanda.lua文件，即可方便开启调试功能。
-* [调试原理](./docs/manual/Feature.md/#SyntaxCheck)
-* [接入调试方法](./docs/manual/Feature.md/#SyntaxCheck)
-* [单文件调试与运行](./docs/manual/Feature.md/#SyntaxCheck)
+* [Debug Principle [调试原理]](./docs/manual/debugPrinciple.md)
+* [Debug Use [接入调试方法]](./docs/manual/usedebug.md)
+* [Debug and Run Sigle Lua File [单文件调试与运行]](./docs/manual/debugsinglefile.md)
+
 ## 安装
 
 **应用市场安装**
