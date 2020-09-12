@@ -1,4 +1,5 @@
-# LuaHelper Guide
+# LuaHelper
+LuaHelper is a free lua plugin. Intellisense, Linting, Debugging, Code formatting, High-performance, and more.
 
 ## 介绍
 Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其生态并不完善，IDE开发工具及配套支持较少，一定程度上影响了Lua的开发效率及质量。LuaHelper遵从微软Language Server Protocol协议，是采用go语言开发的一种跨平台Lua代码编辑及检测工具。
