@@ -63,7 +63,7 @@ Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其�
 
 
 ## Support
-如有问题先参阅 [FAQ](#FAQ) ，如有问题建议使用 [issues](https://github.com/yinfei8/LuaHelper/issues) ，我们会关注和回复。
+如有LuaHelper有关问题先参阅 [FAQ](#FAQ) ，如有问题建议使用 [issues](https://github.com/yinfei8/LuaHelper/issues) ，我们会关注和回复。
 
 Email：yvanfyin@tencent.com; handsomeli@tencent.com; richardzha@tencent.com</br>
 QQ群：747590892
