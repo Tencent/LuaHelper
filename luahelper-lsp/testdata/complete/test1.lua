@@ -1,0 +1,1 @@
+local abc = 1;

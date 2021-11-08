@@ -1,0 +1,43 @@
+{
+    "BaseDir":"./bin/",
+    "ShowWarnFlag":          1,
+    "ShareSymbolsFlag":      1,
+    "ReferMatchPathFlag":    0,
+    "GvalTipFlag":           1,
+    "IgnoreFileNameVarFlag": 1,
+    "ProjectFiles":[],
+    "IgnoreModules":["hive", "import"],
+    "IgnoreFileVars": [
+        {
+            "File": "lobby/gm.lua",
+            "Vars": ["ss"]
+        },
+        {
+            "File": "gamesvr/game_mgr.lua",
+            "Vars": ["fake_load"]
+        }
+    ],
+    "IgnoreReadFiles": [
+        "config/dbagent.lua",
+		"config/lobby.lua"
+    ],
+    "IgnoreErrorTypes": [
+	],
+	"IgnoreFileOrFloder": [
+		"lobby/on.*lua",
+		"tests/",
+		"robot/",
+        "coverage/"
+	],
+    "IgnoreFileErr": [
+       "lobby/gm1.lua",
+       "common/test.lua"
+	],
+    "IgnoreFileErrTypes": [
+        {
+            "File": "lobby/gm.lua",
+            "Types": [11]
+        }
+    ],
+    "ProtocolVars": []
+}

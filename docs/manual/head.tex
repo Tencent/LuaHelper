@@ -1,0 +1,29 @@
+\usepackage{framed}
+\usepackage{quoting}
+\usepackage{xcolor}
+
+\definecolor{bgcolor}{HTML}{DADADA}
+
+\let\oldtexttt\texttt
+
+\renewcommand{\texttt}[1]{
+  \colorbox{bgcolor}{\oldtexttt{#1}}
+}
+
+\colorlet{shadecolor}{bgcolor}
+% define a new environment shadedquotation. You can change leftmargin and
+% rightmargin as you wish.
+\newenvironment{shadedquotation}
+ {\begin{shaded*}
+  \quoting[leftmargin=1em, rightmargin=0pt, vskip=0pt]
+ }
+ {\endquoting
+ \end{shaded*}
+ }
+
+%
+\def\quote{\shadedquotation}
+\def\endquote{\endshadedquotation}
+
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}

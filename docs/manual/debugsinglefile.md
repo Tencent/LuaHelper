@@ -14,6 +14,6 @@
 
 
 ### 4单文件运行
-调试选项切换LuaPanda-DebugFile, 代码编辑窗口切换到待运行的文件，按ctrl + F5 快捷键运行lua文件。这种模式下，也不用引入LuaPanda.lua文件和luasocket库。
+调试选项切换LuaPanda-DebugFile, 代码编辑窗口切换到待运行的文件，按ctrl + F5 快捷键运行lua文件。。这种模式下，也不用引入LuaPanda.lua文件和luasocket库。
 
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/debug/runonefile.gif)
