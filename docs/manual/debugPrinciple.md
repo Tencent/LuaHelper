@@ -1,7 +1,7 @@
 # 调试器原理
 
-## 1调试器协议
-调试器的实现采用了微软推出的[Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/)，它把开发工具（IDE或Editor）与不同语言的debugger功能解耦， 并把两者之间的通信的方式抽象为通用协议（JSON格式）。通过调试适配器协议，可以为开发工具实现通用调试器，该调试器可以通过调试适配器与不同的调试器进行通信。调试适配器可以在多个开发工具中重复使用，从而大大减少了在不同工具中支持新调试器的工作。
+## 调试器协议
+调试器的实现采用了微软推出的[Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/)，它把开发工具（IDE或Iditor）与不同语言的debugger功能解耦， 并把两者之间的通信的方式抽象为通用协议（JSON格式）。通过调试适配器协议，可以为开发工具实现通用调试器，该调试器可以通过调试适配器与不同的调试器进行通信。调试适配器可以在多个开发工具中重复使用，从而大大减少了在不同工具中支持新调试器的工作。
 
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/debug/debugprinciple.png)
 
@@ -16,7 +16,7 @@
 * launch请求：调试适配器以调试模式启动程序，然后开始与其通信。
 * attach请求：调试适配器连接到已经运行的程序。 最终用户在这里负责启动和终止程序。
 
-## 2实现架构
+## 实现架构
 LuaPanda调试的架构采用了attach请求模式，attach的作用是附加到运行Lua代码的可执行程序上，调试器前端VSCode工程与运行的lua进程（被调试的进程）通过socket通信。下图是LuaHelper集成了LuaPanda调试模块后的调试架构图。
 
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/debug/debugstruct.png)

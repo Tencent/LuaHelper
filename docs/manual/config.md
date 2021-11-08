@@ -1,27 +1,8 @@
-
+[TOC]
 # 代码检查配置
 
-* 1 [代码检查种类](#代码检查种类)
-  * 1.1 [语法错误](#syntaxErr)
-  * 1.2 [变量未找到定义](#noDefineErr)
-  * 1.3 [全局变量先使用，后定义](#cycleDefineErr)
-  * 1.4 [局部变量定义了，未使用](#localNoUse)
-  * 1.5 [table定义构造中有重复的key](#tableDuplicateKey)
-  * 1.6 [加载其他的lua文件，未找到文件义](#referFileErr)
-  * 1.7 [赋值语句参数个数不匹配](#assignParamErr)
-  * 1.8 [局部变量定义参数个数不匹配](#localParamErr)
-  * 1.9 [goto用法未找到对应的lable标记](#gotoErr)
-  * 1.10 [函数调用参数个数大于定义参数的个数](#funCallParamErr)
-  * 1.11 [import其他的lua文件，成员变量未定义](#importVarErr)
-  * 1.12 [if not包含的代码块有误](#ifCheckErr)
-  * 1.13 [函数定义的参数是否重复](#funcParamDuplicateErr)
-  * 1.14 [二元表达式，左右两边的表达式一样](#duplicateExpErr)
-* 2 [代码检查配置文件](#代码检查配置文件)
-  * 2.1 [配置文件说明](#配置文件说明)
-  * 2.2 [配置文件模板下载](#配置文件模板下载)
-
-## 1 代码检查种类<span id="代码检查种类"></span>
-### 1.1 语法错误<span id="syntaxErr"></span>
+## 代码检查种类
+### 1 语法错误
 告警类型：1, 提示前缀 [Warn type:1]</br>
 指不满足lua的语法，例如if 语句没有匹配的then等等。
 ```lua
@@ -30,7 +11,7 @@ if a            -- 没有匹配的then，语法错误
 end
 ```
 
-### 1.2 变量未找到定义<span id="noDefineErr"></span>
+### 2 变量未找到定义
 告警类型：2, 提示前缀 [Warn type:2]</br>
 lua是比较灵活的语言，使用变量之前没有定义的概念，未定义的变量默认为nil值。下面的代码段，在lua语法内是合法的。
 
@@ -40,7 +21,7 @@ local b = a1 + 3  --al之前没有定义，这里会为nil，这里会进行告�
 print(b)
 ```
 但是上面写法，会容易出现笔误，原本是希望输入a，但是输入了a1。代码在运行期间为报错。变量未找到定义检查，上面会提示a1未找到定义，进行告警。
-### 1.3 全局变量先使用，后定义<span id="全局变量先使用"></span>
+### 3 全局变量先使用，后定义
 告警类型：3, 提示前缀 [Warn type:3]</br>
 全局变量在项目中也会出现使用在前，定义在后。
 
@@ -48,12 +29,12 @@ print(b)
 print(a)    --先使用，这里会告警
 a = 1       --后定义
 ```
-### 1.4 局部变量定义了，未使用<span id="localNoUse"></span>
+### 4 局部变量定义了，未使用
 告警类型：4, 提示前缀 [Warn type:4]</br>
 ```lua
 local a = 1 --这里定义了a局部变量，但是后面没有使用到，告警
 ```
-### 1.5 table定义构造中有重复的key<span id="tableDuplicateKey"></span>
+### 5 table定义构造中有重复的key
 告警类型：5, 提示前缀 [Warn type:5]
 ```lua
 local a = {
@@ -61,12 +42,12 @@ local a = {
     b = 2,  --再次定义了成员b，重复了，告警
 }
 ```
-### 1.6 加载其他的lua文件，未找到文件<span id="referFileErr"></span>
+### 6 加载其他的lua文件，未找到文件
 告警类型：6, 提示前缀 [Warn type:6]
 ```lua
 local a = require("test") --目录中不存在test.lua或是test库文件，进行告警
 ```
-### 1.7 赋值语句参数个数不匹配<span id="assignParamErr"></span>
+### 7 赋值语句参数个数不匹配
 告警类型：7, 提示前缀 [Warn type:7]
 ```lua
 local a = 1
@@ -75,14 +56,14 @@ local c
 c = a, b   -- 赋值语句左边只有一个变量，右边赋值了两个值，右边的个数大于左边的，进行告警
 ```
 
-### 1.8 局部变量定义参数个数不匹配<span id="localParamErr"></span>
+### 8 局部变量定义参数个数不匹配
 告警类型：8, 提示前缀 [Warn type:8]
 ```lua
 local a = 1
 local b = 2
 local c = a, b   -- 局部变量定义左右只有一个变量，右边赋值了两个值，右边的个数大于左边的，进行告警
 ```
-### 1.9 goto用法未找到对应的lable标记<span id="gotoErr"></span>
+### 9 goto用法未找到对应的lable标记
 告警类型：9, 提示前缀 [Warn type:9]
 ```lua
 local array = {1, 2, 3}
@@ -94,7 +75,7 @@ for k, v in pairs(array) do
     ::continue::
 end
 ```                
-### 1.10 函数调用参数个数大于定义参数的个数<span id="funCallParamErr"></span>
+### 10 函数调用参数个数大于定义参数的个数
 告警类型：10, 提示前缀 [Warn type:10]
 ```lua
 -- add two value
@@ -104,28 +85,28 @@ end
 
 calcAdd(1, 2, 3)      -- 函数只定义了两个参数，这里调用的参数有三个，进行告警
 ``` 
-### 1.11 import其他的lua文件，成员变量未定义<span id="importVarErr"></span>
+### 11 import其他的lua文件，成员变量未定义
 告警类型：11, 提示前缀 [Warn type:11]</br>
 这个是项目组特有的引入了hive框架，封装import引用另外一个lua文件
 ```lua
 local test = import("test.lua") -- hive框架，import引入了test.lua文件
 test.CalcTest() -- 若test.lua不存在全局变量函数 CalcTest，进行告警
 ``` 
-### 1.12 if not包含的代码块有误<span id="ifCheckErr"></span>
+### 12 if not包含的代码块有误
 告警类型：12, 提示前缀 [Warn type:12]</br>
 ```lua
 if not ss then
     print(ss.name)  -- ss这里判断为 nil，调用 name成员，进行告警
 end
 ``` 
-### 1.13 函数定义的参数是否重复<span id="funcParamDuplicateErr"></span>
+### 13 函数定义的参数是否重复
 告警类型：13, 提示前缀 [Warn type:13]</br>
 ```lua
 function CalcAdd(one, one) -- 函数定义的重复的参数one，进行告警
     print(one)
 end
 ``` 
-### 1.14 二元表达式，左右两边的表达式是否一样<span id="duplicateExpErr"></span>
+### 14 二元表达式，左右两边的表达式是否一样
 告警类型：14, 提示前缀 [Warn type:14]</br>
 当调用or、and、<、<=、>、>=、==、~= 二元表达式，左右两边一样进行告警
 ```lua
@@ -133,26 +114,35 @@ local a = 1
 local b = 1
 local c = a and a  -- and表达式左右两边一样，都是 a，进行告警
 ``` 
+### 15 or表达式始终为true
+告警类型：15, 提示前缀 [Warn type:15]</br>
+例如下面的例子：
+```lua
+local a = 1
+a = a or true     -- or表达式右边包含true，表达式结果始终为true
+``` 
 
-## 2 代码检查配置文件
-### 2.1 配置文件说明
+### 16 and表达式始终为false
+告警类型：16, 提示前缀 [Warn type:16]</br>
+例如下面的例子：
+```lua
+local a = 1
+a = a and false   -- and表达式右边包含false，表达式结果始终为false
+``` 
+
+## 代码检查配置文件
+### 配置文件说明
 由于Lua需要调用到C或是其他语言导入的符号，这些导入的符号是未定义的，因此需要忽略这些符号的告警。有时，也需要屏蔽分析的文件夹或文件，忽略指定的文件的告警等，这些都需要特定的配置文件。
 
 配置文件的名字是固定的：luahelper.json，在vscode工程目录下。这样有利于一个项目组共用一份相同的配置文件，配置文件也放在项目的git或是svn管理。
-
 ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/json.png)
 
-
-
-配置文件的格式是json的，文件名为：luahelper.json，完整的配置格式如下：</br>
-
+配置文件的格式是json的，文件名为：luahelper.json，完整的配置格式如下：
 ```json
 {
     "BaseDir":"./",
     "ShowWarnFlag":          1,
-    "ShareSymbolsFlag":      1,
     "ReferMatchPathFlag":    0,
-    "GvalTipFlag":           1,
     "IgnoreFileNameVarFlag": 0,
     "ProjectFiles":[
     
@@ -206,19 +196,10 @@ local c = a and a  -- and表达式左右两边一样，都是 a，进行告警
 * "ShowWarnFlag":          1,</br>
 表示是否开启所有检测告警，1为开启，0为关闭
 
-* "ShareSymbolsFlag":      1,</br>
-表示是否共享所有的全局符号，1为是，0为否</br>
-例如b.lua文件有个全局符号testB，如果共享所有的全局符号，即使a.lua文件没有引入b.lua文件，也能访问到testB全局符号。</br>
-笔者后台项目中，该值设置为0，默认设置为1即可。
 
 * "ReferMatchPathFlag":    0,</br>
 表示引入其他文件时，是否完整匹配路径，1为是，0为否</br>
 笔者后台项目中，该值设置为1，默认都设置为0即可。
-
-* "GvalTipFlag":           1,</br>
-代码提示时候，是否提示全局变量，1为是，0为否</br>
-全局函数是默认提示的，当提示全局变量设置为1时，提示的符号会变多，默认为1。
-笔者测试过，当提示的变量超过1万个时，插件都不会有任何卡顿。设置为1即可。
 
 * "IgnoreFileNameVarFlag": 0,</br>
 表示是否忽略lua文件同名的变量，1为是，0为否</br>
@@ -306,13 +287,22 @@ lua工程经常需要调用C++等其他宿主语言导入的符号，这里需�
     "port/bbb.lua"文件，忽略类型为：4的告警。</br>
     "port/ss.lua"文件，忽略类型为：4、5的告警。
     
-* "ProtocolVars": []
+* "ProtocolVars": []</br>
    为笔者后台项目定制的协议前缀提示，默认可以忽略。
 
+* "ReferFrameFiles": []</br>
+   为笔者后台项目定制。
 
-### 2.2 配置文件模板下载
-
-  [luahelper.json模板](./../jsonconfig/luahelper.json "luahelper.json配置文件")
-  
-  请根据项目需求，进行相应的修改。</br> (注：当vscode工程目录下没有luahelp.json配置文件，将会忽略所有的告警)
-  
+* "PathSeparator": "."</br>
+   当require或其他方式引入lua文件时，路径分割符，默认为"."
+   ```lua
+   local test = require("common.test")  -- 路径分隔符为., 实际对应的文件为：commone/test.lua
+   local log = require("common/log")    -- 路径分隔符为., 实际对应的文件为：commone/log.lua
+   ```
+   
+### 配置文件模板下载
+#### 后台项目
+  利用到了hive和import引入文件框架</br>
+  [luahelper.json模板](./../jsonconfig/server/luahelper.json "后台luahelper.json")
+#### 客户端项目
+  [luahelper.json模板](./../jsonconfig/client/luahelper.json "客户端luahelper.json")

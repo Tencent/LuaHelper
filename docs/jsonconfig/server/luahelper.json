@@ -1,0 +1,160 @@
+{
+    "BaseDir":"./bin/",
+    "ShowWarnFlag":          1,
+    "ShareSymbolsFlag":      0,
+    "ReferMatchPathFlag":    1,
+    "GvalTipFlag":           1,
+    "IgnoreFileNameVarFlag": 0,
+    "ProjectFiles":[
+        "router.lua",
+		"lobby.lua",
+		"dbagent.lua",
+		"indexsvr.lua",
+		"roomsvr.lua",
+		"mailsvr.lua",
+		"tranksvr.lua",
+		"gamesvr.lua",
+		"idipsvr.lua",
+		"director.lua",
+		"aassvr.lua",
+		"zonesvr.lua",
+		"idcagent.lua",
+		"paysvr.lua",
+		"friendsvr.lua",
+		"matchsvr.lua",
+		"relasvr.lua",
+		"reporter.lua",
+		"teamsvr.lua",
+		"chatchannel.lua",
+		"httpsvr.lua",
+		"carteamsvr.lua",
+		"customroomsvr.lua",
+		"mysqlagent.lua",
+		"aidersvr.lua",
+		"corpssvr.lua",
+		"assistsvr.lua",
+		"gcloudproxy.lua",
+		"lbssvr.lua",
+		"nearbyproxy.lua",
+		"graymatchsvr.lua",
+		"matchstrategy.lua",
+        "vsroomsvr.lua",
+		"assiststatsvr.lua",
+		"esportsocialsvr.lua"
+    ],
+    "IgnoreModules":["hive", "import"],
+    "IgnoreFileVars": [
+        {
+            "File": "lobby/gm.lua",
+            "Vars": ["ss"]
+        },
+        {
+            "File": "gamesvr/game_mgr.lua",
+            "Vars": ["fake_load"]
+        },
+        {
+            "File": "config/aassvr.lua",
+            "Vars": ["allow_platid"]
+        },
+        {
+            "File": "config/lobby.lua",
+            "Vars": [
+                "exp_svr",
+                "app_askfor_key",
+                "app_biz_code",
+                "app_askfor_mid",
+                "app_askfor_cid",
+                "privilege_shop_mid",
+                "privilege_shop_cid",
+                "privilege_shop_url",
+                "notice_update_ver",
+                "update_client_ver_deadline"
+            ]
+        },
+        {
+            "File": "config/transidsvr.lua",
+            "Vars": [
+                "max_connection",
+                "dir",
+                "maxnum",
+                "listen_ip",
+                "listen_port"
+            ]
+        },
+        {
+            "File": "config/paysvr.lua",
+            "Vars": [
+                "game_app_id",
+                "test_rand",
+                "errret"
+            ]
+        },
+        {
+            "File": "config/customroomsvr.lua",
+            "Vars": [
+                "privilege_room_event_url",
+                "privilege_role_event_url",
+                "config.privilege_invite_url"
+            ]
+        }
+    ],
+    "IgnoreReadFiles": [
+        "config/dbagent.lua",
+		"config/lobby.lua",
+		"config/router.lua",
+		"config/idipsvr.lua",
+		"config/aassvr.lua",
+		"config/paysvr.lua",
+		"config/httpsvr.lua",
+		"config/aidersvr.lua",
+		"config/corpssvr.lua",
+		"config/indexsvr.lua",
+		"config/tranksvr.lua",
+		"config/gamesvr.lua",
+		"config/director.lua",
+		"config/idcagent.lua",
+		"config/customroomsvr.lua",
+		"config/gcloudproxy.lua",
+		"config/roomsvr.lua",
+		"config/zonesvr.lua",
+		"config/matchsvr.lua",
+		"config/reporter.lua",
+		"config/mysqlagent.lua",
+		"config/assistsvr.lua",
+		"config/nearbyproxy.lua",
+		"config/mail.lua",
+		"config/relasvr.lua",
+		"config/teamsvr.lua",
+		"config/vsroomsvr.lua",
+        "config/robot.lua",
+        "config/httpagent.lua",
+        "common/config_center.lua",
+		"config/transidsvr.lua",
+        "config/esportsocialsvr.lua",
+        "config/assiststatsvr.lua"
+    ],
+    "IgnoreErrorTypes": [
+        11
+	],
+	"IgnoreFileOrFloder": [
+		"lobby/on.*lua",
+		"tests/",
+		"robot/",
+        "coverage/"
+	],
+    "IgnoreFileErr": [
+       "lobby/gm1.lua",
+       "common/test.lua"
+	],
+    "IgnoreFileErrTypes": [
+        {
+            "File": "lobby/gm.lua",
+            "Types": [11]
+        }
+    ],
+    "ProtocolVars": [
+        "c2s",
+        "s2s",
+        "idipreq"
+	]
+}
