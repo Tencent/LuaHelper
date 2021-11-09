@@ -80,15 +80,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     savedContext.subscriptions.push(vscode.languages.setLanguageConfiguration("lua", new LuaLanguageConfiguration()));
 
-
     // 公共变量赋值
     let pkg = require(context.extensionPath + "/package.json");
     Tools.adapterVersion = pkg.version;
     Tools.VSCodeExtensionPath = context.extensionPath;
-    //Tools.VSCodeOpenedFolder = savedContext.extensionPath;
-    console.log(context.extensionPath);
-    console.log("yinfei");
-    console.log(Tools.VSCodeExtensionPath);
     // init log
     DebugLogger.init();
 
@@ -98,8 +93,6 @@ export function activate(context: vscode.ExtensionContext) {
     progressBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
 
     startServer();
-
-    //vscode.commands.executeCommand('extension.lua.doc', "en-us/54/manual.html#lua_rawget");
 }
 
 exports.activate = activate;
