@@ -1,4 +1,4 @@
----@class debug @This library provides the functionality of the debug interface to Lua programs. You should exert care when using this library. Several of its functions violate basic assumptions about Lua code (e.g., that variables local to a function cannot be accessed from outside; that userdata metatables cannot be changed by Lua code; that Lua programs do not crash) and therefore can compromise otherwise secure code. Moreover, some functions in this library may be slow. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.10)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/6.10"])
+---@class debug @This library provides the functionality of the debug interface to Lua programs. You should exert care when using this library. Several of its functions violate basic assumptions about Lua code (e.g., that variables local to a function cannot be accessed from outside; that userdata metatables cannot be changed by Lua code; that Lua programs do not crash) and therefore can compromise otherwise secure code. Moreover, some functions in this library may be slow. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.10)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/6.10"])
 debug = {}
 
 ---@class debuginfo
@@ -27,7 +27,7 @@ debug = {}
 ---
 --- Note that commands for `debug.debug` are not lexically nested within any
 --- function, and so have no direct access to local variables.
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.debug)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.debug"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.debug)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.debug"])
 function debug.debug() end
 
 --- Returns the environment of object o.
@@ -43,7 +43,7 @@ function debug.getfenv(o) end
 ---@return function hook
 ---@return string mask
 ---@return integer count
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.gethook)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.gethook"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.gethook)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.gethook"])
 function debug.gethook(co) end
 
 --- Returns a table with information about a function. You can give the
@@ -70,7 +70,7 @@ function debug.gethook(co) end
 ---@param f      integer|function
 ---@param what?  string
 ---@return debuginfo
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getinfo)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.getinfo"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getinfo)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.getinfo"])
 function debug.getinfo(thread, f, what) end
 
 --- This function returns the name and the value of the local variable with
@@ -92,7 +92,7 @@ function debug.getinfo(thread, f, what) end
 ---
 --- The parameter `f` may also be a function. In that case, `getlocal` returns
 --- only the name of function parameters.
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getlocal)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.getlocal"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getlocal)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.getlocal"])
 ---@overload fun(level: integer, index: integer):string, any
 ---@param thread  thread
 ---@param level   integer
@@ -104,12 +104,12 @@ function debug.getlocal(thread, level, index) end
 --- Returns the metatable of the given `value` or **nil** if it does not have a metatable.
 ---@param object any
 ---@return table metatable
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getmetatable)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.getmetatable"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getmetatable)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.getmetatable"])
 function debug.getmetatable(object) end
 
 ---Returns the registry table.
 ---@return table
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getregistry)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.getregistry"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getregistry)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.getregistry"])
 function debug.getregistry() end
 
 
@@ -117,7 +117,7 @@ function debug.getregistry() end
 ---@param u userdata
 ---@param n number
 ---@return boolean
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getuservalue)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.getuservalue"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getuservalue)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.getuservalue"])
 function debug.getuservalue(u, n) end
 
 -- This function returns the name and the value of the upvalue with index up of the function f. The function returns fail if there is no upvalue with the given index.
@@ -131,7 +131,7 @@ function debug.getuservalue(u, n) end
 ---@param up integer
 ---@return string name
 ---@return any    value
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getupvalue)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.getupvalue"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getupvalue)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.getupvalue"])
 function debug.getupvalue(f, up) end
 
 -- Sets the environment of the given `object` to the given `table`. Returns `object`.
@@ -168,7 +168,7 @@ function debug.setfenv(object, env) end
 ---@param hook   function
 ---@param mask   string @"c" or "r" or "l"
 ---@param count? integer
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.sethook)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.sethook"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.sethook)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.sethook"])
 function debug.sethook(thread, hook, mask, count) end
 
 --- This function assigns the value `value` to the local variable with
@@ -183,7 +183,7 @@ function debug.sethook(thread, hook, mask, count) end
 ---@param index  integer
 ---@param value  any
 ---@return string name
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.setlocal)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.setlocal"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.setlocal)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.setlocal"])
 function debug.setlocal(thread, level, index, value) end
 
 --- Sets the metatable for the given `object` to the given `table` (which can be **nil**). Returns value.
@@ -191,7 +191,7 @@ function debug.setlocal(thread, level, index, value) end
 ---@param value T
 ---@param meta  table
 ---@return T value
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.setmetatable)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.setmetatable"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.setmetatable)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.setmetatable"])
 function debug.setmetatable(value, meta) end
 
 --- This function assigns the value `value` to the upvalue with index `up`
@@ -201,7 +201,7 @@ function debug.setmetatable(value, meta) end
 ---@param up    integer
 ---@param value any
 ---@return string name
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.setupvalue)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.setupvalue"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.setupvalue)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.setupvalue"])
 function debug.setupvalue(f, up, value) end
 
 --- Sets the given *value* as the *n*-th associated to the given *udata*. *udata* must be a full userdata.
@@ -211,7 +211,7 @@ function debug.setupvalue(f, up, value) end
 ---@param value any
 ---@param n     integer
 ---@return userdata udata
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.setuservalue)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.setuservalue"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.setuservalue)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.setuservalue"])
 function debug.setuservalue(udata, value, n) end
 
 
@@ -225,7 +225,7 @@ function debug.setuservalue(udata, value, n) end
 ---@param message? any
 ---@param level?   integer
 ---@return string  message
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.traceback)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.traceback"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.traceback)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.traceback"])
 function debug.traceback(thread, message, level) end
 
 --- Returns a unique identifier (as a light userdata) for the upvalue numbered
@@ -238,7 +238,7 @@ function debug.traceback(thread, message, level) end
 ---@param f fun():number
 ---@param n integer
 ---@return lightuserdata id
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.upvalueid)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.upvalueid"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.upvalueid)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.upvalueid"])
 function debug.upvalueid(f, n) end
 
 --- Make the *n1*-th upvalue of the Lua closure f1 refer to the *n2*-th upvalue of the Lua closure f2.
@@ -246,5 +246,5 @@ function debug.upvalueid(f, n) end
 ---@param n1 integer
 ---@param f2 function
 ---@param n2 integer
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.upvaluejoin)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-debug.upvaluejoin"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.upvaluejoin)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.upvaluejoin"])
 function debug.upvaluejoin(f1, n1, f2, n2) end

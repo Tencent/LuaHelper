@@ -1,9 +1,9 @@
----@class os @This library is implemented through table os. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.8)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/6.8"])
+---@class os @This library is implemented through table os. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.8)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/6.8"])
 os = {}
 
 --- Returns an approximation of the amount in seconds of CPU time used by the program.
 ---@return number
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.clock)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.clock"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.clock)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.clock"])
 function os.clock() end
 
 ---@class osdate
@@ -50,7 +50,7 @@ function os.clock() end
 ---@param format? string
 ---@param time?   integer
 ---@return string|osdate
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.date)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.date"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.date)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.date"])
 function os.date(format, time) end
 
 --- Returns the difference, in seconds, from time `t1` to time `t2`. (where the
@@ -59,7 +59,7 @@ function os.date(format, time) end
 ---@param t2 integer
 ---@param t1 integer
 ---@return integer
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.difftime)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.difftime"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.difftime)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.difftime"])
 function os.difftime(t2, t1) end
 
 --- This function is equivalent to the C function `system`. It passes `command`
@@ -78,7 +78,7 @@ function os.difftime(t2, t1) end
 ---@return boolean?  suc
 ---@return string?  @"exit" or "signal"
 ---@return integer?  code
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.execute)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.execute"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.execute)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.execute"])
 function os.execute(command) end
 
 --- Calls the ISO C function `exit` to terminate the host program. If `code` is
@@ -90,14 +90,14 @@ function os.execute(command) end
 --- exiting.
 ---@param code?  boolean|integer
 ---@param close? boolean
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.exit)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.exit"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.exit)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.exit"])
 function os.exit(code, close) end
 
 --- Returns the value of the process environment variable `varname`, or
 --- **nil** if the variable is not defined.
 ---@param varname string
 ---@return string
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.getenv)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.getenv"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.getenv)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.getenv"])
 function os.getenv(varname) end
 
 --- Deletes the file (or empty directory, on POSIX systems) with the given name.
@@ -106,7 +106,7 @@ function os.getenv(varname) end
 ---@param filename string
 ---@return boolean suc
 ---@return string? errmsg
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.remove)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.remove"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.remove)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.remove"])
 function os.remove(filename) end
 
 --- Renames the file or directory named `oldname` to `newname`. If this function
@@ -116,7 +116,7 @@ function os.remove(filename) end
 ---@param newname string
 ---@return boolean suc
 ---@return string? errmsg
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.rename)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.rename"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.rename)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.rename"])
 function os.rename(oldname, newname) end
 
 
@@ -139,7 +139,7 @@ function os.rename(oldname, newname) end
 ---@param locale    string|nil
 ---@param category? string @"all" or "collate" or "ctype" or "monetary" or "numeric" or "time"
 ---@return string localecategory
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.setlocale)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.setlocale"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.setlocale)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.setlocale"])
 function os.setlocale(locale, category) end
 
 --- Returns the current time when called without arguments, or a time
@@ -165,7 +165,7 @@ function os.setlocale(locale, category) end
 --- as before the call but with values inside their valid ranges.
 ---@param date? osdate
 ---@return integer
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.time)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.time"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.time)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.time"])
 function os.time(date) end
 
 --- Returns a string with a file name that can be used for a temporary
@@ -181,5 +181,5 @@ function os.time(date) end
 --- When possible, you may prefer to use `io.tmpfile`, which automatically
 --- removes the file when the program ends.
 ---@return string
----[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.tmpname)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-os.tmpname"])
+---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.tmpname)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.tmpname"])
 function os.tmpname() end

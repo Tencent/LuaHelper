@@ -1,4 +1,4 @@
----@class tablelib @This library provides generic functions for table manipulation. It provides all its functions inside the table table. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.3)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/6.3"])
+---@class tablelib @This library provides generic functions for table manipulation. It provides all its functions inside the table table. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.3)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/6.3"])
 table = {}
 
 --- Given a list where all elements are strings or numbers, returns the string
@@ -10,7 +10,7 @@ table = {}
 ---@param i?   integer
 ---@param j?   integer
 ---@return string
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.concat)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-table.concat"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.concat)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-table.concat"])
 function table.concat(list, sep, i, j) end
 
 --- Inserts element `value` at position `pos` in `list`, shifting up the
@@ -20,7 +20,7 @@ function table.concat(list, sep, i, j) end
 ---@param list table
 ---@param pos integer
 ---@param value any
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.insert)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-table.insert"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.insert)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-table.insert"])
 function table.insert(list, pos, value) end
 
 --- Moves elements from table a1 to table `a2`, performing the equivalent to
@@ -36,7 +36,7 @@ function table.insert(list, pos, value) end
 ---@param t   integer
 ---@param a2? table
 ---@return table a2
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.move)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-table.move"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.move)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-table.move"])
 function table.move(a1, f, e, t, a2) end
 
 --- Returns a new table with all arguments stored into keys 1, 2, etc. and
@@ -44,7 +44,7 @@ function table.move(a1, f, e, t, a2) end
 --- resulting table may not be a sequence, if some arguments are **nil**.
 ---@version >lua5.2
 ---@return table
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.pack)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-table.pack"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.pack)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-table.pack"])
 function table.pack(...) end
 
 --- Removes from `list` the element at position `pos`, returning the value of
@@ -59,7 +59,7 @@ function table.pack(...) end
 ---@param list table
 ---@param pos? integer
 ---@return any
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.remove)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-table.remove"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.remove)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-table.remove"])
 function table.remove(list, pos) end
 
 --- Sorts list elements in a given order, *in-place*, from `list[1]` to
@@ -77,7 +77,7 @@ function table.remove(list, pos) end
 --- order may have their relative positions changed by the sort.
 ---@param list table
 ---@param comp fun(a: any, b: any):boolean
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.sort)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-table.sort"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.sort)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-table.sort"])
 function table.sort(list, comp) end
 
 --- Returns the elements from the given list. This function is equivalent to
@@ -87,5 +87,5 @@ function table.sort(list, comp) end
 ---@param list table
 ---@param i?   integer
 ---@param j?   integer
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.unpack)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-table.unpack"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-table.unpack)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-table.unpack"])
 function table.unpack(list, i, j) end

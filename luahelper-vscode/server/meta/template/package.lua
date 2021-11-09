@@ -1,4 +1,4 @@
----@class package @The *package* library provides basic facilities for loading modules in Lua. It exports one function directly in the global environment: *require*. Everything else is exported in the table *package*. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.3)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/6.3"])
+---@class package @The *package* library provides basic facilities for loading modules in Lua. It exports one function directly in the global environment: *require*. Everything else is exported in the table *package*. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.3)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/6.3"])
 package = {}
 
 --- A string describing some compile-time configurations for packages. This
@@ -14,7 +14,7 @@ package = {}
 --- executable's directory. Default is '!'.
 --- The fifth line is a mark to ignore all text after it when building the
 --- luaopen_ function name. Default is '-'.
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.config)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-package.config"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.config)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-package.config"])
 package.config = ""
 
 --- The path used by `require` to search for a Lua loader.
@@ -24,7 +24,7 @@ package.config = ""
 --- default path defined in `luaconf.h`, if those environment variables are not
 --- defined. Any ";;" in the value of the environment variable is replaced by
 --- the default path.
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.path)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-package.path"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.path)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-package.path"])
 package.path = ""
 
 --- The path used by `require` to search for a C loader.
@@ -33,7 +33,7 @@ package.path = ""
 --- the Lua path `package.path`, using the environment variable `LUA_CPATH_5_4`
 --- or the environment variable `LUA_CPATH`, or a default path defined in
 --- `luaconf.h`.
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.cpath)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-package.cpath"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.cpath)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-package.cpath"])
 package.cpath = ""
 
 
@@ -41,7 +41,7 @@ package.cpath = ""
 ---
 --- This variable is only a reference to the real table; assignments to this
 --- variable do not change the table used by `require`.
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.preload)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-package.preload"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.preload)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-package.preload"])
 package.preload = {}
 
 ---@version lua5.1
@@ -71,7 +71,7 @@ package.loaders = {}
 ---@param libname string
 ---@param funcname string
 ---@return fun():nil
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.loadlib)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-package.loadlib"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.loadlib)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-package.loadlib"])
 function package.loadlib(libname, funcname) end
 
 --- A table used by require to control how to load modules.
@@ -83,7 +83,7 @@ function package.loadlib(libname, funcname) end
 --- value that will be passed to that loader, or a string explaining why it did
 --- not find that module (or **nil** if it has nothing to say).
 ---@version >lua5.2
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.searchers)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-package.searchers"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-package.searchers)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-package.searchers"])
 package.searchers = {}
 
 --- Searches for the given name in the given path.

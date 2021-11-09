@@ -8,7 +8,7 @@ _ENV = {}
 ---@param v any
 ---@param message? string
 ---@return any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-assert)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-assert"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-assert)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-assert"])
 function assert(v, message) end
 
 ---
@@ -41,7 +41,7 @@ function assert(v, message) end
 ---@param opt? string
 ---@param arg? string
 ---@return any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-collectgarbage)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-collectgarbage"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-collectgarbage)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-collectgarbage"])
 function collectgarbage(opt, arg) end
 
 --- Opens the named file and executes its contents as a Lua chunk. When called
@@ -51,7 +51,7 @@ function collectgarbage(opt, arg) end
 --- in protected mode).
 ---@param filename? string
 ---@return table
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-dofile)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-dofile"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-dofile)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-dofile"])
 function dofile(filename) end
 
 --- Terminates the last protected function called and returns `message` as the
@@ -64,10 +64,10 @@ function dofile(filename) end
 --- addition of error position information to the message.
 ---@param message string
 ---@param level? number
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-error)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-error"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-error)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-error"])
 function error(message, level) end
 
----@class _G @A global variable (not a function) that holds the global environment. Lua itself does not use this variable; changing its value does not affect any environment, nor vice versa. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-_G)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-_G"])
+---@class _G @A global variable (not a function) that holds the global environment. Lua itself does not use this variable; changing its value does not affect any environment, nor vice versa. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-_G)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-_G"])
 _G = {}
 
 ---Returns the current environment in use by the function. *f* can be a Lua function or a number that specifies the function at that stack level: Level 1 is the function calling `getfenv`. If the given function is not a Lua function, or if f is 0, `getfenv` returns the global environment. The default for *f* is 1.
@@ -81,7 +81,7 @@ function getfenv(f) end
 --- value. Otherwise, returns the metatable of the given object.
 ---@param object any
 ---@return table metatable
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-getmetatable)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-getmetatable"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-getmetatable)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-getmetatable"])
 function getmetatable(object) end
 
 --- Returns three values (an iterator function, the table `t`, and 0) so that the construction
@@ -90,7 +90,7 @@ function getmetatable(object) end
 ---@generic V
 ---@param t table<number, V>|V[]
 ---@return fun(tbl: table<number, V>):number, V
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-ipairs)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-ipairs"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-ipairs)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-ipairs"])
 function ipairs(t) end
 
 --- Loads a chunk.
@@ -125,14 +125,14 @@ function ipairs(t) end
 ---@param chunkname? string
 ---@param mode? string
 ---@param env? any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-load)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-load"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-load)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-load"])
 function load(chunk, chunkname, mode, env) end
 
 --- Similar to `load`, but gets the chunk from file `filename` or from the standard input, if no file name is given.
 ---@param filename? string
 ---@param mode? string
 ---@param env? any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-loadfile)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-loadfile"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-loadfile)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-loadfile"])
 function loadfile(filename, mode, env) end
 
 -- Similar to `load`, but gets the chunk from the given string. To load and run a given string, use the idiom assert(loadstring(s))() When absent, chunkname defaults to the given string.
@@ -167,7 +167,7 @@ function module(name, ...) end
 ---@param table table
 ---@param index? any
 ---@return any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-next)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-next"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-next)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-next"])
 function next(table, index) end
 
 --- If `t` has a metamethod `__pairs`, calls it with `t` as argument and returns the first three results from the call.
@@ -181,7 +181,7 @@ function next(table, index) end
 ---@generic K, V
 ---@param t table<K, V>|V[]
 ---@return fun(tbl: table<K, V>):K, V
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-pairs)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-pairs"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-pairs)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-pairs"])
 function pairs(t) end
 
 --- Calls function `f` with the given arguments in *protected mode*. This
@@ -193,38 +193,38 @@ function pairs(t) end
 ---@param f fun():any
 ---@param arg1 ? table
 ---@return boolean|table
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-pcall)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-pcall"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-pcall)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-pcall"])
 function pcall(f, arg1, ...) end
 
 --- Receives any number of arguments, and prints their values to `stdout`, using the `tostring` function to convert them to strings. `print` is not intended for formatted output, but only as a quick way to show a value, for instance for debugging. For complete control over the output, use `string.format` and `io.write`.
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-print)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-print"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-print)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-print"])
 function print(...) end
 
 --- Checks whether `v1` is equal to `v2`, without the `__eq` metamethod. Returns a boolean.
 ---@param v1 any
 ---@param v2 any
 ---@return boolean
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-rawequal)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-rawequal"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-rawequal)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-rawequal"])
 function rawequal(v1, v2) end
 
 --- Gets the real value of `table[index]`, the `__index` metamethod. `table` must be a table; `index` may be any value.
 ---@param table table
 ---@param index any
 ---@return any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-rawget)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-rawget"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-rawget)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-rawget"])
 function rawget(table, index) end
 
 --- Returns the length of the object `v`, which must be a table or a string, without invoking any metamethod. Returns an integer number.
 ---@param v string|table
 ---@return number
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-rawlen)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-rawlen"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-rawlen)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-rawlen"])
 function rawlen(v) end
 
 --- Sets the real value of `table[index]` to `value`, without invoking the `__newindex` metamethod. `table` must be a table, `index` any value different from **nil** and NaN, and `value` any Lua value.
 ---@param table table
 ---@param index any
 ---@param value any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-rawset)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-rawset"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-rawset)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-rawset"])
 function rawset(table, index, value) end
 
 
@@ -259,7 +259,7 @@ function rawset(table, index, value) end
 --- any loader for the module, then `require` raises an error.
 ---@param modname string
 ---@return any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-require)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-require"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-require)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-require"])
 function require(modname) end
 
 --- If `index` is a number, returns all arguments after argument number
@@ -270,7 +270,7 @@ function require(modname) end
 ---@param index number|string
 ---@vararg T
 ---@return T
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-select)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-select"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-select)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-select"])
 function select(index, ...) end
 
 
@@ -291,7 +291,7 @@ function setfenv(f, table) end
 ---@param table T
 ---@param metatable table
 ---@return T
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-setmetatable)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-setmetatable"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-setmetatable)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-setmetatable"])
 function setmetatable(table, metatable) end
 
 --- When called with no `base`, `tonumber` tries to convert its argument to a
@@ -311,7 +311,7 @@ function setmetatable(table, metatable) end
 ---@param e string
 ---@param base? number
 ---@return any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-tonumber)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-tonumber"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-tonumber)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-tonumber"])
 function tonumber(e, base) end
 
 --- Receives a value of any type and converts it to a string in a human-readable
@@ -323,7 +323,7 @@ function tonumber(e, base) end
 --- call as its result.
 ---@param v any
 ---@return string
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-tostring)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-tostring"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-tostring)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-tostring"])
 function tostring(v) end
 
 --- Returns the type of its only argument, coded as a string. The possible
@@ -332,7 +332,7 @@ function tostring(v) end
 --- and "`userdata`".
 ---@param v any
 ---@return string
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-type)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-type"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-type)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-type"])
 function type(v) end
 
 _VERSION = 'Lua 5.4'
@@ -343,14 +343,14 @@ _VERSION = 'Lua 5.4'
 --- By convention, a one-piece message starting with '@' is intended to be a control message, which is a message to the warning system itself. In particular, the standard warning function in Lua recognizes the control messages "@off", to stop the emission of warnings, and "@on", to (re)start the emission; it ignores unknown control messages.
 ---@version lua5.4
 ---@param message string
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-warn)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-warn"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-warn)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-warn"])
 function warn(message, ...) end
 
 --- This function is similar to `pcall`, except that it sets a new message handler `msgh`.
 ---@param f fun():any
 ---@param msgh fun():string
 ---@return any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-xpcall)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-xpcall"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-xpcall)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-xpcall"])
 function xpcall(f, msgh, arg1, ...) end
 
 --- Returns the elements from the given table. This function is equivalent to
@@ -393,5 +393,5 @@ function unpack(list, i, j) end
 --- any loader for the module, then `require` raises an error.
 ---@param modname string
 ---@return any
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-require)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-require"]
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-require)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-require"]
 function require(modname) end
