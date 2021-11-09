@@ -1,8 +1,8 @@
 {
     "name": "luahelper",
-    "displayName": "Lua Helper",
+    "displayName": "Lua",
     "description": "Intellisense, Linting, Debugging, Code formatting, High-performance, and more.",
-    "version": "0.1.66",
+    "version": "0.2.1",
     "publisher": "yinfei",
     "author": {
         "name": "yinfei",
@@ -26,10 +26,10 @@
     "icon": "images/luahelper.png",
     "repository": {
         "type": "git",
-        "url": "https://github.com/yinfei8/LuaHelper.git"
+        "url": "https://github.com/Tencent/LuaHelper.git"
     },
     "bugs": {
-        "url": "https://github.com/yinfei8/LuaHelper.git"
+        "url": "https://github.com/Tencent/LuaHelper.git"
     },
     "engines": {
         "vscode": "^1.53.0"
