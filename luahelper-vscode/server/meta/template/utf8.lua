@@ -1,8 +1,8 @@
----@class utf8 @This library provides basic support for UTF-8 encoding. It provides all its functions inside the table utf8. This library does not provide any support for Unicode other than the handling of the encoding. Any operation that needs the meaning of a character, such as character classification, is outside its scope.  [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.5)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/6.5"])
+---@class utf8 @This library provides basic support for UTF-8 encoding. It provides all its functions inside the table utf8. This library does not provide any support for Unicode other than the handling of the encoding. Any operation that needs the meaning of a character, such as character classification, is outside its scope.  [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.5)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/6.5"])
 ---@field charpattern string
 utf8 = {}
 
----@type string @The pattern (a string, not a function) "`[\0-\x7F\xC2-\xF4][\x80-\xBF]*`", which matches exactly one UTF-8 byte sequence, assuming that the subject is a valid UTF-8 string. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.charpattern)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-utf8.charpattern"])
+---@type string @The pattern (a string, not a function) "`[\0-\x7F\xC2-\xF4][\x80-\xBF]*`", which matches exactly one UTF-8 byte sequence, assuming that the subject is a valid UTF-8 string. [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.charpattern)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-utf8.charpattern"])
 utf8.charpattern = ""
 
 
@@ -11,7 +11,7 @@ utf8.charpattern = ""
 --- these sequences.
 ---@param code integer
 ---@return string
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.char)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-utf8.char"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.char)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-utf8.char"])
 function utf8.char(code, ...) end
 
 --Returns values so that the construction
@@ -21,7 +21,7 @@ function utf8.char(code, ...) end
 ---@param s    string
 ---@param lax? boolean
 ---@return fun():integer, integer
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.codes)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-utf8.codes"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.codes)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-utf8.codes"])
 function utf8.codes(s, lax) end
 
 --- Returns the codepoints (as integers) from all characters in `s` that start
@@ -33,7 +33,7 @@ function utf8.codes(s, lax) end
 ---@param j?   integer
 ---@param lax? boolean
 ---@return integer code
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.codepoint)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-utf8.codepoint"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.codepoint)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-utf8.codepoint"])
 function utf8.codepoint(s, i, j, lax) end
 
 --- Returns the number of UTF-8 characters in string `s` that start between
@@ -46,7 +46,7 @@ function utf8.codepoint(s, i, j, lax) end
 ---@param lax? boolean
 ---@return integer?
 ---@return integer? errpos
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.len)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-utf8.len"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.len)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-utf8.len"])
 function utf8.len(s, i, j, lax) end
 
 --- Returns the position (in bytes) where the encoding of the `n`-th character
@@ -64,5 +64,5 @@ function utf8.len(s, i, j, lax) end
 ---@param n integer
 ---@param i integer
 ---@return integer p
---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.offset)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-utf8.offset"])
+--[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-utf8.offset)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-utf8.offset"])
 function utf8.offset(s, n, i) end

@@ -1,4 +1,4 @@
----@class io @The I/O library provides two different styles for file manipulation. The first one uses implicit file handles; that is, there are operations to set a default input file and a default output file, and all input/output operations are done over these default files. The second style uses explicit file handles. -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.8)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/6.8"])
+---@class io @The I/O library provides two different styles for file manipulation. The first one uses implicit file handles; that is, there are operations to set a default input file and a default output file, and all input/output operations are done over these default files. The second style uses explicit file handles. -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#6.8)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/6.8"])
 ---@field stdin  file @Standard in.
 ---@field stdout file @Standard out.
 ---@field stderr file @Standard err.
@@ -9,11 +9,11 @@ io = {}
 ---@return boolean?  suc
 ---@return string? @"exit" or "signal"
 ---@return integer?  code
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.close)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.close"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.close)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.close"])
 function io.close(file) end
 
 --- Equivalent to `io.output():flush()`.
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.flush)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.flush"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.flush)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.flush"])
 function io.flush() end
 
 --- When called with a file name, it opens the named file (in text mode), and
@@ -24,7 +24,7 @@ function io.flush() end
 --- In case of errors this function raises the error, instead of returning an error code.
 ---@param file? string|file
 ---@return file
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.input)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.input"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.input)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.input"])
 function io.input(file) end
 
 --- Opens the given file name in read mode and returns an iterator function
@@ -40,7 +40,7 @@ function io.input(file) end
 --- In case of errors this function raises the error, instead of returning an error code.
 ---@param filename? string
 ---@return fun():string|number
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.lines)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.lines"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.lines)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.lines"])
 function io.lines(filename, ...) end
 
 --- This function opens a file, in the mode specified in the string `mode`.  In
@@ -60,12 +60,12 @@ function io.lines(filename, ...) end
 ---@param filename string
 ---@param mode string
 ---@return file
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.open)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.open"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.open)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.open"])
 function io.open(filename, mode) end
 
 --- Similar to `io.input`, but operates over the default output file.
 ---@param file? string|file
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.output)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.output"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.output)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.output"])
 function io.output(file) end
 
 --- This function is system dependent and is not available on all platforms.
@@ -76,17 +76,17 @@ function io.output(file) end
 ---@param prog  string
 ---@param mode? string @"r" or "w"
 ---@return file
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.popen)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.popen"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.popen)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.popen"])
 function io.popen(prog, mode) end
 
 --- Equivalent to `io.input():read(···)`.
 ---@return string|number
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.read)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.read"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.read)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.read"])
 function io.read(...) end
 
 --- In case of success, returns a handle for a temporary file. This file is opened in update mode and it is automatically removed when the program ends.
 ---@return file
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.tmpfile)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.tmpfile"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.tmpfile)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.tmpfile"])
 function io.tmpfile() end
 
 
@@ -95,15 +95,15 @@ function io.tmpfile() end
 --- handle, or **nil** if `obj` is not a file handle.
 ---@param file file | string
 ---@return string @"file" or "closed file" or "nil"
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.type)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.type"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.type)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.type"])
 function io.type(file) end
 
 -- Equivalent to `io.output():write(...)`.
 ---@return file 
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.write)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-io.write"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.write)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.write"])
 function io.write(...) end
 
----@class file @File object [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-file"])
+---@class file @File object [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file"])
 local file = {}
 
 --- Closes `file`. Note that files are automatically closed when their
@@ -112,11 +112,11 @@ local file = {}
 ---
 --- When closing a file handle created with `io.popen`, `file:close` returns the
 --- same values returned by `os.execute`.
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:close)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-file:close"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:close)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:close"])
 function file:close() end
 
 -- Saves any written data to `file`.
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:flush)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-file:flush"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:flush)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:flush"])
 function file:flush() end
 
 --- Returns an iterator function that, each time it is called, reads the file
@@ -130,7 +130,7 @@ function file:flush() end
 --- In case of errors this function raises the error, instead of returning an
 --- error code.
 ---@return fun():string|number
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:lines)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-file:lines"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:lines)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:lines"])
 function file:lines(...) end
 
 --- Reads the file `file`, according to the given formats, which specify
@@ -157,7 +157,7 @@ function file:lines(...) end
 --- on end of file. If `number` is zero, it reads nothing and returns an
 --- empty string, or **nil** on end of file.
 ---@return string|number
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:read)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-file:read"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:read)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:read"])
 function file:read(...) end
 
 --- Sets and gets the file position, measured from the beginning of the
@@ -179,7 +179,7 @@ function file:read(...) end
 ---@param whence? string @ "set" or "cur" or "end"
 ---@param offset? number
 ---@return integer @offset
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:seek)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-file:seek"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:seek)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:seek"])
 function file:seek(whence, offset) end
 
 --- Sets the buffering mode for an output file. There are three available
@@ -195,7 +195,7 @@ function file:seek(whence, offset) end
 --- bytes. The default is an appropriate size.
 ---@param mode? string @ "no" or "full" or "line"
 ---@param size? number
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:setvbuf)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-file:setvbuf"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:setvbuf)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:setvbuf"])
 function file:setvbuf(mode, size) end
 
 --- Writes the value of each of its arguments to the `file`. The arguments
@@ -205,6 +205,6 @@ function file:setvbuf(mode, size) end
 --- **nil** plus a string describing the error.
 ---@return file
 ---@return string @errmsg
--- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:write)  |  [`View local doc`](command:extension.lua.doc?["en-us/54/manual.html/pdf-file:write"])
+-- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:write)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:write"])
 function file:write(...) end
 
