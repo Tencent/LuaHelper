@@ -71,7 +71,6 @@ func CreateLspServer() *LspServer {
 		onlineReport: OnlineReport{
 			ClientType:  "vsc",
 			FileNumber:  0,
-			MacAddr:     "vsc",
 			OsType:      "vsc",
 			ClientVer:   clientVerStr,
 			FirstReport: 1,
