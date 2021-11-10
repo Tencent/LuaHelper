@@ -44,7 +44,6 @@ func (l *LspServer)UDPReportOnline() {
 	//创建协程，收取udp的在线回包数据
 	go handleRecv(conn)
 
-	l.getMac()
 	l.SetReportOtherInfo()
 
 	for {
@@ -80,23 +79,4 @@ func handleRecv(conn net.Conn) {
 			onlinePeopleNum = reportReturn.Num
 		}
 	}
-}
-
-// 获取本机的MAC地址
-func (l *LspServer)getMac() {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		log.Error("Poor soul, here is what you got: " + err.Error())
-	}
-
-	strMac := ""
-	for _, inter := range interfaces {
-		//获取本机MAC地址
-		strMac = inter.HardwareAddr.String()
-		if len(strMac) > 0 {
-			break
-		}
-	}
-
-	l.SetOnlineMacAddr(strMac)
 }

@@ -1,9 +1,6 @@
 package langserver
 
 import (
-	"luahelper-lsp/langserver/log"
-	"os"
-	"os/user"
 	"runtime"
 )
 
@@ -11,13 +8,10 @@ import (
 type OnlineReport struct {
 	ClientType         string `json:"clientType"`         // 客户端类型
 	FileNumber         int    `json:"fileNumber"`         // 工程lua文件的数量
-	MacAddr            string `json:"macAddr"`            // 客户端mac地址
 	OsType             string `json:"osType"`             // 客户端操作系统类型
-	ClientVer          string `json:"clientVer"`          // 客户端的版本号，例如0.1.22
+	ClientVer          string `json:"clientVer"`          // 客户端的版本号，例如0.2.1
 	FirstReport        int    `json:"firstReport"`        // 客户端是否首次打开插件上报， 1为是
 	CostMsTime         int    `json:"costMsTime"`         // 初次加载的耗时时间毫秒
-	HostName           string `json:"hostName"`           // 主机名称
-	UserName           string `json:"userName"`           // 用户名称
 	WorkspaceFolderNum int    `json:"workspaceFolderNum"` // 用户多文件夹数
 }
 
@@ -44,11 +38,6 @@ func (l *LspServer) GetOnlineReportData() OnlineReport {
 	return l.onlineReport
 }
 
-// SetOnlineMacAddr 获取客户端mac地址
-func (l *LspServer) SetOnlineMacAddr(macaddress string) {
-	l.onlineReport.MacAddr = macaddress
-}
-
 // SetFirstReportFlag 设置是否第一次上报标记
 func (l *LspServer) SetFirstReportFlag(flag int) {
 	l.onlineReport.FirstReport = flag
@@ -56,22 +45,5 @@ func (l *LspServer) SetFirstReportFlag(flag int) {
 
 // SetReportOtherInfo 设置上报的其他信息
 func (l *LspServer) SetReportOtherInfo() {
-	u, err := user.Current()
-	if err == nil {
-		l.onlineReport.UserName = u.Username
-		//l.onlineReport.HomeDir = u.HomeDir
-		log.Debug("get current info ok")
-	} else {
-		log.Debug("get current info error")
-	}
-
-	hostname, err1 := os.Hostname()
-	if err1 == nil {
-		l.onlineReport.HostName = hostname
-		log.Debug("get host name ok")
-	} else {
-		log.Debug("get host name error")
-	}
-
 	l.onlineReport.OsType = runtime.GOOS
 }
