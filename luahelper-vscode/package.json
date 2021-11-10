@@ -357,7 +357,7 @@
                     "description": "%luahelper.reference.maxNum%"
                 },
                 "luahelper.show.online": {
-                    "default": false,
+                    "default": true,
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.show.online%"
