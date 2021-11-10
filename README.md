@@ -56,11 +56,13 @@ Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其�
 * Click the Vs Code application market icon 
 * Search luahelper in the input box 
 * Click to install Lua Helper
+* Marketplace url: https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper
 
 **应用市场安装**
 * 点击Vs Code应用市场图标
 * 在输入框中搜索 luahelper
 * 点击安装Lua Helper
+* 应用市场链接: https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper
 
 ![avatar](docs/images/Install.gif)
 
