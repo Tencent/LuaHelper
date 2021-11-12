@@ -1,4 +1,4 @@
-# Lua Helper Guide
+# LuaHelper Guide
 ![logo](/docs/images/logo.png)
 ## Introduction
 
