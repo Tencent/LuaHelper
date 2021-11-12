@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestPrintDir (t *testing.T) {
+func TestComplete1 (t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	paths, _ := filepath.Split(filename)
  

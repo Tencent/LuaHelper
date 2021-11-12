@@ -44,6 +44,12 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 	strFile := comResult.strFile
 
 	// 1) 判断是否输入的为 --- 注释，用于快捷生成函数定义的注释
+	// 输入-时候，传人的为空，特殊处理 
+	if vs.Context.TriggerCharacter == "" && judgeBeforeCommentHorizontal(comResult.contents, comResult.offset) {
+		// 处理快捷生成注解, 以及提升注解系统
+		comList, _ := l.handleGenerateComment(strFile, comResult.contents, comResult.offset, (int)(comResult.pos.Line))
+		return comList, err
+	}
 	if vs.Context.TriggerCharacter == "-" {
 		// 处理快捷生成注解, 以及提升注解系统
 		comList, _ := l.handleGenerateComment(strFile, comResult.contents, comResult.offset, (int)(comResult.pos.Line))
@@ -392,6 +398,25 @@ func getComplelteStruct(str string, line, character int) (validFlag bool, comple
 	return
 }
 
+func judgeBeforeCommentHorizontal(contents []byte, offset int) bool {
+	beforeIndex := offset - 1
+	for index := offset - 1; index >= 0; index-- {
+		ch := contents[index]
+		if ch == '-' {
+			beforeIndex = index
+			continue
+		}
+
+		break
+	}
+
+	if  offset-beforeIndex == 1 || offset-beforeIndex == 2 || offset-beforeIndex == 3 {
+		return true
+	}
+
+	return false
+}
+
 // 处理快捷生成函数的注释 type CompletionList struct
 func (l *LspServer) handleGenerateComment(strFile string, contents []byte, offset int,
 	posLine int) (comList lsp.CompletionList, err error) {
@@ -409,7 +434,7 @@ func (l *LspServer) handleGenerateComment(strFile string, contents []byte, offse
 		break
 	}
 
-	if offset-beforeIndex != 2 && offset-beforeIndex != 3 {
+	if offset-beforeIndex != 1 && offset-beforeIndex != 2 && offset-beforeIndex != 3 {
 		log.Debug("handleGenerateComment len is not 3, strFile=%s", strFile)
 		return
 	}
@@ -437,14 +462,17 @@ func (l *LspServer) handleGenerateComment(strFile string, contents []byte, offse
 	for _, oneComplete := range completeVecs {
 		var oneLspComplete lsp.CompletionItem
 
-		oneLspComplete.Label = "--- " + oneComplete.Label
-		oneLspComplete.Kind = lsp.SnippetCompletion
+		oneLspComplete.Label = "---" + oneComplete.Label
+		oneLspComplete.Kind = lsp.TextCompletion
 		oneLspComplete.Detail = oneComplete.Detail
 
-		oneLspComplete.Documentation = lsp.MarkupContent{
-			Kind:  lsp.PlainText,
+		 oneLspComplete.Documentation = lsp.MarkupContent{
+		 	Kind:  lsp.Markdown,
 			Value: oneComplete.Documentation,
-		}
+		 }
+		
+		//oneLspComplete.Documentation = oneComplete.Documentation
+
 		oneLspComplete.InsertText = oneComplete.InsetText
 		oneLspComplete.InsertTextFormat = lsp.SnippetTextFormat
 		comList.Items = append(comList.Items, oneLspComplete)

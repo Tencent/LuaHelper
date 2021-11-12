@@ -1,8 +1,14 @@
 # Change Log
 
+## 0.2.2 (Nov 12, 2021)
++ 修复外网Issues42 https://github.com/Tencent/LuaHelper/issues/42
++ 修复外网Issues44 https://github.com/Tencent/LuaHelper/issues/44
++ 完善了require语法
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+  
 ## 0.2.1 (Nov 10, 2021)
 + 正式对外开发，发布0.2.1版本
-+ [Repository](https://github.com/Tencent/LuaHelper)  (https://github.com/Tencent/LuaHelper)
++ [Repository](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
 
 ## 0.1.66 (Nov 8, 2021)
 + 修复了VSCode图片链接地址
