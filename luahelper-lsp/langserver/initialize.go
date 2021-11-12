@@ -98,6 +98,7 @@ func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.In
 					ResolveProvider: true,
 					//TriggerCharacters: strings.Split("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:", ""),
 					TriggerCharacters: []string{".", "\"", "'", ":", "-", "@"},
+					//AllCommitCharacters:[]string{".", "\"", "'", ":", "-", "@"},
 				},
 				ColorProvider:           false,
 				HoverProvider:           true,

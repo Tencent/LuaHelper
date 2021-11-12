@@ -139,7 +139,7 @@ func (a *AllProject) HandleFileEventChanges(fileEventVec []FileEventStruct) (cha
 			a.HandleNotCheckThirdFile()
 		}
 
-		log.Debug("HandleAllThirdFile thirdFlag=%d, third costTime=%d, all_time=%d", thirdFlag,
+		log.Debug("HandleAllThirdFile thirdFlag=%t, third costTime=%d, all_time=%d", thirdFlag,
 			time.Since(time5).Milliseconds(), time.Since(time0).Milliseconds())
 	} else {
 		// 5) 对有需要的工程做第二遍工程遍历

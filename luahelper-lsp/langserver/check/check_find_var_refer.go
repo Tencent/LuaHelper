@@ -301,6 +301,7 @@ func (a *AllProject) getTableAccessRelateSymbol(luaInFile string, node *ast.Tabl
 		return
 	}
 
+	// 1）先处理_G.a 这样的情况
 	if defineLen == 1 && defineStruct.StrVec[0] == "_G" {
 		// 先只处理简单的情况
 		if !common.JudgeSimpleStr(strKey) {
@@ -312,94 +313,60 @@ func (a *AllProject) getTableAccessRelateSymbol(luaInFile string, node *ast.Tabl
 		return symbol
 	}
 
-	// 为复杂的内容
-	// 切割strTable为数组
-	gFlag := false
-	if defineStruct.StrVec[0] == "_G" {
-		gFlag = true
-		defineStruct.StrVec = defineStruct.StrVec[1:]
-		defineStruct.IsFuncVec = defineStruct.IsFuncVec[1:]
+	// 2）判断是否为简单的取值a.b
+	var lastSymbol *common.Symbol
+	_, sampleFlag := (node.PrefixExp).(*ast.NameExp)
+	if sampleFlag {
+		strOne := defineStruct.StrVec[0]
+
+		if strOne == "self" {
+			strOne = a.selfChangeStrName(luaInFile, node.Loc)
+		}
+
+		// 首先查找父的模块变量
+		lastSymbol = a.findStrReferSymbol(luaInFile, strOne, keyLoc, false, comParam, findExpList)
+	} else {
+		lastSymbol = a.FindVarReferSymbol(luaInFile, node.PrefixExp, comParam, findExpList, 1)
 	}
-	defineStruct.StrVec = append(defineStruct.StrVec, strKey)
-	defineStruct.IsFuncVec = append(defineStruct.IsFuncVec, false)
-	strOne := defineStruct.StrVec[0]
 
-	if strOne == "self" {
-		strOne = a.selfChangeStrName(luaInFile, node.Loc)
+	if lastSymbol == nil {
+		return nil
 	}
 
-	// 首先查找父的模块变量
-	lastSymbol := a.findStrReferSymbol(luaInFile, strOne, keyLoc, gFlag, comParam, findExpList)
+	var lastExp ast.Exp    // 最终查找关联到的表达式
+	var lastLuaFile = ""   // 最终查找关联到的表达式所在的文件
+	var varIndex uint8 = 1 // 多次申明变量时候，变量的index
 
-	// 2.1) 有多层，逐层查找传人的子成员
-	for i := 0; i < len(defineStruct.StrVec)-1; i++ {
-		// 为nil, 返回
-		if lastSymbol == nil {
-			return nil
+	subSymbol := a.symbolHasSubKey(lastSymbol, strKey, comParam, findExpList)
+	if subSymbol != nil {
+		lastSymbol = subSymbol
+		return lastSymbol
+	}
+
+	if lastSymbol.VarInfo == nil {
+		return nil
+	}
+
+	lastExp = lastSymbol.VarInfo.ReferExp
+	lastLuaFile = lastSymbol.FileName
+	varIndex = lastSymbol.VarInfo.VarIndex
+
+	// 没有找到，那么这个变量，它关联的上一层变量呢
+	// 递归进行查找
+	subFindFlag := false
+	tmpList := a.FindDeepSymbolList(lastLuaFile, lastExp, comParam, findExpList, false, varIndex)
+	for _, oneSymbol := range tmpList {
+		subSymbol := a.symbolHasSubKey(oneSymbol, strKey, comParam, findExpList)
+		if subSymbol != nil {
+			lastSymbol = subSymbol
+			subFindFlag = true
+			break
 		}
+	}
 
-		// 判断这个的值是否为函数的返回。例如字符串为：func().a， 那么第一个值是函数返回，第二个值为否
-		funcFlag := false
-		if len(defineStruct.IsFuncVec) > i {
-			funcFlag = defineStruct.IsFuncVec[i]
-		}
-
-		var lastExp ast.Exp    // 最终查找关联到的表达式
-		var lastLuaFile = ""   // 最终查找关联到的表达式所在的文件
-		var varIndex uint8 = 1 // 多次申明变量时候，变量的index
-
-		strKey := defineStruct.StrVec[i+1]
-		if funcFlag {
-			// 是函数的查找
-			findFlag, subSymbol, exp, luaFile := a.getVarInfoFuncHasKey(lastSymbol, strKey, comParam, findExpList)
-			if findFlag == 0 {
-				// 没有找到
-				return nil
-			}
-
-			if findFlag == 1 {
-				// 找到了
-				lastSymbol = subSymbol
-				continue
-			}
-
-			// 需要继续关联表达式查找
-			lastExp = exp
-			lastLuaFile = luaFile
-			varIndex = 1
-		} else {
-			subSymbol := a.symbolHasSubKey(lastSymbol, strKey, comParam, findExpList)
-			if subSymbol != nil {
-				lastSymbol = subSymbol
-				continue
-			}
-
-			if lastSymbol.VarInfo == nil {
-				return nil
-			}
-
-			lastExp = lastSymbol.VarInfo.ReferExp
-			lastLuaFile = lastSymbol.FileName
-			varIndex = lastSymbol.VarInfo.VarIndex
-		}
-
-		// 没有找到，那么这个变量，它关联的上一层变量呢
-		// 递归进行查找
-		subFindFlag := false
-		tmpList := a.FindDeepSymbolList(lastLuaFile, lastExp, comParam, findExpList, false, varIndex)
-		for _, oneSymbol := range tmpList {
-			subSymbol := a.symbolHasSubKey(oneSymbol, strKey, comParam, findExpList)
-			if subSymbol != nil {
-				lastSymbol = subSymbol
-				subFindFlag = true
-				break
-			}
-		}
-
-		// 最终也是没有找到
-		if !subFindFlag {
-			return nil
-		}
+	// 最终也是没有找到
+	if !subFindFlag {
+		return nil
 	}
 
 	return lastSymbol
@@ -414,8 +381,8 @@ func (a *AllProject) getReferReferInfoSymbol(referFile *results.FileResult, refe
 			return symbol
 		}
 		return
-	} 
-	
+	}
+
 	if referSubType == common.RtypeRequire {
 		find, returnExp := referFile.MainFunc.GetLastOneReturnExp()
 		if !find {
@@ -677,6 +644,70 @@ func (a *AllProject) selfChangeStrName(luaInFile string, loc lexer.Location) (st
 	return firstColonFunc.RelateVar.StrName
 }
 
+// GetImportReferByCallExp 根据传人的exp，判断是否为导入的函数调用
+func (a *AllProject) getImportReferSymbol(luaInFile string, funcExp *ast.FuncCallExp,
+	comParam *CommonFuncParam, findExpList *[]common.FindExpFile) (symbol *common.Symbol) {
+	symbol = nil
+	fileStruct := a.getVailidCacheFileStruct(luaInFile)
+
+	if fileStruct == nil {
+		log.Error("FindVarDefine error, not find file=%s", luaInFile)
+		return nil
+	}
+
+	if funcExp.NameExp != nil {
+		return nil
+	}
+
+	callExp, ok := funcExp.PrefixExp.(*ast.NameExp)
+	if ok != true {
+		return nil
+	}
+
+	if !common.GConfig.ReferOtherFileMap[callExp.Name] {
+		return nil
+	}
+
+	if len(funcExp.Args) != 1 {
+		return nil
+	}
+
+	firstExp := funcExp.Args[0]
+	if _, flag := firstExp.(*ast.StringExp); !flag {
+		return nil
+	}
+
+	strFirst := firstExp.(*ast.StringExp).Str
+
+	oneRefer := common.CreateOneReferInfo(callExp.Name, strFirst, funcExp.Loc)
+	if oneRefer == nil {
+		return nil
+	}
+
+	// 先查找该引用是否有效
+	fileStruct.FileResult.CheckReferFile(oneRefer, a.allFilesMap)
+	if !oneRefer.Valid {
+		return nil
+	}
+
+	referFile := a.GetFirstReferFileResult(oneRefer)
+	if referFile == nil {
+		// 文件不存在
+		return nil
+	}
+
+	if oneRefer.ReferType == common.ReferTypeRequire {
+		find, returnExp := referFile.MainFunc.GetLastOneReturnExp()
+		if !find {
+			return nil
+		}
+
+		symbol = a.FindVarReferSymbol(referFile.Name, returnExp, comParam, findExpList, 1)
+	}
+
+	return symbol
+}
+
 // 根据table的调用，获取到对应的变量
 func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp, comParam *CommonFuncParam,
 	findExpList *[]common.FindExpFile, varIndex uint8) (symbol *common.Symbol) {
@@ -686,7 +717,9 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 		strName := nameExp.Name
 		// 这两个函数，在变量的referInfo里面已经存在了
 		if strName == "require" || common.GConfig.IsFrameReferOtherFile(strName) {
-			return nil
+			//return nil
+			 referSymbol := a.getImportReferSymbol(luaInFile, node, comParam, findExpList)
+			 return referSymbol
 		}
 
 		// 考虑是下面简单原表的调用
@@ -719,82 +752,41 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 		return matchVarFile
 	}
 
-	// 切分, 判断后面是否为简单的字符串
-	strList := strings.Split(strTable, ".")
-	for i := 1; i < len(strList); i++ {
-		strTmp := strList[i]
-		if !common.JudgeSimpleStr(strTmp) {
-			return nil
-		}
-	}
-
-	// 最后的为冒号的
-	keyLoc := common.GetExpLoc(node.PrefixExp)
-	if node.NameExp != nil {
-		strList = append(strList, node.NameExp.Str)
-	}
-
-	gGlag := false
-	if strList[0] == "!_G" {
-		gGlag = true
-		strList = strList[1:]
-	}
-	if len(strList) == 0 {
-		return nil
-	}
-
-	strOne := strList[0]
-	_, strOne = common.StrRemoveSigh(strOne)
-	if strOne == "self" {
-		strOne = a.selfChangeStrName(luaInFile, node.Loc)
-	}
-
-	var funcSymbol *common.Symbol
-
-	// 只有一个函数
-	// 递归向前去查找
-	funcSymbol = a.findStrReferSymbol(luaInFile, strOne, keyLoc, gGlag, comParam, findExpList)
-	// 第一次都没有，直接退出
-	if funcSymbol == nil {
+	// 递归查找，例如： uiButton.new():setX(10):setY(10)
+	// 修复 https://github.com/Tencent/LuaHelper/issues/42
+	beforeSymbol := a.FindVarReferSymbol(luaInFile, node.PrefixExp, comParam, findExpList, 1)
+	if beforeSymbol == nil {
 		return
 	}
-
-	// 统一处理，逐层查找，判断是否含义table的成员
-	// 长度为大于1，说明函数为成员函数
-	for i := 0; i < len(strList)-1; i++ {
-		strKey := strList[i+1]
-		// 第一次都没有，直接退出
-		if funcSymbol == nil {
-			return
-		}
-
-		varSubFile := a.symbolHasSubKey(funcSymbol, strKey, comParam, findExpList)
+	funcSymbol := beforeSymbol
+	if node.NameExp != nil {
+		strAfter := node.NameExp.Str
+		varSubFile := a.symbolHasSubKey(beforeSymbol, strAfter, comParam, findExpList)
 		if varSubFile != nil {
 			funcSymbol = varSubFile
-			continue
-		}
-
-		if funcSymbol.VarInfo == nil {
-			return
-		}
-
-		// 没有找到，那么这个变量，它关联的上一层变量呢
-		// 递归进行查找
-		exp := funcSymbol.VarInfo.ReferExp
-		subFindFlag := false
-		symList := a.FindDeepSymbolList(funcSymbol.FileName, exp, comParam, findExpList, false,
-			funcSymbol.VarInfo.VarIndex)
-		for _, oneSymbol := range symList {
-			varFileTmp := a.symbolHasSubKey(oneSymbol, strKey, comParam, findExpList)
-			if varFileTmp != nil {
-				funcSymbol = varFileTmp
-				subFindFlag = true
-				break
+		} else {
+			if beforeSymbol.VarInfo == nil {
+				return
 			}
-		}
 
-		if !subFindFlag {
-			return nil
+			// 没有找到，那么这个变量，它关联的上一层变量呢
+			// 递归进行查找
+			exp := beforeSymbol.VarInfo.ReferExp
+			subFindFlag := false
+			symList := a.FindDeepSymbolList(beforeSymbol.FileName, exp, comParam, findExpList, false,
+				beforeSymbol.VarInfo.VarIndex)
+			for _, oneSymbol := range symList {
+				varFileTmp := a.symbolHasSubKey(oneSymbol, strAfter, comParam, findExpList)
+				if varFileTmp != nil {
+					funcSymbol = varFileTmp
+					subFindFlag = true
+					break
+				}
+			}
+
+			if !subFindFlag {
+				return nil
+			}
 		}
 	}
 

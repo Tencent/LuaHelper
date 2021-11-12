@@ -487,6 +487,8 @@ func (g *GlobalConfig) handleNotJSONCheckFlag(checkFlagList []bool, ignoreFileOr
 			}
 		}
 	}
+
+	g.IgnoreVarMap = map[string]string{}
 }
 
 // HandleChangeCheckList 客户端的告警配置有改动
