@@ -399,18 +399,18 @@ func getComplelteStruct(str string, line, character int) (validFlag bool, comple
 }
 
 func judgeBeforeCommentHorizontal(contents []byte, offset int) bool {
-	beforeIndex := offset - 1
+	num := 0
 	for index := offset - 1; index >= 0; index-- {
 		ch := contents[index]
 		if ch == '-' {
-			beforeIndex = index
+			num = num + 1
 			continue
 		}
 
 		break
 	}
 
-	if  offset-beforeIndex == 1 || offset-beforeIndex == 2 || offset-beforeIndex == 3 {
+	if num == 1 || num == 2 || num == 3 {
 		return true
 	}
 
