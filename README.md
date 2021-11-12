@@ -70,9 +70,15 @@ Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其�
 
 
 ## Acknowledgements
+* [luago-books](https://github.com/zxh0/luago-book), Go language generates Lua's AST, modified the source code (adding column attributes to each node of the AST, and also optimizing performance).
+* [LuaFormatter](https://github.com/Koihik/LuaFormatter), Lua code formatting library written in c++, with high performance.
+* [LuaPanda](https://github.com/Tencent/LuaPanda), Integrating the debugging components of LuaPanda, LuaPanda author stuartwang also provided us with a lot of help.
+* [EmmyLua](https://github.com/EmmyLua), The author, Tang, provides a lot of help and suggestions for the implementation of our entire plug-in.
+---
+
 * [luago-books](https://github.com/zxh0/luago-book), go语言生成lua的AST，修改了源码（对AST的每个节点增加了列的属性，同时也优化了性能）。
 * [LuaFormatter](https://github.com/Koihik/LuaFormatter), c++写的Lua代码格式化库，性能较高。
-* [LuaPanda](https://github.com/Tencent/LuaPanda), 集成了LuaPanda的调试组件，LuaPanda的作者stuartwang也给我们提供了很多帮助。
+* [LuaPanda](https://github.com/Tencent/LuaPanda),集成了LuaPanda的调试组件，LuaPanda的作者stuartwang也给我们提供了很多帮助。
 * [EmmyLua](https://github.com/EmmyLua), 作者阿唐对我们整个插件的实现提供很多帮助和建议。
 
 
