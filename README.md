@@ -12,6 +12,7 @@ Compared with other Lua plugins currently on the market, it has the following **
 - [X] 5. Rich configurable items, including: multiple alarm information configurations, ignorable file settings 
 - [X] 6. Low memory consumption, low-performance machines can still run smoothly
 
+LuaHelper is a High-performance lua plugin, Language Server Protocol for lua.
 --------------------------------------------------------------------------------------------------------------------
 Lua因其语法简单、使用灵活，在游戏开发中十分流行。但其生态并不完善，IDE开发工具及配套支持较少，一定程度上影响了Lua的开发效率及质量。LuaHelper遵从微软Language Server Protocol协议，是采用go语言开发的一种跨平台Lua代码编辑及检测工具。
 
