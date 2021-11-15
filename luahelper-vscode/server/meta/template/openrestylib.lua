@@ -1,0 +1,245 @@
+---@class ngx @定义所有到ngx类
+---@field send_headers fun() @发送头部信息
+---@field print fun(...) @打印输出
+---@field STDERR number @错误输出类型
+---@field EMERG number @紧急的错误输出类型
+---@field ALERT number @告警错误输出类型
+---@field CRIT number @告警CRIT输出类型
+---@field ERR number @错误输出类型
+---@field WARN number @告警输出类型
+---@field NOTICE number @提示输出类型
+---@field INFO number @info输出类型
+---@field DEBUG number @调试输出类型
+---@field arg string[] @参数列表
+---@field __index any @--index信息
+---@field __newindex any @__newindex信息
+---@field HTTP_GET number @get宏，整型
+---@field HTTP_POST number @post宏，整型
+---@field HTTP_PUT number @HTTP_PUT宏，整型
+---@field NGX_HTTP_HEAD number @NGX_HTTP_HEAD宏，整型
+---@field HTTP_DELETE number @HTTP_DELETE宏，整型
+---@field HTTP_OPTIONS number @HTTP_OPTIONS宏，整型
+---@field HTTP_MKCOL number @HTTP_MKCOL宏，整型
+---@field HTTP_COPY number @HTTP_COPY宏，整型
+---@field HTTP_MOVE number @HTTP_MOVE宏，整型
+---@field HTTP_PROPFIND number @HTTP_PROPFIND宏，整型
+---@field HTTP_PROPPATCH number @HTTP_PROPPATCH宏，整型
+---@field HTTP_LOCK number @HTTP_LOCK宏，整型
+---@field HTTP_UNLOCK number @HTTP_UNLOCK宏，整型
+---@field HTTP_PATCH number @HTTP_PATCH宏，整型
+---@field HTTP_TRACE number @HTTP_TRACE宏，整型
+---@field HTTP_PATCH number @HTTP_PATCH宏，整型
+---@field HTTP_CONTINUE number @HTTP_CONTINUE宏，整型
+---@field HTTP_SWITCHING_PROTOCOLS number @HTTP_SWITCHING_PROTOCOLS宏，整型
+---@field HTTP_OK number @HTTP_OK宏，整型
+---@field HTTP_CREATED number @HTTP_CREATED宏，整型
+---@field HTTP_ACCEPTED number @HTTP_ACCEPTED宏，整型
+---@field HTTP_NO_CONTENT number @HTTP_NO_CONTENT宏，整型
+---@field HTTP_PARTIAL_CONTENT number @HTTP_PARTIAL_CONTENT宏，整型
+---@field HTTP_SPECIAL_RESPONSE number @HTTP_SPECIAL_RESPONSE宏，整型
+---@field HTTP_MOVED_PERMANENTLY number @HTTP_MOVED_PERMANENTLY宏，整型
+---@field HTTP_MOVED_TEMPORARILY number @HTTP_MOVED_TEMPORARILY宏，整型
+---@field HTTP_SEE_OTHER number @HTTP_SEE_OTHER宏，整型
+---@field HTTP_PERMANENT_REDIRECT number @HTTP_PERMANENT_REDIRECT宏，整型
+---@field HTTP_NOT_MODIFIED number @HTTP_NOT_MODIFIED宏，整型
+---@field HTTP_TEMPORARY_REDIRECT number @HTTP_TEMPORARY_REDIRECT宏，整型
+---@field HTTP_BAD_REQUEST number @HTTP_BAD_REQUEST宏，整型
+---@field HTTP_UNAUTHORIZED number @HTTP_UNAUTHORIZED宏，整型
+---@field HTTP_PAYMENT_REQUIRED number @HTTP_PAYMENT_REQUIRED宏，整型值402
+---@field HTTP_FORBIDDEN number @HTTP_FORBIDDEN宏，整型
+---@field HTTP_NOT_FOUND number @HTTP_NOT_FOUND宏，整型
+---@field HTTP_NOT_ALLOWED number @HTTP_NOT_ALLOWED宏，整型
+---@field HTTP_NOT_ACCEPTABLE number @HTTP_NOT_ACCEPTABLE宏，整型值406
+---@field HTTP_REQUEST_TIMEOUT number @HTTP_REQUEST_TIMEOUT宏，整型
+---@field HTTP_CONFLICT number @HTTP_CONFLICT宏，整型
+---@field HTTP_GONE number @HTTP_GONE宏，整型值410
+---@field HTTP_UPGRADE_REQUIRED number @HTTP_UPGRADE_REQUIRED宏，整型值410
+---@field HTTP_TOO_MANY_REQUESTS number @HTTP_TOO_MANY_REQUESTS宏，整型值429
+---@field HTTP_ILLEGAL number @HTTP_ILLEGAL宏，整型值451
+---@field HTTP_CLOSE number @HTTP_CLOSE宏，整型
+---@field HTTP_INTERNAL_SERVER_ERROR number @HTTP_INTERNAL_SERVER_ERROR宏，整型
+---@field HTTP_METHOD_NOT_IMPLEMENTED number @HTTP_METHOD_NOT_IMPLEMENTED宏，整型
+---@field HTTP_BAD_GATEWAY number @HTTP_BAD_GATEWAY宏，整型
+---@field HTTP_SERVICE_UNAVAILABLE number @HTTP_SERVICE_UNAVAILABLE宏，整型
+---@field HTTP_GATEWAY_TIMEOUT number @HTTP_GATEWAY_TIMEOUT宏，整型
+---@field HTTP_VERSION_NOT_SUPPORTED number @HTTP_VERSION_NOT_SUPPORTED宏，整型值505
+---@field HTTP_INSUFFICIENT_STORAGE number @HTTP_INSUFFICIENT_STORAGE宏，整型
+---@field OK number @OK宏，整型
+---@field AGAIN number @AGAIN宏，整型
+---@field DONE number @DONE宏，整型
+---@field DECLINED number @DECLINED宏，整型
+---@field ERROR number @ERROR宏，整型
+---@field null any @null类型
+---@field send_headers fun() @设置头部
+---@field flush fun(flag:boolean) @Flushes response output to the client.
+---@field eof fun() @Explicitly specify the end of the response output stream. In the case of HTTP 1.1 chunked encoded output, it will just trigger the Nginx core to send out the "last chunk".
+---@field encode_args fun(param1:table):string @Encode the Lua table to a query args string according to the URI encoded rules.
+---@field decode_args fun(data:string, max_args:number):table @Decodes a URI encoded query-string into a Lua table. This is the inverse function of ngx.encode_args.
+---@field encode_base64 fun(str:string, no_padding:boolean):string @Encodes str to a base64 digest.
+---@field decode_base64 fun(str:string):string @Decodes the str argument as a base64 digest to the raw form. Returns nil if str is not well formed.
+---@field crc32_short fun(str:string):number @Calculates the CRC-32 (Cyclic Redundancy Code) digest for the str argument.
+---@field crc32_long fun(str:string):number @Calculates the CRC-32 (Cyclic Redundancy Code) digest for the str argument.
+---@field md5 fun(str:string):string @Returns the hexadecimal representation of the MD5 digest of the str argument.
+---@field md5_bin fun(str:string):string @Returns the binary form of the MD5 digest of the str argument.
+---@field sha1_bin fun(str:string):string @Returns the binary form of the SHA-1 digest of the str argument.
+---@field today fun():string @Returns current date (in the format yyyy-mm-dd) from the Nginx cached time (no syscall involved unlike Lua's date library).
+---@field time fun():number @Returns the elapsed seconds from the epoch for the current time stamp from the Nginx cached time
+---@field now fun():number @Returns a floating-point number for the elapsed time in seconds (including milliseconds as the decimal part) from the epoch for the current time stamp from the Nginx cached time
+---@field update_time fun() @Forcibly updates the Nginx current time cache. This call involves a syscall and thus has some overhead, so do not abuse it.
+---@field localtime fun():string @Returns the current time stamp (in the format yyyy-mm-dd hh:mm:ss) of the Nginx cached time (no syscall involved unlike Lua's os.date function).
+---@field utctime fun():string @Returns the current time stamp (in the format yyyy-mm-dd hh:mm:ss) of the Nginx cached time (no syscall involved unlike Lua's os.date function).
+---@field cookie_time fun(sec:number):string @Returns a formatted string can be used as the cookie expiration time. The parameter sec is the time stamp in seconds (like those returned from ngx.time).
+---@field http_time fun(sec:number):string @Returns a formated string can be used as the http header time (for example, being used in Last-Modified header). The parameter sec is the time stamp in seconds (like those returned from ngx.time).
+---@field parse_http_time fun(str:string):number @Parse the http time string (as returned by ngx.http_time) into seconds. Returns the seconds or nil if the input string is in bad forms.
+---@field is_subrequest boolean @Returns true if the current request is an Nginx subrequest, or false otherwise.
+---@field quote_sql_str fun(raw_value:string):string @Returns a quoted SQL string literal according to the MySQL quoting rules
+---@field hmac_sha1 fun(secret_key:string, str:string):string @计算输入字符串 str 的 HMAC-SHA1 的摘要，并根据 secret_key 对结果进行转换
+---@field redirect fun(url:string, status:number) @
+---@field exec fun(url:string) @Does an internal redirect to uri with args and is similar to the echo_exec directive of the echo-nginx-module.
+---@field on_abort fun(fun1:function) @Registers a user Lua function as the callback which gets called automatically when the client closes the (downstream) connection prematurely.
+---@field sleep fun(seconds:number) @Sleeps for the specified seconds without blocking. One can specify time resolution up to 0.001 seconds (i.e., one millisecond).
+---@field escape_uri fun(str:string, type:number):string @
+---@field unescape_uri fun(str:string):string @Unescape str as an escaped URI component.
+---@field req ngx_req @ngx.req module
+---@field resp ngx_resp @ngx.resp module
+---@field shared table<string, ngx_one_share> @ngx.shared ,Shared memory zones are always shared by all the Nginx worker processes in the current Nginx server instance.
+---@field socket ngx_socket @ngx.socket
+---@field get_phase fun():string @Retrieves the current running phase name.
+---@field thread ngx_thead @ngx.thread module
+---@field timer ngx_timer @ngx.timer module
+---@field config ngx_config @ngx.config module
+---@field worker ngx_worker @ngx.worker module
+---@field re ngx_regex @ngx.re module
+---@field say fun(...):boolean, string @Just as ngx.print but also emit a trailing newline.
+---@field log fun(log_level:number, ...) @Log arguments concatenated to error.log with the given logging level.
+---@field headers_sent boolean @Returns true if the response headers have been sent (by ngx_lua), and false otherwise.
+---@field exit fun(status:number) @The status argument can be ngx.OK, ngx.ERROR, ngx.HTTP_NOT_FOUND, ngx.HTTP_MOVED_TEMPORARILY, or other HTTP status constants.
+---@field ctx table @This table can be used to store per-request Lua context data and has a life time identical to the current request (as with the Nginx variables).
+---@field status number @Read and write the current request's response status. This should be called before sending out the response headers.
+
+
+---@class ngx_req @ngx.req module
+---@field get_method fun():string @Retrieves the current request's request method name. Strings like "GET" and "POST" are returned instead of numerical method constants.
+---@field set_method fun(mothod_id:number) @Overrides the current request's request method with the method_id argument. Currently only numerical method constants are supported, like ngx.HTTP_POST and ngx.HTTP_GET.
+---@field http_version fun():number @Returns the HTTP version number for the current request as a Lua number.
+---@field raw_header fun(no_request_line:boolean):string @Returns the original raw HTTP protocol header received by the Nginx server.
+---@field set_header fun(header_name:string, header_value:any) @Set the current request's request header named header_name to value header_value, overriding any existing ones.
+---@field set_uri fun(uri:string, jump:boolean) @Rewrite the current request's (parsed) URI by the uri argument. The uri argument must be a Lua string and cannot be of zero length, or a Lua exception will be thrown.
+---@field set_uri_args fun(args:string|table) @Rewrite the current request's URI query arguments by the args argument. The args argument can be either a Lua string,
+---@field get_post_args fun(max_args:number):table, string @Returns a Lua table holding all the current request POST query arguments (of the MIME type application/x-www-form-urlencoded). Call ngx.req.read_body to read the request body first or turn on the lua_need_request_body directive to avoid errors.
+---@field socket fun():function @获取对应的socket 
+---@field is_internal fun():boolean @判断当前请求是否是"内部请求"
+---@field read_body fun() @准备读取body
+---@field discard_body fun() @discard the request body
+---@field get_body_data fun() @get body dta
+---@field get_body_file fun():string @get body fle name
+---@field set_body_data fun(data:string) @set body data
+---@field set_body_file fun(file_name:string, auto_clean:boolean) @set body file name
+---@field init_body fun(buffer_size:number) @init body buffer buffer_size
+---@field append_body fun(data:string) @append body data
+---@field finish_body fun() @finish body
+---@field start_time fun():number @Returns a floating-point number representing the timestamp (including milliseconds as the decimal part) when the current request was created.
+---@field get_uri_args fun(max_args:number):table, string @Returns a Lua table holding all the current request URL query arguments.
+---@field get_headers fun(max_headers:number, raw:string):table,string @Returns a Lua table holding all the current request headers.
+---@field clear_header fun(header_name:string) @Clears the current request's request header named header_name. None of the current request's existing subrequests will be affected but subsequently initiated subrequests will inherit the change by default.
+
+---@class ngx_resp @ngx.resp的类型
+---@field get_headers fun():table, string @get resp headers data
+
+---@class ngx_one_share @ngx one share
+---@field get :fun(key:string):string, string @Retrieving the value in the dictionary ngx.shared.DICT for the key key
+---@field get_stale :fun(key:string):string, string,boolean @Similar to the get method but returns the value even if the key has already expired
+---@field set :fun(key:string, value:string, exptime:number, flags:boolean):boolean, string, boolean @Unconditionally sets a key-value pair into the shm-based dictionary
+---@field safe_set :fun(key:string, value:string, exptime:number, flags:boolean):boolean, string @Similar to the set method, but never overrides the (least recently used) unexpired items in the store when running out of storage in the shared memory zone.
+---@field add :fun(key:string, value:string, exptime:number, flags:boolean):boolean, string,boolean @Just like the set method, but only stores the key-value pair into the dictionary ngx.shared.DICT if the key does not exist.
+---@field safe_add :fun(key:string, value:string, exptime:number, flags:boolean):boolean, string @Similar to the add method, but never overrides the (least recently used) unexpired items in the store when running out of storage in the shared memory zone.
+---@field replace :fun(key:string, value:string, exptime:number, flags:boolean):boolean, string,boolean @Just like the set method, but only stores the key-value pair into the dictionary ngx.shared.DICT if the key does exist.
+---@field delete :fun(key:string):boolean,string @Unconditionally removes the key-value pair from the shm-based dictionary
+---@field incr :fun(key:string, value:string, init:number, init_ttl:number):number,string @Increments the (numerical) value for key in the shm-based dictionary ngx.shared.DICT by the step value value. Returns the new resulting number if the operation is successfully completed or nil and an error message otherwise.
+---@field lpush :fun(key:string, value:string) :number, string @Inserts the specified (numerical or string) value at the head of the list named key in the shm-based dictionary ngx.shared.DICT. Returns the number of elements in the list after the push operation.
+---@field rpush: fun(key:string, value:string):number, string @Similar to the lpush method, but inserts the specified (numerical or string) value at the tail of the list named key.
+---@field lpop:fun(key:string):string, string @Removes and returns the first element of the list named key in the shm-based dictionary ngx.shared.DICT.
+---@field rpop:fun(key:string):string, string @Removes and returns the last element of the list named key in the shm-based dictionary ngx.shared.DICT.
+---@field llen:fun(key:string):number,string @Returns the number of elements in the list named key in the shm-based dictionary ngx.shared.DICT.
+---@field ttl:fun(key:string):number,string @Retrieves the remaining TTL (time-to-live in seconds) of a key-value pair in the shm-based dictionary ngx.shared.DICT.
+---@field expire:fun(key:string, exptime:number):boolean,string @Updates the exptime (in second) of a key-value pair in the shm-based dictionary ngx.shared.DICT. Returns a boolean indicating success if the operation completes or nil and an error message otherwise.
+---@field flush_all:fun():boolean,string @Flushes out all the items in the dictionary. This method does not actually free up all the memory blocks in the dictionary but just marks all the existing items as expired.
+---@field flush_expired:fun(max_count:number):number @Flushes out the expired items in the dictionary, up to the maximal number specified by the optional max_count argument. When the max_count argument is given 0 or not given at all, then it means unlimited. Returns the number of items that have actually been flushed.
+---@field get_keys:fun(max_count:number):string[] @Fetch a list of the keys from the dictionary, up to <max_count>.
+---@field capacity:fun():number @Retrieves the capacity in bytes for the shm-based dictionary ngx.shared.DICT declared with the lua_shared_dict directive.
+---@field free_space:fun():number @Retrieves the free page size in bytes for the shm-based dictionary ngx.shared.DICT.
+---@field safe_set:fun(key:string, value:string, exptime:number, flags:boolean):boolean, string @Similar to the set method, but never overrides the (least recently used) unexpired items in the store when running out of storage in the shared memory zone. In this case, it will immediately return nil and the string "no memory".
+
+---@class ngx_socket @ngx.socket
+---@field udp:fun():ngx_udp @Creates and returns a UDP or datagram-oriented unix domain socket object (also known as one type of the "cosocket" objects)
+---@field tcp fun():ngx_tcp @Creates and returns a TCP or stream-oriented unix domain socket object (also known as one type of the "cosocket" objects)
+---@field stream fun():ngx_tcp @Just an alias to ngx.socket.tcp. If the stream-typed cosocket may also connect to a unix domain socket, then this API name is preferred.
+---@field connect fun(host:string, port:number):ngx_tcp, string @get one tcp
+
+---@class ngx_udp @ngx.socket.udp
+---@field setpeername :fun(host:string, port:number):boolean, string @Attempts to connect a UDP socket object to a remote server or to a datagram unix domain socket file. Because the datagram protocol is actually connection-less, this method does not really establish a "connection", but only just set the name of the remote peer for subsequent read/write operations
+---@field send:fun(data:string):boolean, string @Sends data on the current UDP or datagram unix domain socket object.
+---@field receive:fun(size:number):string,string @Receives data from the UDP or datagram unix domain socket object with an optional receive buffer size argument, size.
+---@field cloase:fun():boolean,string @Closes the current UDP or datagram unix domain socket. It returns the 1 in case of success and returns nil with a string describing the error otherwise.
+---@field settimeout :fun(time:number):boolean @Set the timeout value in milliseconds for subsequent socket operations (like receive).
+
+
+---@class ngx_tcp @ngx.socket.tcp
+---@field connect :fun(host:string, port:number, options_table:any):boolean,string @Attempts to connect a TCP socket object to a remote server or to a stream unix domain socket file without blocking.
+---@field send:fun(data:string):number,string @Sends data without blocking on the current TCP or Unix Domain Socket connection.
+---@field receive:fun(size:number):string,string @Receives data from the connected socket according to the reading pattern or size.
+---@field receiveany:fun(max:number):string, string @Returns any data received by the connected socket, at most max bytes.
+---@field receiveuntil:fun(pattern:string):fun() @This method returns an iterator Lua function that can be called to read the data stream until it sees the specified pattern or an error occurs.
+---@field close:fun():boolean,string @Closes the current TCP or stream unix domain socket. It returns the 1 in case of success and returns nil with a string describing the error otherwise.
+---@field settimeout:fun(time:number):boolean,string @Set the timeout value in milliseconds for subsequent socket operations (connect, receive, and iterators returned from receiveuntil).
+---@field settimeouts:fun(connect_timeout:number, send_timeout:number, read_timeout:number):boolean,string @Respectively sets the connect, send, and read timeout thresholds (in milliseconds) for subsequent socket operations (connect, send, receive, and iterators returned from receiveuntil).
+---@field setoption:fun(option:string, value:any):boolean,string @The option is a string with the option name, and the value depends on the option
+---@field setkeepalive:fun(timeout:number, size:number):boolean,string @Puts the current socket's connection immediately into the cosocket built-in connection pool and keep it alive until other connect method calls request it or the associated maximal idle timeout is expired.
+---@field getreusedtimes:fun():number, string @This method returns the (successfully) reused times for the current connection. In case of error, it returns nil and a string describing the error.
+
+
+---@class ngx_thead @ngx.thread
+---@field spawn fun(function, arg1:any, arg2:any, ...):any @Spawns a new user "light thread" with the Lua function func as well as those optional arguments arg1, arg2, and etc. Returns a Lua thread (or Lua coroutine) object represents this "light thread".
+---@field wait fun(thread1:any, thread2:any, ...) @Waits on one or more child "light threads" and returns the results of the first "light thread" that terminates (either successfully or with an error).
+---@field kill fun(thread:any):boolean, string @Kills a running "light thread" created by ngx.thread.spawn. Returns a true value when successful or nil and a string describing the error otherwise.
+
+---@class ngx_timer @ngx.timer
+---@field at fun(delay:number, callback:function, user_arg1, user_arg2, ...):boolean,string @Creates an Nginx timer with a user callback function as well as optional user arguments.
+---@field every fun(delay:number, callback:function, user_arg1, user_arg2, ...):boolean,string  @timer will be created every delay seconds until the current Nginx worker process starts exiting.
+---@field running_count fun():number @Returns the number of timers currently running.
+---@field pending_count fun():number @Returns the number of pending timers.
+
+
+---@class ngx_config @ngx.config
+---@field subsystem string @This string field indicates the Nginx subsystem the current Lua environment is based on
+---@field debug boolean @This boolean field indicates whether the current Nginx is a debug build, i.e., being built by the ./configure option --with-debug.
+---@field prefix fun():string @Returns the Nginx server "prefix" path, as determined by the -p command-line option when running the Nginx executable, or the path specified by the --prefix command-line option when building Nginx with the ./configure script.
+---@field nginx_version number @This field take an integral value indicating the version number of the current Nginx core being used. For example, the version number 1.4.3 results in the Lua number 1004003.
+---@field nginx_configure string @This function returns a string for the Nginx ./configure command's arguments string.
+---@field ngx_lua_version number @This field take an integral value indicating the version number of the current ngx_lua module being used. For example, the version number 0.9.3 results in the Lua number 9003.
+
+
+---@class ngx_worker @ngx.worker module
+---@field exiting fun():boolean @This function returns a boolean value indicating whether the current Nginx worker process already starts exiting. Nginx worker process exiting happens on Nginx server quit or configuration reload (aka HUP reload).
+---@field pid fun():number @This function returns a Lua number for the process ID (PID) of the current Nginx worker process. 
+---@field count fun():number @Returns the total number of the Nginx worker processes (i.e., the value configured by the worker_processes directive in nginx.conf).
+---@field id fun():number @Returns the ordinal number of the current Nginx worker processes (starting from number 0).
+
+
+---@class ngx_regex @ngx.regex module
+---@field match fun(subject:string, regex:string, ctx, res_table):string[], string @Matches the subject string using the Perl compatible regular expression regex with the optional options.
+---@field find fun(subject:string, regex:string, options:string, ctx, nth):string,string,string @Similar to ngx.re.match but only returns the beginning index (from) and end index (to) of the matched substring. The returned indexes are 1-based and can be fed directly into the string.sub API function to obtain the matched substring.
+---@field gmatch fun(subject:string, regex:string, options:string):any, string @Similar to ngx.re.match, but returns a Lua iterator instead, so as to let the user programmer iterate all the matches over the <subject> string argument with the PCRE regex.
+---@field sub fun(subject:string, regex:string, replace:string, options:string):string, number, string @Substitutes the first match of the Perl compatible regular expression regex on the subject argument string with the string or function argument replace. The optional options argument has exactly the same meaning as in ngx.re.match.
+---@field gsub fun(subject:string, regex:string, replace:string, options:string):string, number, string @Just like ngx.re.sub, but does global substitution.
+
+
+---@type ngx
+_G.ngx = {}
+
+
+---@class env @定义evn全局类型
+---@field get_env fun(api:string) : string @获取api到环境
+
+---@type env
+_G.env = {}
