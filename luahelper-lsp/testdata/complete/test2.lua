@@ -2,7 +2,7 @@
 local uiButton = class('uiButton')
 
 ---@return uiButton
-function uiButton.new()
+function uiButton:new()
     return self
 end
 

@@ -614,7 +614,7 @@ func (a *AllProject) getBindAnnotateSetType(luaInFile string, strFuncName string
 }
 
 func (a *AllProject) selfChangeStrName(luaInFile string, loc lexer.Location) (strName string) {
-	strName = luaInFile
+	strName = ""
 
 	// 1）先查找该文件是否存在
 	fileStruct := a.getVailidCacheFileStruct(luaInFile)
@@ -623,7 +623,7 @@ func (a *AllProject) selfChangeStrName(luaInFile string, loc lexer.Location) (st
 		return
 	}
 
-	minScope, minFunc := fileStruct.FileResult.FindASTNode(loc.StartLine, loc.StartColumn)
+	minScope, minFunc := fileStruct.FileResult.FindASTNode(loc.StartLine - 1, loc.StartColumn)
 	if minScope == nil || minFunc == nil {
 		log.Error("FindVarDefine error, minScope or minFunc is nil file=%s", luaInFile)
 		return
@@ -732,9 +732,16 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 
 	strTable := common.GetExpName(node.PrefixExp)
 	_, tableSigh := common.StrRemoveSigh(strTable)
+	keyLoc := common.GetExpLoc(node.PrefixExp)
 
+	selfFlag := false
 	if tableSigh == "self" {
 		tableSigh = a.selfChangeStrName(luaInFile, node.Loc)
+		if tableSigh == "" {
+			tableSigh = "self"
+		} else {
+			selfFlag = true
+		}
 	}
 
 	strFuncName := ""
@@ -752,9 +759,15 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 		return matchVarFile
 	}
 
-	// 递归查找，例如： uiButton.new():setX(10):setY(10)
-	// 修复 https://github.com/Tencent/LuaHelper/issues/42
-	beforeSymbol := a.FindVarReferSymbol(luaInFile, node.PrefixExp, comParam, findExpList, 1)
+	var beforeSymbol *common.Symbol
+	if selfFlag {
+		beforeSymbol = a.findStrReferSymbol(luaInFile, tableSigh, keyLoc, false, comParam, findExpList)
+	} else {
+		// 递归查找，例如： uiButton.new():setX(10):setY(10)
+		// 修复 https://github.com/Tencent/LuaHelper/issues/42
+		beforeSymbol = a.FindVarReferSymbol(luaInFile, node.PrefixExp, comParam, findExpList, 1)
+	}
+	
 	if beforeSymbol == nil {
 		return
 	}
