@@ -1,5 +1,5 @@
 
-# Lua Helper Guide
+# LuaHelper Guide
 
 [![version](https://vsmarketplacebadge.apphb.com/version-short/yinfei.luahelper.svg)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
 [![rating](https://vsmarketplacebadge.apphb.com/rating-short/yinfei.luahelper.svg)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)

@@ -1,8 +1,8 @@
 {
     "name": "luahelper",
     "displayName": "Lua",
-    "description": "Intellisense, Linting, Debugging, Code formatting, High-performance, and more.",
-    "version": "0.2.2",
+    "description": "LuaHelper, Intellisense, Linting, Debugging, Code formatting, High-performance, and more.",
+    "version": "0.2.3",
     "publisher": "yinfei",
     "author": {
         "name": "yinfei",

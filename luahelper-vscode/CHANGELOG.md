@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.3 (Nov 16, 2021)
++ 修复外网Issues46 https://github.com/Tencent/LuaHelper/issues/46
++ 修复外网Issues47 https://github.com/Tencent/LuaHelper/issues/47
++ 修复了textDocument/documentSymbol 显示函数位置信息不准确的bug
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+  
 ## 0.2.2 (Nov 12, 2021)
 + 修复外网Issues42 https://github.com/Tencent/LuaHelper/issues/42
 + 修复外网Issues44 https://github.com/Tencent/LuaHelper/issues/44
