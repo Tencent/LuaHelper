@@ -478,6 +478,7 @@ func (f *FileResult) FindAllSymbol() (symbolVec []common.FileSymbolStruct) {
 
 		// 若是函数
 		if oneVar.ReferFunc != nil {
+			oneSymbol.Loc = oneVar.ReferFunc.Loc
 			oneSymbol.Kind = 2
 			paramStr := ""
 			// oneSymbol.Children = oneVar.ReferFunc.MainScope.FindAllLocalVal(nil)
@@ -524,6 +525,7 @@ func (f *FileResult) FindAllSymbol() (symbolVec []common.FileSymbolStruct) {
 				oneSymbol.Name = strProPre + "." + strVar
 				if oneVar.ReferFunc != nil {
 					oneSymbol.Kind = common.IKFunction
+					oneSymbol.Loc = oneVar.ReferFunc.Loc
 					paramStr := ""
 					// oneSymbol.Children = oneVar.ReferFunc.MainScope.FindAllLocalVal(nil)
 					for _, param := range oneVar.ReferFunc.ParamList {

@@ -403,6 +403,7 @@ func (varInfo *VarInfo) FindAllVar(strName string, preStrName string) (symbolStr
 
 	if varInfo.ReferFunc != nil {
 		symbolStruct.Kind = IKFunction
+		symbolStruct.Loc = varInfo.ReferFunc.Loc
 		paramStr := ""
 		// symbolStruct.Children = varInfo.ReferFunc.MainScope.FindAllLocalVal(nil)
 		for _, param := range varInfo.ReferFunc.ParamList {

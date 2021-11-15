@@ -388,6 +388,7 @@ func (scope *ScopeInfo) FindAllLocalVal(gScopes []*ScopeInfo) (allSymbolStruct [
 
 		if oneLocInfo.ReferFunc != nil {
 			oneSymbol.Kind = IKFunction
+			oneSymbol.Loc = oneLocInfo.ReferFunc.Loc
 			curChirenScope := oneLocInfo.ReferFunc.MainScope
 			paramStr := ""
 			for _, param := range oneLocInfo.ReferFunc.ParamList {
