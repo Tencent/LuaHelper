@@ -4,9 +4,13 @@ import "testing"
 
 func TestParseConst(t *testing.T) {
 	parser := CreateParser([]byte("local a<const> = 1"), "test")
-	_, _, err := parser.BeginAnalyze()
+	block, _, err := parser.BeginAnalyze()
 	if err != nil {
 		t.Fatalf("parser const fatal, errstr=%s", err.Error())
+	}
+
+	if block == nil {
+		t.Logf("is nil")
 	}
 
 	parser1 := CreateParser([]byte("local a<consts> = 1"), "test")
