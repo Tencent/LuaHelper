@@ -14,6 +14,9 @@ export class LuaPath {
         // windows平台特殊处理
         let path = require("path");
         let pathArr = strPath.split(path.sep);
+        strPath = pathArr.join('/');
+        pathArr = strPath.split("/");
+      
         for (var i = 1; i < pathArr.length - 1; i++) {
             if (pathArr[i].indexOf(" ") > 0) {
                 pathArr[i] = "\"" + pathArr[i] + "\"";
@@ -145,7 +148,8 @@ export class LuaPath {
             }
         }
 
-        strVect[1] = this.getLuaCPathStr(vSCodeExtensionPath, strVer);
+        let newVSCodeExtensionPath: string = this.getSetLuaPath(vSCodeExtensionPath);
+        strVect[1] = this.getLuaCPathStr(newVSCodeExtensionPath, strVer);
 
         return strVect;
     }
