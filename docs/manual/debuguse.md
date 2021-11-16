@@ -13,7 +13,7 @@
 #### 2.1 在VSCode 设置setting.json内容
  打开setting.json的方式：
  
-  ![avatar](https://https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/Proxys.gif)
+  ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/Proxys.gif)
   
  填写go的环境，还需要设置代理(方便安装go的一些扩展工具)，下面是我的一些设置:
  
@@ -30,7 +30,7 @@
 #### 2.2 VSCode安装go的插件
  在插件市场搜索Go，安装排名第一的插件即可
 
- ![avatar](https://https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/go.png)
+ ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/go.png)
  
 #### 2.3 VSCode打开luahelper-lsp目录，按F5调试即可
 
