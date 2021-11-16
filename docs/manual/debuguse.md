@@ -13,7 +13,7 @@
 #### 2.1 在VSCode 设置setting.json内容
  打开setting.json的方式：
  
-  ![avatar](https://https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/Proxys.gif)
+  ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/Proxys.gif)
   
  填写go的环境，还需要设置代理(方便安装go的一些扩展工具)，下面是我的一些设置:
  
@@ -30,13 +30,13 @@
 #### 2.2 VSCode安装go的插件
  在插件市场搜索Go，安装排名第一的插件即可
 
- ![avatar](https://https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/go.png)
+ ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/go.png)
  
 #### 2.3 VSCode打开luahelper-lsp目录，按F5调试即可
 
 #### 2.4 设置插件前端连接Go后端
 插件前端与插件后端协议的格式Json RPC，如下图所示
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/running.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/running.png)
 
 插件前端连接后端有两种方式：
 * a) 通过管道的方式，插件前端直接拉取后端exe程序
@@ -45,7 +45,7 @@
 为了使插件前端通过socket连接的后端，前端插件的设置如下：
 （选设置-》Lua Helper—》 Project:Lsp (勾选socket rpc)
 
- ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/socket.png)
+ ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/socket.png)
  
  
  #### 2.5 VSCode重新打开Lua工程

@@ -135,7 +135,7 @@ a = a and false   -- and表达式右边包含false，表达式结果始终为fal
 由于Lua需要调用到C或是其他语言导入的符号，这些导入的符号是未定义的，因此需要忽略这些符号的告警。有时，也需要屏蔽分析的文件夹或文件，忽略指定的文件的告警等，这些都需要特定的配置文件。
 
 配置文件的名字是固定的：luahelper.json，在vscode工程目录下。这样有利于一个项目组共用一份相同的配置文件，配置文件也放在项目的git或是svn管理。
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/json.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/json.png)
 
 配置文件的格式是json的，文件名为：luahelper.json，完整的配置格式如下：
 ```json
