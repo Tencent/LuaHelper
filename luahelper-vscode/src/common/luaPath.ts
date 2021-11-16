@@ -126,7 +126,8 @@ export class LuaPath {
             let luaVersionStr = this.getLuaBinVersion("lua -v");
             if (luaVersionStr === "") {
                 // 没有找到默认的lua二进制，利用插件自带的二进制版本
-                strVect[0] = this.getLuaExePathStr(vSCodeExtensionPath, "5.4");
+                let newVSCodeExtensionPath: string = this.getSetLuaPath(vSCodeExtensionPath);
+                strVect[0] = this.getLuaExePathStr(newVSCodeExtensionPath, "5.4");
                 strVer = "5.4";
             } else {
                 //  找到了默认的lua 二进制
@@ -139,7 +140,8 @@ export class LuaPath {
             let luaVersionStr = this.getLuaBinVersion(strNewPath + " -v");
             if (luaVersionStr === "") {
                 // 没有找到默认的lua二进制，利用插件自带的二进制版本
-                strVect[0] = this.getLuaExePathStr(vSCodeExtensionPath, "5.4");
+                let newVSCodeExtensionPath: string = this.getSetLuaPath(vSCodeExtensionPath);
+                strVect[0] = this.getLuaExePathStr(newVSCodeExtensionPath, "5.4");
                 strVer = "5.4";
             } else {
                 //  找到
@@ -148,8 +150,8 @@ export class LuaPath {
             }
         }
 
-        let newVSCodeExtensionPath: string = this.getSetLuaPath(vSCodeExtensionPath);
-        strVect[1] = this.getLuaCPathStr(newVSCodeExtensionPath, strVer);
+        //let newVSCodeExtensionPath: string = this.getSetLuaPath(vSCodeExtensionPath);
+        strVect[1] = this.getLuaCPathStr(vSCodeExtensionPath, strVer);
 
         return strVect;
     }
