@@ -4,26 +4,26 @@
 ### 1.1 生成调试配置
 点击VSCode调试状态栏，若没有创建过launch.json文件，主动创建launch.json，在弹出框中选择LuaHelper：debug。会自动生成对应的LuaHelper调试配置文件launch.json。
 
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/debug/launch.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/launch.png)
 
 
 生成的调试配置文件launch.json里面包含了两种调试方式：
 * LuaHelper-Attach：通过attach的方式调试其他的执行进程。
 * LuaHelper-DebugFile：表示调试和运行单个lua文件。
 
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/debug/debugways.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/debugways.png)
 
 ### 1.2 添加调试配置
 点击VSCode调试状态栏，已经创建过lanuch.json文件，但是调试的方式不包括LuaHelper-Attach和LuaHelper-DebugFile，需要快捷添加调试配置。
 快捷添加的方式：点击Add Configuration按钮，快捷输入LuaHelper，选择LuaHelper-Attach和LuaHelper-DebugFile。
 
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/debug/debugsetting.gif)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/debugsetting.gif)
 
 
 ### 1.3 调试项说明
 launch.json 配置项中要修改的主要是luaFileExtension, 改成lua文件使用的后缀就行（比如xlua框架改为lua.txt, slua框架改为txt）。
 
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/debug/debugsuffix.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/debugsuffix.png)
 
 ## 2引入LuaPanda.lua文件
 调试需要引入LuaPanda.lua与前端VScode Lua工程进行socket通信，且LuaHelper.lua会直接引入luasocket网络库。目前lua框架： slua, slua-unreal, xlua 都已集成 luasocket网络库。
@@ -36,7 +36,7 @@ launch.json 配置项中要修改的主要是luaFileExtension, 改成lua文件�
 **打开快捷方式:**</br>
 快捷键:ctrl + shift + p, 然后输入LuaHelper，会提示下面列的快捷命令：
 
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/debug/shortcutcmd.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/shortcutcmd.png)
 
 + LuaHelper: Open Debug Foder，表示打开插件自带的关键目录（里面包含LuaPanda.lua和luasocket库）。</br>
 + LuaHelper: Copy debug file to workspace, 表示把LuaPanda.lua文件拷贝到项目中指定的目录，需要手动指定目标目录。</br>
@@ -50,7 +50,7 @@ launch.json 配置项中要修改的主要是luaFileExtension, 改成lua文件�
 * VSCode前端工程按F5启动调试，等待运行lua代码的进行通过引入LuaPanda.lua文件连接上。
 * Lua代码工程进程开始运行，连接VSCode前端工程。
 
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/debug/begindebug.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/begindebug.png)
 s
 ## 4各种框架下使用调试
 ### slua框架调试
