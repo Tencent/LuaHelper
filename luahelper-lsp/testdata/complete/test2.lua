@@ -45,4 +45,7 @@ local btn7 = setYa().setX();
 function uiButton:setY1(y)
     local btn8 = self:setX()
     local btn9 = self:setY()
+       
 end
+           
+           

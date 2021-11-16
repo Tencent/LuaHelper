@@ -382,6 +382,235 @@ func TestComplete2(t *testing.T) {
 		testCompleteList = append(testCompleteList, oneComplete)
 	}
 
+	// 15)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      47,
+				Character: 4,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn8."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY", "x_", "y_"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 16)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      47,
+				Character: 4,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn8:"
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 17)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn6."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY", "x_", "y_"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 18)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn6:"
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 19)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn3."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY", "x_", "y_"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 20)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn3:"
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 21)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn4."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY", "x_", "y_"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 22)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn4:"
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 23)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn1."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY", "x_", "y_"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 24)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn1:"
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	
+	// 25)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn7."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY", "x_", "y_"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 26)
+	{
+		var oneComplete TestCompleteInfo
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      50,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "btn7:"
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"new", "setX", "setY"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
 	for index, oneComplete := range testCompleteList {
 		openParams := lsp.DidOpenTextDocumentParams{
 			TextDocument: lsp.TextDocumentItem{
