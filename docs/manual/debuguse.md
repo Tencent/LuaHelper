@@ -30,7 +30,7 @@
 #### 2.2 VSCode安装go的插件
  在插件市场搜索Go，安装排名第一的插件即可
 
- ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/go.png)
+ ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/go.png)
  
 #### 2.3 VSCode打开luahelper-lsp目录，按F5调试即可
 
@@ -45,7 +45,7 @@
 为了使插件前端通过socket连接的后端，前端插件的设置如下：
 （选设置-》Lua Helper—》 Project:Lsp (勾选socket rpc)
 
- ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/socket.png)
+ ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/debug/socket.png)
  
  
  #### 2.5 VSCode重新打开Lua工程
