@@ -38,10 +38,12 @@
 
 ### Format Code/代码格式化 <a id="FormatCode"></a>
 **支持代码格式化**
+
 ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/Format.gif)
 
 ### Hover/代码悬停 <a id="Hover"></a>
 **支持代码悬停提示**
+
 ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/Hover.gif)
 
 ### Hightlight Global Var/全局变量着色 <a id="HightlightGlobalVar"></a>
