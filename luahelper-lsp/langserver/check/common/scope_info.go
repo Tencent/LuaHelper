@@ -411,6 +411,10 @@ func (scope *ScopeInfo) FindAllLocalVal(gScopes []*ScopeInfo) (allSymbolStruct [
 				continue
 			}
 
+			var maxLoc lexer.Location
+			maxLoc.EndLine = oneSymbol.Loc.EndLine
+			maxLoc.EndColumn = oneSymbol.Loc.EndColumn
+
 			// 若当前变量为 表结构，则分析它的子结构
 			for strName, varInfo := range oneLocInfo.SubMaps {
 				subOneSymbol := varInfo.FindAllVar(strName, strVar)
@@ -421,10 +425,20 @@ func (scope *ScopeInfo) FindAllLocalVal(gScopes []*ScopeInfo) (allSymbolStruct [
 					oneSymbol.Children = append(oneSymbol.Children, subOneSymbol)
 				}
 
+				if subOneSymbol.Loc.EndLine > maxLoc.EndLine {
+					maxLoc.EndLine = subOneSymbol.Loc.EndLine
+					maxLoc.EndColumn = subOneSymbol.Loc.EndColumn
+				} else if subOneSymbol.Loc.EndLine == maxLoc.EndLine && subOneSymbol.Loc.EndColumn > maxLoc.EndColumn {
+					maxLoc.EndColumn = subOneSymbol.Loc.EndColumn
+				}
+
 				if varInfo.ReferFunc != nil && varInfo.ReferFunc.MainScope != nil {
 					delete(scopeInfos, varInfo.ReferFunc.MainScope)
 				}
 			}
+
+			oneSymbol.Loc.EndLine = maxLoc.EndLine
+			oneSymbol.Loc.StartColumn = maxLoc.EndColumn
 		}
 
 		allSymbolStruct = append(allSymbolStruct, oneSymbol)

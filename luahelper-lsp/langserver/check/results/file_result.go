@@ -396,7 +396,7 @@ func (f *FileResult) isReferFileContainFiles(needReferFileMap map[string]struct{
 // allFilesMap map[string]bool 为所有加载的文件列表
 func (f *FileResult) ReanalyseReferInfo(needReferFileMap map[string]struct{}, allFilesMap map[string]struct{}) {
 	// 1) 首先判断是否有包含改动的引用关系
-	if !f.isHasErrorNoFile() && ! f.isReferFileContainFiles(needReferFileMap){
+	if !f.isHasErrorNoFile() && !f.isReferFileContainFiles(needReferFileMap) {
 		return
 	}
 
@@ -498,6 +498,10 @@ func (f *FileResult) FindAllSymbol() (symbolVec []common.FileSymbolStruct) {
 				continue
 			}
 
+			var maxLoc lexer.Location
+			maxLoc.EndLine = oneSymbol.Loc.EndLine
+			maxLoc.EndColumn = oneSymbol.Loc.EndColumn
+
 			for strName, varInfo := range oneVar.SubMaps {
 				subOneSymbol := varInfo.FindAllVar(strName, strVar)
 				if oneSymbol.Children == nil {
@@ -505,12 +509,24 @@ func (f *FileResult) FindAllSymbol() (symbolVec []common.FileSymbolStruct) {
 				}
 				if subOneSymbol.Name != "" {
 					oneSymbol.Children = append(oneSymbol.Children, subOneSymbol)
+
+					if subOneSymbol.Loc.EndLine > maxLoc.EndLine {
+						maxLoc.EndLine = subOneSymbol.Loc.EndLine
+						maxLoc.EndColumn = subOneSymbol.Loc.EndColumn
+					} else if subOneSymbol.Loc.EndLine == maxLoc.EndLine && subOneSymbol.Loc.EndColumn > maxLoc.EndColumn {
+						maxLoc.EndColumn = subOneSymbol.Loc.EndColumn
+					}
 				}
 			}
+
+			oneSymbol.Loc.EndLine = maxLoc.EndLine
+			oneSymbol.Loc.StartColumn = maxLoc.EndColumn
 		}
 		symbolVec = append(symbolVec, oneSymbol)
 	}
 
+	// todo 包含局部变量的时候，定位不准
+	
 	// 3) 查找这个文件的所有协议前缀
 	if len(f.ProtocolMaps) != 0 {
 		protocolSymbols := make(map[string]common.FileSymbolStruct)
