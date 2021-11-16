@@ -321,6 +321,9 @@ func (a *AllProject) getTableAccessRelateSymbol(luaInFile string, node *ast.Tabl
 
 		if strOne == "self" {
 			strOne = a.selfChangeStrName(luaInFile, node.Loc)
+			if strOne == "" {
+				strOne = "self"
+			}
 		}
 
 		// 首先查找父的模块变量
