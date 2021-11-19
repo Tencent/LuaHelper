@@ -108,13 +108,14 @@ function getWarnCheckFlag(str: string): boolean {
 }
 
 function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent) {
-    if (activeEditor && activeEditor.document === event.document && activeEditor.document.languageId === LANGUAGE_ID) {
+    if (activeEditor && activeEditor.document === event.document && activeEditor.document.languageId === LANGUAGE_ID
+        && client) {
         Annotator.requestAnnotators(activeEditor, client);
     }
 }
 
 function onDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined) {
-    if (editor && editor.document.languageId === LANGUAGE_ID) {
+    if (editor && editor.document.languageId === LANGUAGE_ID && client) {
         activeEditor = editor as vscode.TextEditor;
         Annotator.requestAnnotators(activeEditor, client);
     }
