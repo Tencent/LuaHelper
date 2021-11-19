@@ -5,15 +5,15 @@
 
 
 早期，没有LSP协议，如果要为语言编写不同编辑器下的插件，每种编辑器下都需要单独开发。
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/Nolsp.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/Nolsp.png)
 
 后面，微软推出了LSP协议，把插件的开发分为前端和后端，后端可以使用其他语言，且可以适配不同的前端。那么不同编辑器下插件，可以利用同一个后端，极大的减少插件的开发量。同时，插件的后端可以采用任何语言，不局限于前端的语言。前端与后端通信，采用Json协议格式。如下图所示。
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/Lsp.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/Lsp.png)
 
 ## 2 源码介绍
 本插件，前端是利用Typescript语言，后端是采用Go语言。
 源码目录如下：
-![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/src.png)
+![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/src.png)
 
 luahelper-lsp目录，是后端go程序目录。</br>
 luahelper-vscode目录，是前端typescript程序目录。
@@ -28,7 +28,7 @@ luahelper-vscode目录，是前端typescript程序目录。
      如果是mac环境，会编译出lualsp, 二进制更改名称为: maclualsp</br>
  * **c) 把编译出来的go二进制（总共三个环境二进制），拷贝到插件前端目录中：**</br>
      ..\LuaHelper\luahelper-vscode\server ,目录如下图所示：
-   ![avatar](https://raw.githubusercontent.com/yinfei8/LuaHelper/master/images/clientexe.png)
+   ![avatar](https://raw.githubusercontent.com/Tencent/LuaHelper/master/images/clientexe.png)
  * **d) 前端插件编译的时候，会把..\LuaHelper\luahelper-vscode\server目录下的二进制打包到插件中。**</br>
  插件运行时，会根据不同的平台加载相应的二进制执行。
  

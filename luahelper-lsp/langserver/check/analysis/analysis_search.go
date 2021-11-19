@@ -1336,6 +1336,15 @@ func (a *Analysis) GetImportReferByCallExp(funcExp *ast.FuncCallExp) *common.Ref
 		return nil
 	}
 
+	parensExp, ok := funcExp.PrefixExp.(*ast.ParensExp)
+	if ok {
+		funcExp, ok = parensExp.Exp.(*ast.FuncCallExp)
+
+		if !ok {
+			return nil
+		}
+	}
+
 	fileResult := a.curResult
 	callExp, ok := funcExp.PrefixExp.(*ast.NameExp)
 	if ok != true {
