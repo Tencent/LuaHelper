@@ -443,6 +443,7 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 		break
 	case *ast.FuncCallExp:
 		defineVar.ValidFlag = true
+		defineVar.Exp = exp
 		recurseExpToDefine(expV.PrefixExp, &defineVar)
 		if expV.NameExp == nil {
 			if len(defineVar.IsFuncVec) > 0 {

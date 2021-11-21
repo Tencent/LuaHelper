@@ -606,19 +606,33 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 		ColonFlag: completeVar.ColonFlag,
 	}
 
-	symbol, symList := a.FindVarDefine(comParam.fileResult.Name, &varStruct)
+	var symbol *common.Symbol
+	var symList []*common.Symbol
+	if strFind == "require" {
+		findExpList := []common.FindExpFile{}
+		symbol = a.FindVarReferSymbol(comParam.fileResult.Name, completeVar.Exp, comParam, &findExpList, 1)
+		symList = []*common.Symbol{symbol}
+		if len(completeVar.StrVec) > 1 {
+			completeVar.StrVec = append(completeVar.StrVec, completeVar.StrVec[1])
+			completeVar.IsFuncVec = append(completeVar.IsFuncVec, completeVar.IsFuncVec[1])
+		}
+	}
+
 	if symbol == nil {
-		// 判断是否在globalNodefineMaps中
-		strName := completeVar.StrVec[0]
-		findVar, ok := comParam.fileResult.NodefineMaps[strName]
-		if !ok {
+		symbol, symList = a.FindVarDefine(comParam.fileResult.Name, &varStruct)
+		if symbol == nil {
+			// 判断是否在globalNodefineMaps中
+			strName := completeVar.StrVec[0]
+			findVar, ok := comParam.fileResult.NodefineMaps[strName]
+			if !ok {
+				return
+			}
+
+			// 遍历AST树，构造想要的代码补全数据
+			sufThreeStrVec := completeVar.StrVec[1:]
+			a.getFileCompleteExt(comParam.fileResult.Name, strName, comParam, completeVar, findVar, sufThreeStrVec)
 			return
 		}
-
-		// 遍历AST树，构造想要的代码补全数据
-		sufThreeStrVec := completeVar.StrVec[1:]
-		a.getFileCompleteExt(comParam.fileResult.Name, strName, comParam, completeVar, findVar, sufThreeStrVec)
-		return
 	}
 
 	a.varInfoDeepComplete(symbol, symList, &varStruct, completeVar, comParam)
