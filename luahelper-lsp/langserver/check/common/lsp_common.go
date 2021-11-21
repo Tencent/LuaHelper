@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"luahelper-lsp/langserver/check/compiler/ast"
 	"luahelper-lsp/langserver/check/compiler/lexer"
 )
 
@@ -63,6 +64,7 @@ type DefineVarStruct struct {
 	StrVec       []string // 所有切分出来的数据
 	IsFuncVec    []bool   // 切分出来的数据是否为函数, 与StrVec一一对应
 	BracketsFlag bool     // 括号
+	Exp          ast.Exp  // 表达式
 }
 
 // CompleteVarStruct 代码补全的定义结构
@@ -76,6 +78,7 @@ type CompleteVarStruct struct {
 	FilterCharacterFlag bool     // 查找的结果，是否过滤指定的字符
 	FilterOneChar       rune     // 过滤的第一个字符（忽略大小写）
 	FilterTwoChar       rune     // 过滤的第二个字符（忽略大小写）
+	Exp                 ast.Exp  // 表达式
 }
 
 // RelateCheckInfo 相关联的告警信息
