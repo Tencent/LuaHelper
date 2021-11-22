@@ -375,6 +375,7 @@ func getComplelteStruct(str string, line, character int) (validFlag bool, comple
 		IsFuncVec:     varStruct.IsFuncVec,
 		ColonFlag:     colonFlag,
 		LastEmptyFlag: lastEmptyFlag,
+		Exp:           varStruct.Exp,
 	}
 
 	if len(varStruct.StrVec) == 1 && varStruct.StrVec[0] != "" {

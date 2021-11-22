@@ -604,6 +604,7 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 		PosLine:   completeVar.PosLine,
 		PosCh:     completeVar.PosCh,
 		ColonFlag: completeVar.ColonFlag,
+		Exp:       completeVar.Exp,
 	}
 
 	symbol, symList := a.FindVarDefine(comParam.fileResult.Name, &varStruct)
