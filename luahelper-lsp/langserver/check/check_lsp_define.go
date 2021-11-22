@@ -407,14 +407,18 @@ func (a *AllProject) FindVarDefine(strFile string, varStruct *common.DefineVarSt
 		return
 	}
 
-	// 最初始的第一次查找，原始的
-	luaInFile, findStrName, findVar := a.findOldDefineInfo(comParam, varStruct)
-	if luaInFile == "" || findVar == nil || len(varStruct.StrVec) <= 0 {
-		return oldSymbol, symList
+	if varStruct.StrVec[0] == "require" && varStruct.IsFuncVec[0] && varStruct.Exp != nil {
+		findExpList := []common.FindExpFile{}
+		oldSymbol = a.FindVarReferSymbol(comParam.fileResult.Name, varStruct.Exp, comParam, &findExpList, 1)
+	} else {
+		// 最初始的第一次查找，原始的
+		luaInFile, findStrName, findVar := a.findOldDefineInfo(comParam, varStruct)
+		if luaInFile == "" || findVar == nil || len(varStruct.StrVec) <= 0 {
+			return oldSymbol, symList
+		}
+
+		oldSymbol = a.createAnnotateSymbol(luaInFile, findStrName, findVar)
 	}
-
-	oldSymbol = a.createAnnotateSymbol(luaInFile, findStrName, findVar)
-
 	//调用链中没有函数，走这里
 	symList = a.getDeepVarList(oldSymbol, varStruct, comParam)
 	return oldSymbol, symList
