@@ -406,6 +406,12 @@ func recurseExpToDefine(exp ast.Exp, defineVar *common.DefineVarStruct) {
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
 		break
 	case *ast.FuncCallExp:
+		if subExp, flag := expV.PrefixExp.(*ast.NameExp); flag {
+			if subExp.Name == "require" {
+				defineVar.Exp = exp
+			}
+		}
+	
 		recurseExpToDefine(expV.PrefixExp, defineVar)
 		if expV.NameExp == nil {
 			if len(defineVar.IsFuncVec) > 0 {
@@ -440,11 +446,15 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 		defineVar.StrVec = append(defineVar.StrVec, expV.Name)
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
 		defineVar.ValidFlag = true
-		defineVar.Exp = exp
+		//defineVar.Exp = exp
 		break
 	case *ast.FuncCallExp:
 		defineVar.ValidFlag = true
-		defineVar.Exp = exp
+		if subExp, flag := expV.PrefixExp.(*ast.NameExp); flag {
+			if subExp.Name == "require" {
+				defineVar.Exp = exp
+			}
+		}
 		recurseExpToDefine(expV.PrefixExp, &defineVar)
 		if expV.NameExp == nil {
 			if len(defineVar.IsFuncVec) > 0 {
@@ -461,7 +471,7 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 
 	case *ast.TableAccessExp:
 		defineVar.ValidFlag = true
-		defineVar.Exp = exp
+		//defineVar.Exp = exp
 		recurseExpToDefine(expV.PrefixExp, &defineVar)
 
 		defineVar.StrVec = append(defineVar.StrVec, common.GetExpName(expV.KeyExp))

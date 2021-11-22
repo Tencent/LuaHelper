@@ -24,3 +24,5 @@ print(req_v.d)
 
 local req_f = require("hover2_requrie").f
 print(req_f.d)
+
+print(require("hover2_requrie").d.a)

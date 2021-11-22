@@ -195,7 +195,7 @@ func TestHover2(t *testing.T) {
 	// 	Line:      21,
 	// 	Character: 15,
 	// })
-	//resultList = append(resultList, "number")
+	// resultList = append(resultList, "number")
 
 	positionList = append(positionList, lsp.Position{
 		Line:      22,
@@ -213,6 +213,18 @@ func TestHover2(t *testing.T) {
 	positionList = append(positionList, lsp.Position{
 		Line:      25,
 		Character: 13,
+	})
+	resultList = append(resultList, "number")
+
+	positionList = append(positionList, lsp.Position{
+		Line:      27,
+		Character: 33,
+	})
+	resultList = append(resultList, "table")
+
+	positionList = append(positionList, lsp.Position{
+		Line:      27,
+		Character: 35,
 	})
 	resultList = append(resultList, "number")
 
