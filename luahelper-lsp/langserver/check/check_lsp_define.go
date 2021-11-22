@@ -410,6 +410,11 @@ func (a *AllProject) FindVarDefine(strFile string, varStruct *common.DefineVarSt
 	if varStruct.StrVec[0] == "require" && varStruct.IsFuncVec[0] && varStruct.Exp != nil {
 		findExpList := []common.FindExpFile{}
 		oldSymbol = a.FindVarReferSymbol(comParam.fileResult.Name, varStruct.Exp, comParam, &findExpList, 1)
+
+		// require，已经处理了。上面已经进行了特殊的处理
+		if len(varStruct.IsFuncVec) > 0 {
+			varStruct.IsFuncVec[0] = false
+		}
 	} else {
 		// 最初始的第一次查找，原始的
 		luaInFile, findStrName, findVar := a.findOldDefineInfo(comParam, varStruct)
