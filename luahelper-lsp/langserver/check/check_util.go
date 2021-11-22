@@ -440,9 +440,11 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 		defineVar.StrVec = append(defineVar.StrVec, expV.Name)
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
 		defineVar.ValidFlag = true
+		defineVar.Exp = exp
 		break
 	case *ast.FuncCallExp:
 		defineVar.ValidFlag = true
+		defineVar.Exp = exp
 		recurseExpToDefine(expV.PrefixExp, &defineVar)
 		if expV.NameExp == nil {
 			if len(defineVar.IsFuncVec) > 0 {
@@ -459,6 +461,7 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 
 	case *ast.TableAccessExp:
 		defineVar.ValidFlag = true
+		defineVar.Exp = exp
 		recurseExpToDefine(expV.PrefixExp, &defineVar)
 
 		defineVar.StrVec = append(defineVar.StrVec, common.GetExpName(expV.KeyExp))
