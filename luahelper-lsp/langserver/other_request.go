@@ -58,6 +58,7 @@ type ProjectParams struct {
 	Rootdir              string   `json:"rootdir,omitempty"`
 	IgnoreFileOrDir      []string `json:"IgnoreFileOrDir,omitempty"`
 	IgnoreFileOrDirError []string `json:"IgnoreFileOrDirError,omitempty"`
+	RequirePathSeparator string   `json:"RequirePathSeparator,omitempty"`
 }
 
 // ReferenceParams 引用的设置
@@ -171,6 +172,9 @@ func (l *LspServer) ChangeConfiguration(ctx context.Context, vs ChangeConfigurat
 
 	common.GConfig.HandleChangeCheckList(checkFlagList, vs.Settings.Luahelper.Project.IgnoreFileOrDir,
 		vs.Settings.Luahelper.Project.IgnoreFileOrDirError)
+
+	// 设置require其他lua文件的路径分割
+	common.GConfig.SetRequirePathSeparator(vs.Settings.Luahelper.Project.RequirePathSeparator)
 
 	return l.handleChange(ctx)
 }

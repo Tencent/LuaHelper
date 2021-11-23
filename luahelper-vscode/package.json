@@ -326,6 +326,19 @@
                         "%luahelper.run.socketrpc%"
                     ]
                 },
+                "luahelper.project.requirePathSeparator": {
+                    "type": "string",
+                    "default": ".",
+                    "enum": [
+                        ".",
+                        "/"
+                    ],
+                    "description": "%luahelper.project.requirePathSeparator%",
+                    "enumDescriptions": [
+                        "%luahelper.project.requirePathSeparator1%",
+                        "%luahelper.project.requirePathSeparator2%"
+                    ]
+                },
                 "luahelper.project.ignoreFileOrDir": {
                     "default": [
                         ".vscode/",
