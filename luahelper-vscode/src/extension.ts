@@ -195,6 +195,12 @@ async function doStartServer() {
         lspStr = <string><any>lspConfig;
     }
 
+    let requirePathSeparatorConfig = vscode.workspace.getConfiguration("luahelper.project", null).get("requirePathSeparator");
+    var requirePathSeparator: string = ".";
+    if (lspConfig !== undefined) {
+        requirePathSeparator = <string><any>requirePathSeparatorConfig;
+    }
+
     let lspLogConfig = vscode.workspace.getConfiguration("luahelper.lspserver", null).get("log");
     var lspLogFlag = false;
     if (lspLogConfig !== undefined) {
@@ -255,6 +261,7 @@ async function doStartServer() {
             CheckAnnotateType: getWarnCheckFlag("CheckAnnotateType"),
             IgnoreFileOrDir: ignoreFileOrDirArr,
             IgnoreFileOrDirError: ignoreFileOrDirErrArr,
+            RequirePathSeparator: requirePathSeparator,
         },
         markdown: {
             isTrusted: true,

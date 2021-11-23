@@ -641,6 +641,20 @@ func (g *GlobalConfig) ReadConfig(strDir, configFileName string, checkFlagList [
 	return nil
 }
 
+// SetRequirePathSeparator 设置require其他lua文件时候的路径分割符
+func (g *GlobalConfig) SetRequirePathSeparator(pathSeparator string) {
+	if g.ReadJSONFlag {
+		// 如果是读取json配置文件，忽略设置
+		return
+	}
+
+	if pathSeparator != "." && pathSeparator != "/" {
+		pathSeparator = "."
+	}
+
+	GConfig.PathSeparator = pathSeparator
+}
+
 // InsertIngoreSystemModule 如果为本地形式运行，加载不了插件前端的Lua额外文件夹，忽略系统模块。批量插入
 func (g *GlobalConfig) InsertIngoreSystemModule() {
 	g.IgnoreVarMap["debug"] = "module"

@@ -41,6 +41,7 @@ type InitializationOptions struct {
 	CheckAnnotateType              bool     `json:"CheckAnnotateType,omitempty"`
 	IgnoreFileOrDir                []string `json:"IgnoreFileOrDir,omitempty"`
 	IgnoreFileOrDirError           []string `json:"IgnoreFileOrDirError,omitempty"`
+	RequirePathSeparator           string   `json:"RequirePathSeparator,omitempty"`
 }
 
 // InitializeParams 初始化参数
@@ -83,6 +84,9 @@ func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.In
 		return lsp.InitializeResult{}, initErr
 	}
 	log.Debug("initial luahelper ok")
+
+	// 设置require其他lua文件的路径分割
+	common.GConfig.SetRequirePathSeparator(initOptions.RequirePathSeparator)
 
 	return lsp.InitializeResult{
 		Capabilities: lsp.ServerCapabilities{
@@ -146,7 +150,7 @@ func (l *LspServer) initialCheckProject(ctx context.Context, checkFlagList []boo
 	vscodeRoot := dirManager.GetVsRootDir()
 	timeBegin := time.Now()
 
-	// 尝试读取vscode目录下面的ylua.json工程配置文件
+	// 尝试读取vscode目录下面的luahelper.json工程配置文件
 	if readErr := common.GConfig.ReadConfig(vscodeRoot, "luahelper.json", checkFlagList, ignoreFileOrDir,
 		ignoreFileOrDirErr); readErr != nil {
 		return readErr
