@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.6 (Nov 23, 2021)
++ require语法功能增强
++ 增加require其他lua文件的路径分隔符
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.5 (Nov 19, 2021)
 + 修复Linux平台下格式化失效的bug
 + [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
