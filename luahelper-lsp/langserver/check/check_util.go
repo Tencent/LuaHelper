@@ -477,6 +477,10 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 		defineVar.StrVec = append(defineVar.StrVec, common.GetExpName(expV.KeyExp))
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
 		break
+	case *ast.ParensExp:
+		defineVar.ValidFlag = true
+		recurseExpToDefine(expV.Exp, &defineVar)
+		break
 	default:
 		break
 	}
