@@ -3,8 +3,10 @@ package lexer
 //TkKind token kind
 type TkKind int
 
+// The list of tokens.
 const (
-	TkEof        TkKind = iota      // end-of-file
+	IKIllegal    TkKind = iota      // illegal
+	TkEOF                           // end-of-file
 	TkVararg                        // ...
 	TkSepSemi                       // ;
 	TkSepComma                      // ,

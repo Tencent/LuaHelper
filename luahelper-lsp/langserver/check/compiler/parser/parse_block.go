@@ -34,7 +34,7 @@ func (p *Parser) parseRetExps() []ast.Exp {
 
 	l.NextToken()
 	switch l.LookAheadKind() {
-	case lexer.TkEof, lexer.TkKwEnd,
+	case lexer.TkEOF, lexer.TkKwEnd,
 		lexer.TkKwElse, lexer.TkKwElseif, lexer.TkKwUntil:
 		return []ast.Exp{}
 	case lexer.TkSepSemi:
@@ -51,7 +51,7 @@ func (p *Parser) parseRetExps() []ast.Exp {
 
 func isReturnOrBlockEnd(tokenKind lexer.TkKind) bool {
 	switch tokenKind {
-	case lexer.TkKwReturn, lexer.TkEof, lexer.TkKwEnd,
+	case lexer.TkKwReturn, lexer.TkEOF, lexer.TkKwEnd,
 		lexer.TkKwElse, lexer.TkKwElseif, lexer.TkKwUntil:
 		return true
 	}

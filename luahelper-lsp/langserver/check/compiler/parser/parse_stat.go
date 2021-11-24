@@ -48,6 +48,8 @@ func (p *Parser) parseStat() ast.Stat {
 		return p.parseFuncDefStat()
 	case lexer.TkKwLocal:
 		return p.parseLocalAssignOrFuncDefStat()
+	case lexer.IKIllegal:
+		return p.parseIKIllegalStat()
 	default:
 		return p.parseAssignOrFuncCallStat()
 	}
@@ -584,4 +586,19 @@ func (p *Parser) parseFuncName() (exp ast.Exp, hasColon bool) {
 	}
 
 	return
+}
+
+// func (p *Parser) parseIKIllegalStat() *ast.IllegalStat{
+// 	l := p.l
+// 	loc := l.GetNowTokenLoc()
+// 	l.NextToken()
+// 	return &ast.IllegalStat{
+// 		Name: "",
+// 		Loc:  loc,
+// 	}
+// }
+
+func (p *Parser) parseIKIllegalStat() *ast.EmptyStat {
+	p.l.NextToken()
+	return _statEmpty
 }

@@ -8,8 +8,8 @@ type Location struct {
 	EndColumn   int
 }
 
-// LuaParseError check的错误信息
-type LuaParseError struct {
+// ParseError check的错误信息
+type ParseError struct {
 	ErrStr      string      // 简单的错误信息
 	ShowStr     string      // 完整的错误信息
 	ErrToken    TokenStruct // 出错的token
@@ -32,7 +32,7 @@ type CommentInfo struct {
 }
 
 // Error err string
-func (l LuaParseError) Error() string {
+func (l ParseError) Error() string {
 	return l.ShowStr
 }
 
