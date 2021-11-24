@@ -11,3 +11,4 @@ local c = {
     }
 }
 
+local d = (require "test3_require")
