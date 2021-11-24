@@ -9,21 +9,28 @@ import (
 type Parser struct {
 	// 词法分析器对象
 	l *lexer.Lexer
+
+	parseErrs []lexer.ParseError
 }
 
 // CreateParser 创建一个分析对象
 func CreateParser(chunk []byte, chunkName string) *Parser {
-	return &Parser{
-		l: lexer.NewLexer(chunk, chunkName),
+	parser := &Parser{}
+	errHandler := func(oneErr lexer.ParseError) {
+		parser.parseErrs = append(parser.parseErrs, oneErr)
 	}
+	parser.l = lexer.NewLexer(chunk, chunkName)
+	parser.l.SetErrHandler(errHandler)
+
+	return parser
 }
 
 // BeginAnalyze 开始分析
-func (p *Parser) BeginAnalyze() (block *ast.Block,commentMap map[int]*lexer.CommentInfo, err error) {
+func (p *Parser) BeginAnalyze() (block *ast.Block, commentMap map[int]*lexer.CommentInfo, err error) {
 	defer func() {
 		if recoverErr := recover(); recoverErr != nil {
-			luaParseErr := recoverErr.(lexer.LuaParseError)
-			err = luaParseErr
+			parseErr := recoverErr.(lexer.ParseError)
+			err = parseErr
 		}
 	}()
 
@@ -34,12 +41,12 @@ func (p *Parser) BeginAnalyze() (block *ast.Block,commentMap map[int]*lexer.Comm
 	blockEndLoc := p.l.GetNowTokenLoc()
 	block.Loc = lexer.GetRangeLoc(&blockBeginLoc, &blockEndLoc)
 
-	p.l.NextTokenOfKind(lexer.TkEof)
+	p.l.NextTokenOfKind(lexer.TkEOF)
 	p.l.SetEnd()
 	return block, p.l.GetCommentMap(), nil
 }
 
-// ParseExp single exp
+// BeginAnalyzeExp ParseExp single exp
 func (p *Parser) BeginAnalyzeExp() (exp ast.Exp) {
 	defer func() {
 		if err2 := recover(); err2 != nil {

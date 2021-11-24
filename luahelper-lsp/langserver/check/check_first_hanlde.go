@@ -75,8 +75,8 @@ func (allProject *AllProject) analysisFirstLuaFile(f *results.FileStruct, luaFil
 	newParser := parser.CreateParser(f.Contents, luaFile)
 	mainAst, commentMap, err := newParser.BeginAnalyze()
 	if err != nil {
-		luaParseErr := err.(lexer.LuaParseError)
-		firstFile.InsertError(common.CheckErrorSyntax, luaParseErr.ErrStr, luaParseErr.Loc)
+		parseErr := err.(lexer.ParseError)
+		firstFile.InsertError(common.CheckErrorSyntax, parseErr.ErrStr, parseErr.Loc)
 		// 如果生成AST出错，把错误信息放入到firstFileResult中
 		handleResult = results.FileHandleSyntaxErr
 		changeFlag = true

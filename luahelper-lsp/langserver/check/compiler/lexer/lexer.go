@@ -29,6 +29,9 @@ type TokenStruct struct {
 	rangeToPos   int    // token end in all pos
 }
 
+// ErrorHandler 词法分析上报错误
+type ErrorHandler func(oneErr ParseError)
+
 // Lexer 词法分析的结构
 type Lexer struct {
 	chunk         string // source code
@@ -43,6 +46,8 @@ type Lexer struct {
 	aheadToken TokenStruct
 
 	commentMap map[int]*CommentInfo // 保存所有的注释信息, key值为行号，从1开始。如果该注释有多行，为最后一行的行号。
+
+	errHandler ErrorHandler // error reporting; or nil
 }
 
 // NewLexer 创建一个词法分析器
@@ -67,6 +72,12 @@ func NewLexer(chunk []byte, chunkName string) *Lexer {
 	}
 }
 
+// SetErrHandler 设置分析错误的处理函数
+func (l *Lexer) SetErrHandler(errHandler ErrorHandler) {
+	l.errHandler = errHandler
+}
+
+// GetCommentMap 获取所有的注释map
 func (l *Lexer) GetCommentMap() map[int]*CommentInfo {
 	return l.commentMap
 }
@@ -235,7 +246,7 @@ func (l *Lexer) NextTokenStruct() {
 
 	if len(l.chunk) == 0 {
 		// file end
-		l.setNowToken(TkEof, "EOF")
+		l.setNowToken(TkEOF, "EOF")
 		return
 	}
 
@@ -404,8 +415,32 @@ func (l *Lexer) NextTokenStruct() {
 		return
 	}
 
-	l.ErrorPrint("unexpected symbol near %q", c)
+	illegalStr :=  l.scanIllegalToken()
+	l.ErrorPrint("unexpected Unicode-name:%s", illegalStr)
+	l.setNowToken(IKIllegal, illegalStr)
 	return
+}
+
+func (l *Lexer) scanIllegalToken() string {
+	str := ""
+	i := 0
+	for i < len(l.chunk) {
+		ch := l.chunk[i]
+		i++
+		if ch == ' ' || ch == '\n' {
+			break
+		}
+	}
+
+	str += l.chunk[0 : i - 1]
+
+	//l.next(i)
+	// 转换为字符的个数，不在是utf8字节数
+	l.chunk = l.chunk[i:]
+	strTemp := codingconv.ConvertStrToUtf8(str)
+	l.currentPos = l.currentPos + utf8.RuneCountInString(strTemp)
+
+	return str
 }
 
 func (l *Lexer) next(n int) {
@@ -432,14 +467,19 @@ func (l *Lexer) test(s string) bool {
 func (l *Lexer) ErrorPrint(f string, a ...interface{}) {
 	err := fmt.Sprintf(f, a...)
 	errShow := fmt.Sprintf("%s:%d: %s", l.chunkName, l.preToken.line, err)
-	paseError := LuaParseError{
+	paseError := ParseError{
 		ErrStr:      err,
 		ShowStr:     errShow,
 		ErrToken:    l.preToken,
 		Loc:         l.GetPreTokenLoc(),
 		ReadFileErr: false,
 	}
-	panic(paseError)
+
+	if l.errHandler != nil {
+		l.errHandler(paseError)
+	}
+
+	//panic(paseError)
 }
 
 func (l *Lexer) isEnterWrap() bool {
@@ -666,7 +706,7 @@ func (l *Lexer) scanNumber() string {
 			}
 
 			if isDigit(nextCh4) || (nextCh4 >= 'a' && nextCh4 <= 'f') || (nextCh4 >= 'A' && nextCh4 <= 'F') ||
-				 (nextCh4 == 'u' || nextCh4 == 'U' || nextCh4 == 'l' || nextCh4 == 'L')   {
+				(nextCh4 == 'u' || nextCh4 == 'U' || nextCh4 == 'l' || nextCh4 == 'L') {
 				i++
 			} else if nextCh4 == '.' {
 				i++

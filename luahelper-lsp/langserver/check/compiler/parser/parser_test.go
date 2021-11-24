@@ -55,6 +55,27 @@ func TestParseJitNumber(t *testing.T) {
 	}
 }
 
-func BenchmarkHello(b *testing.B) {
+func TestParseIllegalToken(t *testing.T) {
+	parser := CreateParser([]byte("local a = 1\n 尹飞 \n local b = 1"), "test")
+	block, _, err := parser.BeginAnalyze()
+	if err != nil {
+		t.Fatalf("parser const fatal, errstr=%s", err.Error())
+	}
 
+	if block == nil {
+		t.Logf("is nil")
+	}
+}
+
+
+func TestParseIllegalIf(t *testing.T) {
+	parser := CreateParser([]byte(" if \n local a = 1\n print(a)"), "test")
+	block, _, err := parser.BeginAnalyze()
+	if err != nil {
+		t.Fatalf("parser const fatal, errstr=%s", err.Error())
+	}
+
+	if block == nil {
+		t.Logf("is nil")
+	}
 }
