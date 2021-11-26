@@ -78,14 +78,6 @@ func (allProject *AllProject) analysisFirstLuaFile(f *results.FileStruct, luaFil
 			firstFile.InsertError(common.CheckErrorSyntax, oneErr.ErrStr, oneErr.Loc)
 		}
 	}
-	// if err != nil {
-	// 	parseErr := err.(lexer.ParseError)
-	// 	firstFile.InsertError(common.CheckErrorSyntax, parseErr.ErrStr, parseErr.Loc)
-	// 	// 如果生成AST出错，把错误信息放入到firstFileResult中
-	// 	handleResult = results.FileHandleSyntaxErr
-	// 	changeFlag = true
-	// 	return
-	// }
 
 	// 设置指向的AST
 	firstFile.Block = mainAst
