@@ -345,15 +345,14 @@ func TestParseShortStrIllegal2(t *testing.T) {
 	if len(errList) != len(expectLocList) {
 		t.Fatalf("parser errList len err")
 	}
+	if block == nil {
+		t.Logf("is nil")
+	}
 
 	for i, oneErr := range errList {
 		if !lexer.CompareTwoLoc(&oneErr.Loc, &expectLocList[i]) {
 			t.Fatalf("index=%d loc err", i)
 		}
-	}
-
-	if block == nil {
-		t.Logf("is nil")
 	}
 }
 
