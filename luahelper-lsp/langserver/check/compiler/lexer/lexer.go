@@ -17,8 +17,8 @@ var newLineReplacer = strings.NewReplacer(
 	"\n", newLine,
 )
 
-// TokenStruct 词法分析出来的每个单词
-type TokenStruct struct {
+// Token 词法分析出来的每个单词
+type Token struct {
 	valid        bool   // valid or not
 	tokenStr     string // token string
 	tokenKind    TkKind // token kind
@@ -28,7 +28,7 @@ type TokenStruct struct {
 	rangeToPos   int    // token end in all pos
 }
 
-func (l *TokenStruct) GetLine() int {
+func (l *Token) GetLine() int {
 	return l.line
 }
 
@@ -44,9 +44,9 @@ type Lexer struct {
 	tokenStartPos int    // token start in all pos
 	currentPos    int
 
-	preToken   TokenStruct
-	nowToken   TokenStruct
-	aheadToken TokenStruct
+	preToken   Token
+	nowToken   Token
+	aheadToken Token
 
 	commentMap map[int]*CommentInfo // 保存所有的注释信息, key值为行号，从1开始。如果该注释有多行，为最后一行的行号。
 
@@ -59,13 +59,13 @@ func NewLexer(chunk []byte, chunkName string) *Lexer {
 		chunk:     strbytesconv.BytesToString(chunk),
 		chunkName: chunkName,
 		line:      1,
-		preToken: TokenStruct{
+		preToken: Token{
 			valid: false,
 		},
-		nowToken: TokenStruct{
+		nowToken: Token{
 			valid: false,
 		},
-		aheadToken: TokenStruct{
+		aheadToken: Token{
 			valid: false,
 		},
 		lineStartPos:  0,
@@ -158,13 +158,8 @@ func (l *Lexer) GetPreTokenLoc() Location {
 }
 
 // GetNowToken get now token
-func (l *Lexer) GetNowToken() TokenStruct {
+func (l *Lexer) GetNowToken() Token {
 	return l.nowToken
-}
-
-// GetPreToken get pre token
-func (l *Lexer) GetPreToken() TokenStruct {
-	return l.preToken
 }
 
 // GetNowTokenLoc get current Token location
@@ -495,8 +490,6 @@ func (l *Lexer) errorPrint(loc Location, f string, a ...interface{}) {
 	if l.errHandler != nil {
 		l.errHandler(paseError)
 	}
-
-	//panic(paseError)
 }
 
 func (l *Lexer) isEnterWrap() bool {
