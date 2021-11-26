@@ -165,9 +165,7 @@ func (l *LspServer) ClearChangeFileErr(ctx context.Context, strFile string) {
 // SaveOneFilePushAgain 文件保存的操作，重新推送这个文件的错误信息
 func (l *LspServer) SaveOneFilePushAgain(ctx context.Context, strFile string) {
 	// 删除临时保存的错误
-	if _, ok := l.fileChangeErrorMap[strFile]; ok {
-		delete(l.fileChangeErrorMap, strFile)
-	}
+	delete(l.fileChangeErrorMap, strFile)
 
 	if _, ok := l.fileErrorMap[strFile]; ok {
 		// 恢复原来的诊断问题

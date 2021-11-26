@@ -636,6 +636,10 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 
 	// 3.3) 把常用见的关键字放入进来
 	for _, strName := range common.GConfig.CodeCompleteVarVec {
+		if completeVar.IgnoreKeyWord {
+			break
+		}
+
 		if !common.IsCompleteNeedShow(strName, completeVar) || a.completeCache.ExistStr(strName) {
 			continue
 		}

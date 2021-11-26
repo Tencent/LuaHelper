@@ -391,6 +391,11 @@ func (g *GlobalConfig) IntialGlobalVar() {
 	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "continue")
 	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "_G")
 
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for .. ipairs")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for .. pairs")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "then .. end")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for i = ..")
+
 	// 设置系统忽略定义未使用的变量
 	g.setSysNotUseMap()
 
