@@ -44,7 +44,7 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 	strFile := comResult.strFile
 
 	// 1) 判断是否输入的为 --- 注释，用于快捷生成函数定义的注释
-	// 输入-时候，传人的为空，特殊处理 
+	// 输入-时候，传人的为空，特殊处理
 	if vs.Context.TriggerCharacter == "" && judgeBeforeCommentHorizontal(comResult.contents, comResult.offset) {
 		// 处理快捷生成注解, 以及提升注解系统
 		comList, _ := l.handleGenerateComment(strFile, comResult.contents, comResult.offset, (int)(comResult.pos.Line))
@@ -467,11 +467,11 @@ func (l *LspServer) handleGenerateComment(strFile string, contents []byte, offse
 		oneLspComplete.Kind = lsp.TextCompletion
 		oneLspComplete.Detail = oneComplete.Detail
 
-		 oneLspComplete.Documentation = lsp.MarkupContent{
-		 	Kind:  lsp.Markdown,
+		oneLspComplete.Documentation = lsp.MarkupContent{
+			Kind:  lsp.Markdown,
 			Value: oneComplete.Documentation,
-		 }
-		
+		}
+
 		//oneLspComplete.Documentation = oneComplete.Documentation
 
 		oneLspComplete.InsertText = oneComplete.InsetText
@@ -570,41 +570,6 @@ func (l *LspServer) TextDocumentCompleteResolve(ctx context.Context, vs lsp.Comp
 	completionItem.Documentation = lsp.MarkupContent{
 		Kind:  lsp.Markdown,
 		Value: strMarkdown,
-	}
-
-	if vs.Label == "do .. end" && vs.Kind == lsp.KeywordCompletion {
-		completionItem.InsertText = "do" + "\n" + "\t" + "${0:}" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "do" + "\n" + "end"
-	}
-
-	if vs.Label == "then .. end" && vs.Kind == lsp.KeywordCompletion {
-		completionItem.InsertText = "then" + "\n" + "\t" + "${0:}" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "then" + "\n" + "end"
-	}
-
-	if vs.Label == "for .. ipairs" && vs.Kind == lsp.KeywordCompletion {
-		//completionItem.InsertText = "for $1, $2, $3 end"
-		completionItem.InsertText = "for ${1:i}, ${2:v} in ipairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "for i, v in ipairs(t) do" + "\n\n" + "end"
-		completionItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "for .. pairs" && vs.Kind == lsp.KeywordCompletion {
-		//completionItem.InsertText = "for ${0:k} end"
-		completionItem.InsertText = "for ${1:k}, ${2:v} in pairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "for k, v in pairs(t) do" + "\n\n" + "end"
-		completionItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "for i = .." && vs.Kind == lsp.KeywordCompletion {
-		completionItem.InsertText = "for ${1:i} = ${2:1}, ${3:10}, ${4:1} do" + "\n\t" + "$0" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "for i = 1, 10, 1 do" + "\n\n" + "end"
-		completionItem.Kind = lsp.SnippetCompletion
 	}
 
 	return

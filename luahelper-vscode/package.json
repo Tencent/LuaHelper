@@ -2,7 +2,7 @@
     "name": "luahelper",
     "displayName": "Lua",
     "description": "LuaHelper, Intellisense, Linting, Debugging, Code formatting, High-performance, and more.",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "publisher": "yinfei",
     "author": {
         "name": "yinfei",
@@ -730,7 +730,8 @@
                     "strings": true
                 },
                 "editor.tabCompletion": "on",
-                "editor.quickSuggestionsDelay": 1
+                "editor.quickSuggestionsDelay": 1,
+                "editor.suggest.snippetsPreventQuickSuggestions": false
             }
         },
         "colors": []
