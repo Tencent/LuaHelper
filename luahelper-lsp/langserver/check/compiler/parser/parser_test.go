@@ -382,4 +382,5 @@ func TestParseShortStrIllegal3(t *testing.T) {
 	if block == nil {
 		t.Logf("is nil")
 	}
+
 }
