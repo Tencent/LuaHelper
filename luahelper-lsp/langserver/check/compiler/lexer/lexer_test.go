@@ -35,9 +35,9 @@ func constructCopyone(l *Lexer) {
 	l.aheadToken = nextToken
 }
 
-var backPreToken TokenStruct
-var backNowToken TokenStruct
-var nextToken TokenStruct
+var backPreToken Token
+var backNowToken Token
+var nextToken Token
 
 func constructConstCopy(l *Lexer) {
 	backPreToken = l.preToken
