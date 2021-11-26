@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"log"
 	"luahelper-lsp/langserver/check/compiler/ast"
 	"luahelper-lsp/langserver/check/compiler/lexer"
 )
@@ -27,14 +26,6 @@ func CreateParser(chunk []byte, chunkName string) *Parser {
 
 // BeginAnalyze 开始分析
 func (p *Parser) BeginAnalyze() (block *ast.Block, commentMap map[int]*lexer.CommentInfo, errList []lexer.ParseError) {
-	defer func() {
-		if recoverErr := recover(); recoverErr != nil {
-			//parseErr := recoverErr.(lexer.ParseError)
-			//err = parseErr
-			log.Printf("ok")
-		}
-	}()
-
 	p.l.SkipFirstLineComment()
 
 	blockBeginLoc := p.l.GetHeardTokenLoc()
