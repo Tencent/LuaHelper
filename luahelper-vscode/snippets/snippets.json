@@ -19,31 +19,19 @@
         "body": "for ${1:i} = ${2:1}, ${3:10} do\n\t${0:}\nend",
         "description": "for i = 1, n do end"
     },
-    "for i = ..": {
-        "prefix": "for i = ..",
-        "body": "for ${1:i} = ${2:1}, ${3:10} do\n\t${0:}\nend",
-        "description": "for i = 1, n do end"
-    },
+    
     "fori": {
         "prefix": "fori",
         "body": "for ${1:i}, ${2:v} in ipairs(${3:t}) do\n\t${0:}\nend",
         "description": "for i, value in ipairs(t) do end"
     },
-    "for .. ipairs": {
-        "prefix": "for .. ipairs",
-        "body": "for ${1:i}, ${2:v} in ipairs(${3:t}) do\n\t${0:}\nend",
-        "description": "for i, value in ipairs(t) do end"
-    },
+    
     "forp": {
         "prefix": "forp",
         "body": "for ${1:k}, ${2:v} in pairs(${3:t}) do\n\t${0:}\nend",
         "description": "for k, v in pairs(table) do end"
     },
-    "for .. pairs": {
-        "prefix": "for .. pairs",
-        "body": "for ${1:k}, ${2:v} in pairs(${3:t}) do\n\t${0:}\nend",
-        "description": "for k, v in pairs(table) do end"
-    },
+    
     "do": {
         "prefix": "do",
         "body": "do\n${0:}\nend",
@@ -58,11 +46,6 @@
         "prefix": "repeat",
         "body": "repeat\n\t${0:}\nuntil ${1:condition}",
         "description": "repeat .. until"
-    },
-    "then .. end": {
-        "prefix": "then .. end",
-        "body": "then\n\t${0:}\nend",
-        "description": "then .. end"
     },
     "local function": {
         "prefix": "local function",
