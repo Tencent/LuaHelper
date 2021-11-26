@@ -185,54 +185,6 @@ func (a *AllProject) HandleFileEventChanges(fileEventVec []FileEventStruct) (cha
 	return true
 }
 
-// 判断是否需要处理重新分享第一轮的文件列表
-func (a *AllProject) handleNeedAgainFileVec(needAgainFileVec []string, deleteFileMap map[string]struct{}) (retFileVec []string) {
-	// 重建所有需要分析的map
-	needAgainFileMap := map[string]struct{}{}
-	for _, strFile := range needAgainFileVec {
-		needAgainFileMap[strFile] = struct{}{}
-	}
-
-	retFileVec = needAgainFileVec
-
-	// 遍历项目中的所有告警信息，判断是否有6这种告警的
-	// 1) 获取第一阶段的错误
-	for strFile, fileStruct := range a.fileStructMap {
-		if fileStruct.HandleResult == results.FileHandleReadErr {
-			continue
-		}
-
-		// 已经在分析的列表里面了
-		if _, ok := needAgainFileMap[strFile]; ok {
-			continue
-		}
-
-		// 文件已经被删除了，忽略
-		if _, ok := deleteFileMap[strFile]; ok {
-			continue
-		}
-
-		// 判断是否有包含CheckErrorNoFile的错误码
-		needFlag := false
-		fileResult := fileStruct.FileResult
-		for _, oneErr := range fileResult.CheckErrVec {
-			if oneErr.ErrType == common.CheckErrorNoFile {
-				needFlag = true
-				break
-			}
-		}
-
-		if !needFlag {
-			continue
-		}
-
-		retFileVec = append(retFileVec, strFile)
-		needAgainFileMap[strFile] = struct{}{}
-	}
-
-	return retFileVec
-}
-
 // RemoveCacheContent 删除cache的结构
 func (a *AllProject) RemoveCacheContent(strFile string) {
 	flag := a.fileLRUMap.Remove(strFile)
@@ -242,7 +194,7 @@ func (a *AllProject) RemoveCacheContent(strFile string) {
 }
 
 // HandleFileChangeAnalysis 代码实时变化时候，进行分析判断是否要保存到cache中
-func (a *AllProject) HandleFileChangeAnalysis(strFile string, content []byte) (hasAstErrFlag bool, errVec common.CheckError) {
+func (a *AllProject) HandleFileChangeAnalysis(strFile string, content []byte) (errList []common.CheckError) {
 	fileStruct := results.CreateFileStruct(strFile)
 	handleResult, _, _ := a.analysisFirstLuaFile(fileStruct, strFile, content, false, true)
 	fileStruct.HandleResult = handleResult
@@ -252,14 +204,11 @@ func (a *AllProject) HandleFileChangeAnalysis(strFile string, content []byte) (h
 		// 实时分析成功了，保存在cache中
 		a.fileLRUMap.Set(strFile, fileStruct)
 		log.Debug("HandleFileChangeAnalysis ok strFile=%s", strFile)
-		return false, common.CheckError{}
 	}
 
-	log.Debug("HandleFileChangeAnalysis failed strFile=%s", strFile)
 	if fileStruct.FileResult != nil {
-		return fileStruct.FileResult.GetAstCheckError()
+		errList = fileStruct.FileResult.GetAstCheckError()
 	}
 
-	// 读文件失败
-	return false, common.CheckError{}
+	return errList
 }

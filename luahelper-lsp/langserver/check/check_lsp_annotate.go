@@ -28,11 +28,11 @@ func (a *AllProject) checkOneFileType(annotateFile *common.AnnotateFile, fragemn
 		if common.GConfig.IsDefaultAnnotateType(str) {
 			continue
 		}
-		
+
 		if str == "..." {
 			continue
 		}
-		
+
 		if _, ok := genericMap[str]; ok {
 			continue
 		}
@@ -147,7 +147,7 @@ func (a *AllProject) checkCreateTypeListDuplicate(str string, createList common.
 // 根据文件名称，获取到文件的注解文件，没有缓存出
 func (a *AllProject) getNotCacheAnnotateFile(strFile string) (annotateFile *common.AnnotateFile) {
 	// 1）先查找该文件是否存在
-	fileStruct, _ := a.fileStructMap[strFile]
+	fileStruct := a.fileStructMap[strFile]
 	if fileStruct == nil {
 		log.Error("getAnnotateFile error, not find file=%s", strFile)
 		return
@@ -634,7 +634,7 @@ func (a *AllProject) getFuncReturnOneType(oldSymbol *common.Symbol, varIndex uin
 		FileName:     oldSymbol.FileName, // todo这里的文件名不太准确
 		VarInfo:      nil,
 		AnnotateType: oneFunType,
-		VarFlag:      common.FirstAnnotateFlag,              // 默认还是先获取的变量
+		VarFlag:      common.FirstAnnotateFlag,            // 默认还是先获取的变量
 		AnnotateLine: oldSymbol.VarInfo.Loc.StartLine - 1, // todo这里的行号不太准确
 	}
 
@@ -1452,21 +1452,6 @@ func (a *AllProject) GetAnnotateFileSymbolStruct(fileName string) (symbolVec []c
 	}
 
 	return
-}
-
-// 获取这个文件静态的注解产生的着色, 返回所有的位置集合
-func (a *AllProject) getAnnotateColor(strFile string) (locVec []lexer.Location) {
-	annotateFile := a.getAnnotateFile(strFile)
-	if annotateFile == nil {
-		return
-	}
-
-	for _, fragment := range annotateFile.FragementMap {
-		// 获取注释片段带来的位置信息
-		frageVec := fragment.GetColorLocVec()
-		locVec = append(locVec, frageVec...)
-	}
-	return locVec
 }
 
 // typeStrFile 类型对应的文件信息，根据一个类型名查找定义时候用到

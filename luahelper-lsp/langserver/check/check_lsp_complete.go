@@ -123,7 +123,6 @@ func (a *AllProject) CodeCompleteFile(strFile string, referNameStr string, refer
 
 		a.completeCache.InsertCompleteNormal(strName, oneTip.StrDesc, "", common.IKVariable)
 	}
-	return
 }
 
 // CodeComplete 代码进行补全
@@ -174,7 +173,6 @@ func (a *AllProject) CodeComplete(strFile string, completeVar common.CompleteVar
 
 	a.completeCache.SetColonFlag(completeVar.ColonFlag)
 	a.lspCodeComplete(comParam, &completeVar)
-	return
 }
 
 // FuncCommentComplete 生成函数的注释提示
@@ -248,8 +246,6 @@ func (a *AllProject) protocolCodeComplete(strProPre string, secondProject *resul
 			a.completeCache.InsertCompleteVar(oneVar.ExtraGlobal.FileName, strName, oneVar)
 		}
 	}
-
-	return
 }
 
 // _G所有变量的代码补全
@@ -309,8 +305,6 @@ func (a *AllProject) gValueComplete(comParam *CommonFuncParam, completeVar *comm
 
 		a.completeCache.InsertCompleteVar(fileName, strName, oneVar)
 	}
-
-	return
 }
 
 // 前缀是_G符号
@@ -469,13 +463,12 @@ func (a *AllProject) getFileCompleteExt(luaInFile string, strFind string, comPar
 	go goCompleteExtension(copleteParam, retCompleteResultCh)
 
 	// 3) 接收一个协程的数据
-	resultch1, _ := <-retCompleteResultCh
+	resultch1 := <-retCompleteResultCh
 	a.insertFileCacheStrMap(resultch1.strMap)
 
 	// 4) 接收另外一个协程的数据
-	resultch2, _ := <-retCompleteResultCh
+	resultch2 := <-retCompleteResultCh
 	a.insertFileCacheStrMap(resultch2.strMap)
-	return
 }
 
 // import文件的所有成员放入进来
@@ -589,7 +582,7 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 
 	// 1) 判断是否为系统模块函数提示
 	if lenStrVec == 1 && completeVar.LastEmptyFlag {
-		
+
 		// 2) 是否为协议前缀
 		if common.GConfig.IsStrProtocol(strFind) {
 			// 为协议前缀，返回所有的返回
@@ -674,8 +667,6 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 		detail := ""
 		a.completeCache.InsertCompleteNormal(strName, detail, "", common.IKVariable)
 	}
-
-	return
 }
 
 // 代码补全进行的分发
@@ -694,7 +685,6 @@ func (a *AllProject) lspCodeComplete(comParam *CommonFuncParam, completeVar *com
 
 	// 3）模块变量的代码补全
 	a.otherPreComplete(comParam, completeVar)
-	return
 }
 
 // GetCompleteCacheItems 获取所有的

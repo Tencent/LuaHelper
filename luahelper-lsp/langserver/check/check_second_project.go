@@ -120,7 +120,6 @@ func (a *AllProject) handleProjectEntryFileVec(projectVec []string) {
 	for i := 0; i < corNum; i++ {
 		close(chs[i])
 	}
-	return
 }
 
 // HandleAllSecondProject 进行第二轮分析，以入口工程的文件进行分析

@@ -101,7 +101,7 @@ func (l *LspServer) RemoveFile(strFile string) {
 
 // pushFileChangeDiagnostic 推送文件临时变化的诊断错误
 func (l *LspServer) pushFileChangeDiagnostic(ctx context.Context, strFile string) {
-	oneErr, ok := l.fileChangeErrorMap[strFile]
+	errList, ok := l.fileChangeErrorMap[strFile]
 	if !ok {
 		return
 	}
@@ -109,7 +109,10 @@ func (l *LspServer) pushFileChangeDiagnostic(ctx context.Context, strFile string
 	var diagnostics lsp.PublishDiagnosticsParams
 	diagnostics.URI = getFileDocumentURI(strFile)
 	diagnostics.Diagnostics = []lsp.Diagnostic{}
-	diagnostics.Diagnostics = append(diagnostics.Diagnostics, changeErrToDiagnostic(&oneErr))
+	for _, oneErr := range errList {
+		diagnostics.Diagnostics = append(diagnostics.Diagnostics, changeErrToDiagnostic(&oneErr))
+	}
+
 	// 发送单个文件的诊断信息
 	l.sendDiagnostics(ctx, diagnostics)
 }
@@ -138,8 +141,8 @@ func (l *LspServer) pushFileDiagnostic(ctx context.Context, strFile string, igno
 }
 
 // InsertChangeFileErr 文件实时变化，但是没有保存时候，插入实时分析的语法错误
-func (l *LspServer) InsertChangeFileErr(ctx context.Context, strFile string, oneErr common.CheckError) {
-	l.fileChangeErrorMap[strFile] = oneErr
+func (l *LspServer) InsertChangeFileErr(ctx context.Context, strFile string, errList []common.CheckError) {
+	l.fileChangeErrorMap[strFile] = errList
 
 	// 推送新的诊断错误
 	l.pushFileChangeDiagnostic(ctx, strFile)

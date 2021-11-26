@@ -152,7 +152,6 @@ func TestHover2(t *testing.T) {
 	})
 	resultList = append(resultList, "number")
 
-	
 	positionList = append(positionList, lsp.Position{
 		Line:      6,
 		Character: 13,
@@ -203,13 +202,12 @@ func TestHover2(t *testing.T) {
 	})
 	resultList = append(resultList, "table")
 
-
 	positionList = append(positionList, lsp.Position{
 		Line:      25,
 		Character: 11,
 	})
 	resultList = append(resultList, "table")
-	
+
 	positionList = append(positionList, lsp.Position{
 		Line:      25,
 		Character: 13,
@@ -227,7 +225,6 @@ func TestHover2(t *testing.T) {
 		Character: 35,
 	})
 	resultList = append(resultList, "number")
-
 
 	for index, onePoisiton := range positionList {
 		hoverParams := lsp.TextDocumentPositionParams{
@@ -310,7 +307,6 @@ func TestHover3(t *testing.T) {
 	})
 	resultList = append(resultList, "table")
 
-	
 	for index, onePoisiton := range positionList {
 		hoverParams := lsp.TextDocumentPositionParams{
 			TextDocument: lsp.TextDocumentIdentifier{
@@ -373,7 +369,7 @@ func TestHover4(t *testing.T) {
 		Character: 13,
 	})
 	resultList = append(resultList, "number")
-	
+
 	positionList = append(positionList, lsp.Position{
 		Line:      4,
 		Character: 13,
@@ -385,7 +381,6 @@ func TestHover4(t *testing.T) {
 		Character: 13,
 	})
 	resultList = append(resultList, "import")
-
 
 	for index, onePoisiton := range positionList {
 		hoverParams := lsp.TextDocumentPositionParams{

@@ -12,7 +12,7 @@ import (
 )
 
 // TextDocumentDidOpen 打开了一个文件的请求
-func (l *LspServer)TextDocumentDidOpen(ctx context.Context, vs lsp.DidOpenTextDocumentParams) error {
+func (l *LspServer) TextDocumentDidOpen(ctx context.Context, vs lsp.DidOpenTextDocumentParams) error {
 	l.requestMutex.Lock()
 	defer l.requestMutex.Unlock()
 
@@ -59,7 +59,7 @@ func (l *LspServer)TextDocumentDidOpen(ctx context.Context, vs lsp.DidOpenTextDo
 }
 
 // TextDocumentDidChange 单个文件的内容变化了
-func (l *LspServer)TextDocumentDidChange(ctx context.Context, vs lsp.DidChangeTextDocumentParams) error {
+func (l *LspServer) TextDocumentDidChange(ctx context.Context, vs lsp.DidChangeTextDocumentParams) error {
 	l.requestMutex.Lock()
 	defer l.requestMutex.Unlock()
 
@@ -93,9 +93,9 @@ func (l *LspServer)TextDocumentDidChange(ctx context.Context, vs lsp.DidChangeTe
 		return nil
 	}
 
-	astCheckErrFlag, oneErr := project.HandleFileChangeAnalysis(strFile, contents)
-	if astCheckErrFlag {
-		l.InsertChangeFileErr(ctx, strFile, oneErr)
+	errList := project.HandleFileChangeAnalysis(strFile, contents)
+	if len(errList) > 0 {
+		l.InsertChangeFileErr(ctx, strFile, errList)
 		// 设置文件修改的时间
 		l.setColorTime(0)
 	} else {
@@ -110,7 +110,7 @@ func (l *LspServer)TextDocumentDidChange(ctx context.Context, vs lsp.DidChangeTe
 }
 
 // WorkspaceChangeWatchedFiles 整个工程目录lua文件的变化
-func (l *LspServer)WorkspaceChangeWatchedFiles(ctx context.Context, vs lsp.DidChangeWatchedFilesParams) error {
+func (l *LspServer) WorkspaceChangeWatchedFiles(ctx context.Context, vs lsp.DidChangeWatchedFilesParams) error {
 	l.requestMutex.Lock()
 	defer l.requestMutex.Unlock()
 	log.Debug("WorkspaceChangeWatchedFiles..\n")
@@ -156,7 +156,7 @@ func (l *LspServer)WorkspaceChangeWatchedFiles(ctx context.Context, vs lsp.DidCh
 }
 
 // TextDocumentDidClose 文件关闭了
-func (l *LspServer)TextDocumentDidClose(ctx context.Context, vs lsp.DidCloseTextDocumentParams) error {
+func (l *LspServer) TextDocumentDidClose(ctx context.Context, vs lsp.DidCloseTextDocumentParams) error {
 	l.requestMutex.Lock()
 	defer l.requestMutex.Unlock()
 
@@ -188,7 +188,7 @@ func (l *LspServer)TextDocumentDidClose(ctx context.Context, vs lsp.DidCloseText
 }
 
 // TextDocumentDidSave 文件的内容进行保存
-func (l *LspServer)TextDocumentDidSave(ctx context.Context, vs lsp.DidSaveTextDocumentParams) error {
+func (l *LspServer) TextDocumentDidSave(ctx context.Context, vs lsp.DidSaveTextDocumentParams) error {
 	l.requestMutex.Lock()
 	defer l.requestMutex.Unlock()
 

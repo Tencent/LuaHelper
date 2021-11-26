@@ -626,7 +626,7 @@ func (a *AllProject) selfChangeStrName(luaInFile string, loc lexer.Location) (st
 		return
 	}
 
-	minScope, minFunc := fileStruct.FileResult.FindASTNode(loc.StartLine - 1, loc.StartColumn)
+	minScope, minFunc := fileStruct.FileResult.FindASTNode(loc.StartLine-1, loc.StartColumn)
 	if minScope == nil || minFunc == nil {
 		log.Error("FindVarDefine error, minScope or minFunc is nil file=%s", luaInFile)
 		return
@@ -663,7 +663,7 @@ func (a *AllProject) getImportReferSymbol(luaInFile string, funcExp *ast.FuncCal
 	}
 
 	callExp, ok := funcExp.PrefixExp.(*ast.NameExp)
-	if ok != true {
+	if !ok {
 		return nil
 	}
 
@@ -681,7 +681,6 @@ func (a *AllProject) getImportReferSymbol(luaInFile string, funcExp *ast.FuncCal
 	}
 
 	strFirst := firstExp.(*ast.StringExp).Str
-
 	oneRefer := common.CreateOneReferInfo(callExp.Name, strFirst, funcExp.Loc)
 	if oneRefer == nil {
 		return nil
@@ -721,8 +720,8 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 		// 这两个函数，在变量的referInfo里面已经存在了
 		if strName == "require" || common.GConfig.IsFrameReferOtherFile(strName) {
 			//return nil
-			 referSymbol := a.getImportReferSymbol(luaInFile, node, comParam, findExpList)
-			 return referSymbol
+			referSymbol := a.getImportReferSymbol(luaInFile, node, comParam, findExpList)
+			return referSymbol
 		}
 
 		// 考虑是下面简单原表的调用
@@ -770,7 +769,7 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 		// 修复 https://github.com/Tencent/LuaHelper/issues/42
 		beforeSymbol = a.FindVarReferSymbol(luaInFile, node.PrefixExp, comParam, findExpList, 1)
 	}
-	
+
 	if beforeSymbol == nil {
 		return
 	}
