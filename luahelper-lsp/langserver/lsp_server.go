@@ -39,7 +39,7 @@ type LspServer struct {
 	fileErrorMap map[string][]common.CheckError
 
 	// 所有文件的诊断错误信息, 动态的，文件实时修改了，但是没有保存的错误
-	fileChangeErrorMap map[string]common.CheckError
+	fileChangeErrorMap map[string][]common.CheckError
 
 	// 请求互斥锁
 	requestMutex sync.Mutex
@@ -66,7 +66,7 @@ func CreateLspServer() *LspServer {
 		server:             nil,
 		project:            nil,
 		fileErrorMap:       map[string][]common.CheckError{},
-		fileChangeErrorMap: map[string]common.CheckError{},
+		fileChangeErrorMap: map[string][]common.CheckError{},
 		fileCache:          lspcommon.CreateFileMapCache(),
 		onlineReport: OnlineReport{
 			ClientType:  "vsc",

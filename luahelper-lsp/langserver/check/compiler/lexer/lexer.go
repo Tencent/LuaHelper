@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"luahelper-lsp/langserver/codingconv"
 	"luahelper-lsp/langserver/strbytesconv"
-	"regexp"
 	"strings"
 	"unicode/utf8"
 )
@@ -27,6 +26,10 @@ type TokenStruct struct {
 	lineStartPos int    // this line start in all pos
 	rangeFromPos int    // token start in all pos
 	rangeToPos   int    // token end in all pos
+}
+
+func (l *TokenStruct) GetLine() int {
+	return l.line
 }
 
 // ErrorHandler 词法分析上报错误
@@ -130,7 +133,7 @@ func (l *Lexer) LookAheadKind() TkKind {
 	l.lookAheardToken()
 
 	if !l.aheadToken.valid {
-		l.ErrorPrint("syntax error near '%s'", l.aheadToken.tokenStr)
+		l.errorPrint(l.GetPreTokenLoc(), "syntax error near '%s'", l.aheadToken.tokenStr)
 	}
 	return l.aheadToken.tokenKind
 }
@@ -152,6 +155,16 @@ func (l *Lexer) GetPreTokenLoc() Location {
 		EndLine:     l.preToken.line,
 		EndColumn:   l.preToken.rangeToPos - l.preToken.lineStartPos,
 	}
+}
+
+// GetNowToken get now token
+func (l *Lexer) GetNowToken() TokenStruct {
+	return l.nowToken
+}
+
+// GetPreToken get pre token
+func (l *Lexer) GetPreToken() TokenStruct {
+	return l.preToken
 }
 
 // GetNowTokenLoc get current Token location
@@ -199,14 +212,14 @@ func (l *Lexer) GetHeardTokenLoc() Location {
 
 // NextIdentifier 下一个标识
 func (l *Lexer) NextIdentifier() (line int, token string) {
-	return l.NextTokenOfKind(TkIdentifier)
+	return l.NextTokenKind(TkIdentifier)
 }
 
-// NextTokenOfKind 检查下一个单词的类型，匹配
-func (l *Lexer) NextTokenOfKind(kind TkKind) (line int, token string) {
+// NextTokenKind 检查下一个单词的类型，匹配
+func (l *Lexer) NextTokenKind(kind TkKind) (line int, token string) {
 	line, _kind, token := l.NextToken()
 	if kind != _kind {
-		l.ErrorPrint("syntax error near '%s'", token)
+		l.errorPrint(l.GetPreTokenLoc(), "expected %s, found '%s'", kind.String(), token)
 	}
 	return line, token
 }
@@ -250,7 +263,8 @@ func (l *Lexer) NextTokenStruct() {
 		return
 	}
 
-	switch l.chunk[0] {
+	c := l.chunk[0]
+	switch c {
 	case ';':
 		l.next(1)
 		l.setNowToken(TkSepSemi, ";")
@@ -398,7 +412,6 @@ func (l *Lexer) NextTokenStruct() {
 		return
 	}
 
-	c := l.chunk[0]
 	if c == '.' || isDigit(c) {
 		token := l.scanNumber()
 		l.setNowToken(TkNumber, token)
@@ -415,24 +428,31 @@ func (l *Lexer) NextTokenStruct() {
 		return
 	}
 
-	illegalStr :=  l.scanIllegalToken()
-	l.ErrorPrint("unexpected Unicode-name:%s", illegalStr)
+	lineFlag, illegalStr := l.scanIllegalToken()
 	l.setNowToken(IKIllegal, illegalStr)
-	return
+	l.errorPrint(l.GetNowTokenLoc(), "unexpected Unicode-name:%s", illegalStr)
+	if lineFlag {
+		l.line++
+		l.lineStartPos = l.currentPos
+	}
 }
 
-func (l *Lexer) scanIllegalToken() string {
-	str := ""
+func (l *Lexer) scanIllegalToken() (lineFlag bool, str string) {
 	i := 0
 	for i < len(l.chunk) {
 		ch := l.chunk[i]
 		i++
-		if ch == ' ' || ch == '\n' {
+		if ch == ' ' {
+			break
+		}
+
+		if ch == '\n' {
+			lineFlag = true
 			break
 		}
 	}
 
-	str += l.chunk[0 : i - 1]
+	str += l.chunk[0 : i-1]
 
 	//l.next(i)
 	// 转换为字符的个数，不在是utf8字节数
@@ -440,7 +460,7 @@ func (l *Lexer) scanIllegalToken() string {
 	strTemp := codingconv.ConvertStrToUtf8(str)
 	l.currentPos = l.currentPos + utf8.RuneCountInString(strTemp)
 
-	return str
+	return lineFlag, str
 }
 
 func (l *Lexer) next(n int) {
@@ -463,15 +483,12 @@ func (l *Lexer) test(s string) bool {
 	return true
 }
 
-// ErrorPrint 错误打印，词法分析报异常，终止后面的分析
-func (l *Lexer) ErrorPrint(f string, a ...interface{}) {
+// errorPrint 错误打印，词法分析报异常，终止后面的分析
+func (l *Lexer) errorPrint(loc Location, f string, a ...interface{}) {
 	err := fmt.Sprintf(f, a...)
-	errShow := fmt.Sprintf("%s:%d: %s", l.chunkName, l.preToken.line, err)
 	paseError := ParseError{
 		ErrStr:      err,
-		ShowStr:     errShow,
-		ErrToken:    l.preToken,
-		Loc:         l.GetPreTokenLoc(),
+		Loc:         loc,
 		ReadFileErr: false,
 	}
 
@@ -670,7 +687,7 @@ func (l *Lexer) scanNumber() string {
 	if beginCh == '.' {
 		oneFlag, oneChar := l.getIndexChar(i)
 		if !oneFlag {
-			l.ErrorPrint("malformed number")
+			l.errorPrint(l.GetHeardTokenLoc(), "malformed number")
 		}
 
 		beginCh = oneChar
@@ -722,28 +739,31 @@ func (l *Lexer) scanNumber() string {
 	return str
 }
 
-// 匹配一个正则表达式
-func (l *Lexer) scan(re *regexp.Regexp) string {
-	if token := re.FindString(l.chunk); token != "" {
-		l.next(len(token))
-		return token
-	}
-	l.ErrorPrint("unreachable!")
-	return ""
-}
-
 // scanLongString 扫描长字符串
 func (l *Lexer) scanLongString() string {
 	longBracket := l.matchLongStringBacket()
 	if longBracket == "" {
-		l.ErrorPrint("invalid long string delimiter near '%s'",
-			l.chunk[0:2])
+		l.errorPrint(l.GetHeardTokenLoc(), "invalid long string delimiter near '%s'", l.chunk[0:2])
+		return ""
 	}
 
 	longBracketEnd := strings.Replace(longBracket, "[", "]", -1)
 	longBracketIdx := strings.Index(l.chunk, longBracketEnd)
 	if longBracketIdx < 0 {
-		l.ErrorPrint("unfinished long string or comment")
+		str := l.chunk[len(longBracket):len(l.chunk)]
+		l.next(len(l.chunk))
+
+		str = newLineReplacer.Replace(str)
+		if strings.Count(str, "\n") > 0 {
+			l.line += strings.Count(str, "\n")
+			arryStr := strings.Split(str, "\n")
+			l.lineStartPos = l.currentPos - len(arryStr[len(arryStr)-1])
+		} else {
+			//l.lineStartPos = l.currentPos
+		}
+
+		l.errorPrint(l.GetHeardTokenLoc(), "missing `]]`")
+		return ""
 	}
 
 	str := l.chunk[len(longBracket):longBracketIdx]
@@ -826,7 +846,8 @@ func (l *Lexer) consumeEOL(i *int) bool { ///--- EOL = End Of Line
 func (l *Lexer) readEscapeSequence(i *int) (str string) {
 	nowFlag, nowCh := l.getIndexChar(*i)
 	if !nowFlag {
-		l.ErrorPrint("unfinished string")
+		l.errorPrint(l.GetHeardTokenLoc(), "unfinished string")
+		return ""
 	}
 
 	var sequenceStart = *i
@@ -868,7 +889,7 @@ func (l *Lexer) readEscapeSequence(i *int) (str string) {
 	//case 'u': // todo，这里减少了，参考lua5.3源码的实现
 	case '\n', '\r':
 		if !l.consumeEOL(i) {
-			l.ErrorPrint("unfinished string")
+			l.errorPrint(l.GetHeardTokenLoc(), "unfinished string")
 		}
 		return string('\n')
 	case '\\':
@@ -936,8 +957,16 @@ func (l *Lexer) scanShortString() string {
 
 		if i >= len(l.chunk) || (ch == '\r' || ch == '\n') {
 			str += l.chunk[stringStart : i-1]
-			l.next(i)
-			l.ErrorPrint("unfinished string")
+			if i >= len(l.chunk) {
+				l.next(i)
+			} else {
+				l.next(i - 1)
+			}
+			nowLoc := l.GetNowTokenLoc()
+			nowLoc.StartColumn = nowLoc.StartColumn + i
+			nowLoc.EndColumn = nowLoc.StartColumn + 1
+			l.errorPrint(nowLoc, "unfinished string, missing %c", delimiter)
+			return ""
 		}
 
 		if ch != '\\' {
@@ -946,11 +975,12 @@ func (l *Lexer) scanShortString() string {
 
 		str += l.chunk[stringStart:i-1] + l.readEscapeSequence(&i)
 		stringStart = i
-
 	}
 
 	if stringStart >= len(l.chunk) {
-		l.ErrorPrint("unfinished string")
+		l.next(i)
+		l.errorPrint(l.GetHeardTokenLoc(), "unfinished string, missing %c", delimiter)
+		return ""
 	}
 
 	str += l.chunk[stringStart : i-1]
@@ -958,9 +988,7 @@ func (l *Lexer) scanShortString() string {
 	//l.next(i)
 	// 转换为字符的个数，不在是utf8字节数
 	l.chunk = l.chunk[i:]
-
 	strTemp := codingconv.ConvertStrToUtf8(str)
-
 	l.currentPos = l.currentPos + utf8.RuneCountInString(strTemp) + 2
 
 	return str

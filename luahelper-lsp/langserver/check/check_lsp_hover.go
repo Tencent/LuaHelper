@@ -152,7 +152,6 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 		if referFunc != nil {
 			if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 				strPre = "local "
-				strType = "function " + referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
 			}
 
 			if symbol.VarInfo.ExtraGlobal != nil && symbol.VarInfo.ExtraGlobal.GFlag {

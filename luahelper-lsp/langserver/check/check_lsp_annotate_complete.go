@@ -79,8 +79,6 @@ func (a *AllProject) CompleteAnnotateArea() {
 	timeString := timeNow.Format("2006-01-02 15:04:05")
 	detail = "author: " + userName + " " + timeString
 	a.completeCache.InsertCompleteNormal(detail, detail, document, common.IKAnnotateClass)
-
-	return
 }
 
 // 获取注解输入param时候，提示所有的函数参数名
@@ -194,8 +192,6 @@ func (a *AllProject) AnnotateTypeComplete(strFile string, strLine string, strWor
 		a.getFuncParamTypeComplete(strFile, posLine)
 		return
 	}
-
-	return
 }
 
 // 获取补全注解系统的所有类型
@@ -251,8 +247,6 @@ func (a *AllProject) getTypeCompleteVecs(strFile, strWord string, posLine int) {
 
 	// 5）最后插入fun
 	a.completeCache.InsertCompleteNormal("fun", "function", "", common.IKAnnotateClass)
-
-	return
 }
 
 // 获取块注释段引入的generic泛型类型系统
@@ -284,8 +278,6 @@ func (a *AllProject) getGenericCompleteVecs(strFile, preStr string, posLine int)
 
 		a.completeCache.InsertCompleteNormal(strName, "generic", strFile, common.IKAnnotateClass)
 	}
-
-	return
 }
 
 // oneClassInfo 转换为对应的completeVecs
@@ -421,6 +413,4 @@ func (a *AllProject) getFuncReturnCompleteExt(symbol *common.Symbol, colonFlag b
 	for _, varFileTmp := range symList {
 		a.getVarInfoCompleteExt(varFileTmp, colonFlag)
 	}
-
-	return
 }

@@ -186,7 +186,7 @@ func (l *LspServer) clearLspServer(ctx context.Context) {
 	}
 
 	l.fileErrorMap = map[string][]common.CheckError{}
-	l.fileChangeErrorMap = map[string]common.CheckError{}
+	l.fileChangeErrorMap = map[string][]common.CheckError{}
 	l.fileCache = lspcommon.CreateFileMapCache()
 }
 

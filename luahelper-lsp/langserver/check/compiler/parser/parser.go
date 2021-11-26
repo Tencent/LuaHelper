@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+	"log"
 	"luahelper-lsp/langserver/check/compiler/ast"
 	"luahelper-lsp/langserver/check/compiler/lexer"
 )
@@ -16,9 +18,7 @@ type Parser struct {
 // CreateParser 创建一个分析对象
 func CreateParser(chunk []byte, chunkName string) *Parser {
 	parser := &Parser{}
-	errHandler := func(oneErr lexer.ParseError) {
-		parser.parseErrs = append(parser.parseErrs, oneErr)
-	}
+	errHandler := parser.insertErr
 	parser.l = lexer.NewLexer(chunk, chunkName)
 	parser.l.SetErrHandler(errHandler)
 
@@ -26,11 +26,12 @@ func CreateParser(chunk []byte, chunkName string) *Parser {
 }
 
 // BeginAnalyze 开始分析
-func (p *Parser) BeginAnalyze() (block *ast.Block, commentMap map[int]*lexer.CommentInfo, err error) {
+func (p *Parser) BeginAnalyze() (block *ast.Block, commentMap map[int]*lexer.CommentInfo, errList []lexer.ParseError) {
 	defer func() {
 		if recoverErr := recover(); recoverErr != nil {
-			parseErr := recoverErr.(lexer.ParseError)
-			err = parseErr
+			//parseErr := recoverErr.(lexer.ParseError)
+			//err = parseErr
+			log.Printf("ok")
 		}
 	}()
 
@@ -41,9 +42,9 @@ func (p *Parser) BeginAnalyze() (block *ast.Block, commentMap map[int]*lexer.Com
 	blockEndLoc := p.l.GetNowTokenLoc()
 	block.Loc = lexer.GetRangeLoc(&blockBeginLoc, &blockEndLoc)
 
-	p.l.NextTokenOfKind(lexer.TkEOF)
+	p.l.NextTokenKind(lexer.TkEOF)
 	p.l.SetEnd()
-	return block, p.l.GetCommentMap(), nil
+	return block, p.l.GetCommentMap(), p.parseErrs
 }
 
 // BeginAnalyzeExp ParseExp single exp
@@ -56,4 +57,25 @@ func (p *Parser) BeginAnalyzeExp() (exp ast.Exp) {
 
 	exp = p.parseSubExp(0)
 	return exp
+}
+
+// GetErrList get parse error list
+func (p *Parser) GetErrList() (errList []lexer.ParseError) {
+	return p.parseErrs
+}
+
+// insert now token info
+func (p *Parser) insertParserErr(loc lexer.Location, f string, a ...interface{}) {
+	err := fmt.Sprintf(f, a...)
+	paseError := lexer.ParseError{
+		ErrStr:      err,
+		Loc:         loc,
+		ReadFileErr: false,
+	}
+
+	p.insertErr(paseError)
+}
+
+func (p *Parser) insertErr(oneErr lexer.ParseError) {
+	p.parseErrs = append(p.parseErrs, oneErr)
 }
