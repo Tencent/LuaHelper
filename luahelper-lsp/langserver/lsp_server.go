@@ -142,11 +142,7 @@ func (g *LspServer) setColorTime(timeValue int64) {
 func (g *LspServer) isCanHighlight() bool {
 	// 如果修改文件的时间太频繁，返回false
 	nowTime := time.Now().Unix()
-	if nowTime-g.colorTime >= 3 {
-		return true
-	}
-
-	return false
+	return nowTime-g.colorTime >= 3
 }
 
 // setConfigSet 设置配置

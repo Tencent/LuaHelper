@@ -77,12 +77,12 @@ func TestHover1(t *testing.T) {
 		Character: 13,
 	})
 
-	for _, onePoisiton := range positionList {
+	for _, onePosiiton := range positionList {
 		hoverParams := lsp.TextDocumentPositionParams{
 			TextDocument: lsp.TextDocumentIdentifier{
 				URI: lsp.DocumentURI(fileName),
 			},
-			Position: onePoisiton,
+			Position: onePosiiton,
 		}
 		hoverReturn1, err1 := lspServer.TextDocumentHover(context, hoverParams)
 		if err1 != nil {
@@ -90,7 +90,7 @@ func TestHover1(t *testing.T) {
 		}
 
 		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
-		if strings.Index(hoverMarkUpReturn1.Contents.Value, "uiButton") < 0 {
+		if !strings.Contains(hoverMarkUpReturn1.Contents.Value, "uiButton") {
 			t.Fatalf("hover error, not find uiButton")
 		}
 	}
@@ -239,7 +239,7 @@ func TestHover2(t *testing.T) {
 		}
 
 		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
-		if strings.Index(hoverMarkUpReturn1.Contents.Value, resultList[index]) < 0 {
+		if !strings.Contains(hoverMarkUpReturn1.Contents.Value, resultList[index]) {
 			t.Fatalf("hover error, not find str=%s, index=%d", resultList[index], index)
 		}
 	}
@@ -320,7 +320,7 @@ func TestHover3(t *testing.T) {
 		}
 
 		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
-		if strings.Index(hoverMarkUpReturn1.Contents.Value, resultList[index]) < 0 {
+		if !strings.Contains(hoverMarkUpReturn1.Contents.Value, resultList[index]) {
 			t.Fatalf("hover error, not find str=%s, index=%d", resultList[index], index)
 		}
 	}
@@ -395,7 +395,7 @@ func TestHover4(t *testing.T) {
 		}
 
 		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
-		if strings.Index(hoverMarkUpReturn1.Contents.Value, resultList[index]) < 0 {
+		if !strings.Contains(hoverMarkUpReturn1.Contents.Value, resultList[index]) {
 			t.Fatalf("hover error, not find str=%s, index=%d", resultList[index], index)
 		}
 	}
