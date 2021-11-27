@@ -1393,7 +1393,7 @@ func (a *AllProject) getDeepVarList(oldSymbol *common.Symbol, varStruct *common.
 		// 没有找到，那么这个变量，它关联的上一层变量呢
 		// 递归进行查找
 		subFindFlag := false
-		tmpList := a.FindDeepSymbolList(lastLuaFile, lastExp, comParam, &findExpList, false, varIndex)
+		tmpList := a.FindDeepSymbolList(lastLuaFile, lastExp, comParam, &findExpList, true, varIndex)
 		for _, oneSymbol := range tmpList {
 			if subSymbol := a.symbolHasSubKey(oneSymbol, strKey, comParam, &findExpList); subSymbol != nil {
 				lastSymbol = subSymbol
@@ -1415,7 +1415,7 @@ func (a *AllProject) getDeepVarList(oldSymbol *common.Symbol, varStruct *common.
 	}
 
 	tmpList := a.FindDeepSymbolList(lastSymbol.FileName, lastSymbol.VarInfo.ReferExp, comParam,
-		&findExpList, false, lastSymbol.VarInfo.VarIndex)
+		&findExpList, true, lastSymbol.VarInfo.VarIndex)
 	symList = append(symList, tmpList...)
 	return symList
 }
