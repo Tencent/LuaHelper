@@ -214,7 +214,7 @@ func (l *Lexer) NextIdentifier() (line int, token string) {
 func (l *Lexer) NextTokenKind(kind TkKind) (line int, token string) {
 	line, _kind, token := l.NextToken()
 	if kind != _kind {
-		l.errorPrint(l.GetPreTokenLoc(), "expected %s, found '%s'", kind.String(), token)
+		l.errorPrint(l.GetNowTokenLoc(), "expected %s, found '%s'", kind.String(), token)
 	}
 	return line, token
 }

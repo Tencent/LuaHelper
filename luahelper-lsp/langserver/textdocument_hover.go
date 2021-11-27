@@ -146,7 +146,7 @@ func (l *LspServer) handleAnnotateTypeHover(comResult commFileRequest) (strLabl,
 
 	// 1) 判断是否为类似的 ---@param 注解
 	strArea := "---@" + strWord
-	if strings.Index(strLine, strArea) >= 0 {
+	if strings.Contains(strLine, strArea) {
 		return "", getAnnotateAreaHoverStr(strWord), "", true
 	}
 

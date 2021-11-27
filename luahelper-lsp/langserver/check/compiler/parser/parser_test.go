@@ -382,5 +382,54 @@ func TestParseShortStrIllegal3(t *testing.T) {
 	if block == nil {
 		t.Logf("is nil")
 	}
+}
 
+func TestParseExpectTokenIllega(t *testing.T) {
+	parser := CreateParser([]byte("dfjsofjao\nsfjosjaf\nif faf fsf\nelseif fsf ffa\nend"), "test")
+	block, _, errList := parser.BeginAnalyze()
+
+	var expectLocList []lexer.Location
+
+	// 0
+	expectLocList = append(expectLocList, lexer.Location{
+		StartLine:   1,
+		StartColumn: 0,
+		EndLine:     1,
+		EndColumn:   9,
+	})
+	// 1
+	expectLocList = append(expectLocList, lexer.Location{
+		StartLine:   2,
+		StartColumn: 0,
+		EndLine:     2,
+		EndColumn:   8,
+	})
+	// 3
+	expectLocList = append(expectLocList, lexer.Location{
+		StartLine:   3,
+		StartColumn: 7,
+		EndLine:     3,
+		EndColumn:   10,
+	})
+	// 4
+	expectLocList = append(expectLocList, lexer.Location{
+		StartLine:   4,
+		StartColumn: 11,
+		EndLine:     4,
+		EndColumn:   14,
+	})
+
+	if len(errList) != len(expectLocList) {
+		t.Fatalf("parser errList len err")
+	}
+
+	for i, oneErr := range errList {
+		if !lexer.CompareTwoLoc(&oneErr.Loc, &expectLocList[i]) {
+			t.Fatalf("index=%d loc err", i)
+		}
+	}
+
+	if block == nil {
+		t.Logf("is nil")
+	}
 }
