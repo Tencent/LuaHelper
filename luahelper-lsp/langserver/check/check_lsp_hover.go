@@ -49,25 +49,25 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 	dirManager := common.GConfig.GetDirManager()
 
 	for _, oneSymbol := range findList {
-		strType, strLable1, strDoc1, strPre, flag := a.getVarHoverInfo(oneSymbol, varStruct)
+		strType, strLabel1, strDoc1, strPre, flag := a.getVarHoverInfo(oneSymbol, varStruct)
 		if !preFirstFlag {
 			strPreFirst = strPre
 			preFirstFlag = true
 		}
 
 		if flag {
-			lableStr = strLable1
-			if strPreFirst == "_G." && strings.HasPrefix(strLable1, "function ") {
+			lableStr = strLabel1
+			if strPreFirst == "_G." && strings.HasPrefix(strLabel1, "function ") {
 				//  修复特殊的 _G.function a() 这样的显示
-				lableStr = "[_G] " + strLable1
+				lableStr = "[_G] " + strLabel1
 			} else {
-				if strPreFirst == "local " && strings.HasPrefix(strLable1, "function _G.") {
-					lableStr = strPreFirst + "function " + strings.TrimPrefix(strLable1, "function _G.")
+				if strPreFirst == "local " && strings.HasPrefix(strLabel1, "function _G.") {
+					lableStr = strPreFirst + "function " + strings.TrimPrefix(strLabel1, "function _G.")
 				} else {
-					if strings.HasPrefix(strLable1, "_G.") {
-						lableStr = strLable1
+					if strings.HasPrefix(strLabel1, "_G.") {
+						lableStr = strLabel1
 					} else {
-						lableStr = strPreFirst + strLable1
+						lableStr = strPreFirst + strLabel1
 					}
 				}
 			}
@@ -79,7 +79,7 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 
 		if strLastType == "" || strLastType == "any" {
 			strLastType = strType
-			strLastBefore = strLable1
+			strLastBefore = strLabel1
 			luaFileStr = dirManager.RemovePathDirPre(oneSymbol.FileName)
 		}
 
@@ -109,19 +109,19 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 }
 
 func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.DefineVarStruct) (strType string,
-	strLable, strDoc, strPre string, findFlag bool) {
+	strLabel, strDoc, strPre string, findFlag bool) {
 	// 1) 首先提取注解类型
 	if symbol.AnnotateType != nil {
 		str := annotateast.TypeConvertStr(symbol.AnnotateType)
-		strLable = varStruct.Str + " : " + str
+		strLabel = varStruct.Str + " : " + str
 
 		// 判断是否关联成number，如果是number类型尝试获取具体的值
 		if symbol.VarInfo != nil {
 			// strType := symbol.VarInfo.GetVarTypeDetail()
 			// if strings.HasPrefix(strType, "number: ") {
-			// 	strLable = varStruct.Str + " : number = " + strings.TrimPrefix(strType, "number: ")
+			// 	strLabel = varStruct.Str + " : number = " + strings.TrimPrefix(strType, "number: ")
 			// }
-			// strLable = varStruct.Str + " : " + strType
+			// strLabel = varStruct.Str + " : " + strType
 
 			if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 				strPre = "local "
@@ -162,13 +162,13 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 		}
 	}
 
-	strLable = strings.Join(varStruct.StrVec, ".")
+	strLabel = strings.Join(varStruct.StrVec, ".")
 	if symbol.VarInfo.ReferFunc == nil {
 		// if strings.HasPrefix(strType, "number: ") {
 		// 	strType = "number = " + strings.TrimPrefix(strType, "number: ")
 		// }
 
-		strLable = strLable + " : " + strType
+		strLabel = strLabel + " : " + strType
 		if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 			strPre = "local "
 		}
@@ -177,7 +177,7 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 			strPre = "_G."
 		}
 	} else {
-		strLable = strType
+		strLabel = strType
 	}
 
 	strDoc = a.GetLineComment(symbol.FileName, symbol.VarInfo.Loc.EndLine)
