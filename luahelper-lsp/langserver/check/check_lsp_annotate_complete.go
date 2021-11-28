@@ -340,9 +340,7 @@ func (a *AllProject) getVarInfoCompleteExt(symbol *common.Symbol, colonFlag bool
 
 	// 1) 判断注解开关是否有打开, 如果注解打开获取注解的里面的信息
 	if symbol.AnnotateType != nil {
-		line := symbol.GetLine()
-
-		classList := a.getAllNormalAnnotateClass(symbol.AnnotateType, symbol.FileName, line)
+		classList := a.getAllNormalAnnotateClass(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
 		for _, oneClass := range classList {
 			a.convertClassInfoToCompleteVecs(oneClass, colonFlag)
 		}

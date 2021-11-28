@@ -326,8 +326,8 @@ func TestHover3(t *testing.T) {
 	}
 }
 
+// 测试项目中特有的improt功能
 func TestHover4(t *testing.T) {
-	// 测试项目中特有的improt功能
 	_, filename, _, _ := runtime.Caller(0)
 	paths, _ := filepath.Split(filename)
 
@@ -397,6 +397,184 @@ func TestHover4(t *testing.T) {
 		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
 		if !strings.Contains(hoverMarkUpReturn1.Contents.Value, resultList[index]) {
 			t.Fatalf("hover error, not find str=%s, index=%d", resultList[index], index)
+		}
+	}
+}
+
+// 测试hover一个table时候，展开table的所有信息
+func TestHover5(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/hover"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "hover5.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+	openParams := lsp.DidOpenTextDocumentParams{
+		TextDocument: lsp.TextDocumentItem{
+			URI:  lsp.DocumentURI(fileName),
+			Text: string(data),
+		},
+	}
+	err1 := lspServer.TextDocumentDidOpen(context, openParams)
+	if err1 != nil {
+		t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+	}
+
+	var resultList []string = []string{}
+	var positionList []lsp.Position = []lsp.Position{}
+
+	positionList = append(positionList, lsp.Position{
+		Line:      6,
+		Character: 8,
+	})
+	resultList = append(resultList, "anumber: number")
+	positionList = append(positionList, lsp.Position{
+		Line:      6,
+		Character: 8,
+	})
+	resultList = append(resultList, "bstring: string")
+
+	positionList = append(positionList, lsp.Position{
+		Line:      6,
+		Character: 8,
+	})
+	resultList = append(resultList, "dtable: table")
+
+	positionList = append(positionList, lsp.Position{
+		Line:      6,
+		Character: 8,
+	})
+	resultList = append(resultList, "cany: any")
+
+	positionList = append(positionList, lsp.Position{
+		Line:      9,
+		Character: 8,
+	})
+	resultList = append(resultList, "anumber: number")
+	positionList = append(positionList, lsp.Position{
+		Line:      9,
+		Character: 8,
+	})
+	resultList = append(resultList, "bstring: string")
+
+	positionList = append(positionList, lsp.Position{
+		Line:      9,
+		Character: 8,
+	})
+	resultList = append(resultList, "dtable: table")
+
+	positionList = append(positionList, lsp.Position{
+		Line:      9,
+		Character: 8,
+	})
+	resultList = append(resultList, "cany: any")
+
+	for index, onePoisiton := range positionList {
+		hoverParams := lsp.TextDocumentPositionParams{
+			TextDocument: lsp.TextDocumentIdentifier{
+				URI: lsp.DocumentURI(fileName),
+			},
+			Position: onePoisiton,
+		}
+		hoverReturn1, err1 := lspServer.TextDocumentHover(context, hoverParams)
+		if err1 != nil {
+			t.Fatalf("TextDocumentHover file:%s err=%s", fileName, err1.Error())
+		}
+
+		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
+		if !strings.Contains(hoverMarkUpReturn1.Contents.Value, resultList[index]) {
+			t.Fatalf("hover error, not find str=%s, index=%d", resultList[index], index)
+		}
+	}
+}
+
+// 测试hover注解类型时候，展开信息
+func TestHover6(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/hover"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "hover6.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+	openParams := lsp.DidOpenTextDocumentParams{
+		TextDocument: lsp.TextDocumentItem{
+			URI:  lsp.DocumentURI(fileName),
+			Text: string(data),
+		},
+	}
+	err1 := lspServer.TextDocumentDidOpen(context, openParams)
+	if err1 != nil {
+		t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+	}
+
+	var resultList []string = []string{}
+	var positionList []lsp.Position = []lsp.Position{}
+
+	positionList = append(positionList, lsp.Position{
+		Line:      0,
+		Character: 13,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      6,
+		Character: 12,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      7,
+		Character: 10,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      8,
+		Character: 4,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      10,
+		Character: 10,
+	})
+
+	resultList = append(resultList, "astring: string")
+	resultList = append(resultList, "bnumber: number")
+	resultList = append(resultList, "cany: any")
+	resultList = append(resultList, "dfun: function")
+	resultList = append(resultList, "abc: number")
+
+	for index, onePoisiton := range positionList {
+		hoverParams := lsp.TextDocumentPositionParams{
+			TextDocument: lsp.TextDocumentIdentifier{
+				URI: lsp.DocumentURI(fileName),
+			},
+			Position: onePoisiton,
+		}
+		hoverReturn1, err1 := lspServer.TextDocumentHover(context, hoverParams)
+		if err1 != nil {
+			t.Fatalf("TextDocumentHover file:%s err=%s", fileName, err1.Error())
+		}
+
+		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
+
+		for _, oneStr := range resultList {
+			if !strings.Contains(hoverMarkUpReturn1.Contents.Value, oneStr) {
+				t.Fatalf("hover error, not find str=%s, index=%d", oneStr, index)
+			}
 		}
 	}
 }
