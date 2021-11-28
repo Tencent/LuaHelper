@@ -118,8 +118,14 @@ func traverseMapInStringOrder(params map[string]string, handler mapEntryHandler)
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	for _, k := range keys {
-		handler(k, params[k])
+	for index, k := range keys {
+		if index == common.GConfig.PreviewFieldsNum {
+			strMore := fmt.Sprintf("...(+%d)", len(keys)-common.GConfig.PreviewFieldsNum)
+			handler(k, strMore)
+			break
+		} else {
+			handler(k, params[k])
+		}
 	}
 }
 
