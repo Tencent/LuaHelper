@@ -768,9 +768,14 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 		symbol := common.GetDefaultSymbol(item.LuaFile, varInfo)
 		astType, strComment, strPreComment := a.getInfoFileAnnotateType(item.Label, symbol)
 		if astType != nil {
-			str := annotateast.TypeConvertStr(astType)
+			//str := annotateast.TypeConvertStr(astType)
+			str := a.completeAnnotatTypeStr(astType, item.LuaFile, symbol.GetLine())
 			if strPreComment != "" {
-				item.Detail = strPreComment + "  " + str
+				if strPreComment == "type" {
+					item.Detail = item.Label + " : " + str
+				} else {
+					item.Detail = strPreComment + "  " + str
+				}
 			} else {
 				item.Detail = str
 			}
@@ -790,7 +795,13 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 		}
 
 		item.Detail = varInfo.GetVarTypeDetail()
-		if item.Detail == "any" {
+		expandFlag := false
+		if item.Detail == "table" || len(varInfo.SubMaps) > 0 {
+			item.Detail = a.expandTableHover(symbol)
+			expandFlag = true
+		}
+
+		if item.Detail == "any" || expandFlag {
 			comParam := a.getCommFunc(item.LuaFile, varInfo.Loc.StartLine, varInfo.Loc.StartColumn)
 			if comParam == nil {
 				return
@@ -800,23 +811,29 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 			findExpList := []common.FindExpFile{}
 			// 这里也需要做判断，函数返回的变量逐层跟踪，目前只跟踪了一层
 			symList := a.FindDeepSymbolList(item.LuaFile, item.VarInfo.ReferExp, comParam, &findExpList, true, 1)
-			for _, varFileTmp := range symList {
+			for _, symbolTmp := range symList {
 				// 判断是否为注解类型
-				if varFileTmp.AnnotateType != nil {
-					item.Detail = annotateast.TypeConvertStr(varFileTmp.AnnotateType)
-				} else if varFileTmp.VarInfo != nil {
-					strDetail := varFileTmp.VarInfo.GetVarTypeDetail()
+				if symbolTmp.AnnotateType != nil {
+					//item.Detail = annotateast.TypeConvertStr(varFileTmp.AnnotateType)
+					item.Detail = item.Label + " : " + a.expandTableHover(symbolTmp)
+					break
+				} else if symbolTmp.VarInfo != nil {
+					strDetail := symbolTmp.VarInfo.GetVarTypeDetail()
+					if strDetail == "table" || len(symbolTmp.VarInfo.SubMaps) > 0 {
+						strDetail = a.expandTableHover(symbolTmp)
+					}
+
 					if strDetail != "any" {
 						item.Detail = strDetail
 					}
 
-					if varFileTmp.VarInfo.ReferFunc != nil {
-						item.Detail = "function " + varFileTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
+					if symbolTmp.VarInfo.ReferFunc != nil {
+						item.Detail = "function " + symbolTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
 					}
 
 					// 如果为引用的模块
-					if varFileTmp.VarInfo.ReferInfo != nil {
-						item.Detail = varFileTmp.VarInfo.ReferInfo.GetReferComment()
+					if symbolTmp.VarInfo.ReferInfo != nil {
+						item.Detail = symbolTmp.VarInfo.ReferInfo.GetReferComment()
 					}
 				}
 			}
@@ -858,6 +875,8 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 			item.Detail = "class " + typeOne.ClassInfo.ClassState.Name
 			if len(typeOne.ClassInfo.ClassState.ParentNameList) > 0 {
 				item.Detail = item.Detail + " : " + strings.Join(typeOne.ClassInfo.ClassState.ParentNameList, " , ")
+			} else {
+				item.Detail = "class " + typeOne.ClassInfo.ClassState.Name + a.getClassFieldStr(typeOne.ClassInfo)
 			}
 
 			strComment := typeOne.ClassInfo.ClassState.Comment
