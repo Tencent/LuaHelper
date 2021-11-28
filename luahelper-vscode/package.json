@@ -308,12 +308,34 @@
         "configuration": {
             "title": "Lua Helper",
             "properties": {
-                "luahelper.project.rootdir": {
+                "luahelper.colors.Enable": {
+                    "default": true,
+                    "scope": "resource",
+                    "type": "boolean",
+                    "description": "%luahelper.colors.Enable%"
+                },
+                "luahelper.colors.Global Field Color": {
+                    "type": "string",
+                    "default": "#ee9d28",
+                    "description": "%luahelper.colors.globalfield%"
+                },
+                "luahelper.colors.Global Fun Color": {
+                    "type": "string",
+                    "default": "#ee9d28",
+                    "description": "%luahelper.colors.globalfun%"
+                },
+                "luahelper.colors.Type(annotation) Color": {
+                    "type": "string",
+                    "default": "#569CD6",
+                    "description": "%luahelper.colors.annotatetype%"
+                },
+
+                "luahelper.base.rootdir": {
                     "type": "string",
                     "default": "./",
                     "description": "%luahelper.source.rootdir%"
                 },
-                "luahelper.project.lsp": {
+                "luahelper.base.lsp": {
                     "type": "string",
                     "default": "cmd rpc",
                     "enum": [
@@ -326,7 +348,13 @@
                         "%luahelper.run.socketrpc%"
                     ]
                 },
-                "luahelper.project.requirePathSeparator": {
+                "luahelper.base.lspserverLog": {
+                    "default": false,
+                    "scope": "resource",
+                    "type": "boolean",
+                    "description": "%luahelper.lspserver.log%"
+                },
+                "luahelper.base.requirePathSeparator": {
                     "type": "string",
                     "default": ".",
                     "enum": [
@@ -339,7 +367,7 @@
                         "%luahelper.project.requirePathSeparator2%"
                     ]
                 },
-                "luahelper.project.ignoreFileOrDir": {
+                "luahelper.base.ignoreFileOrDir": {
                     "default": [
                         ".vscode/",
                         "one11.lua"
@@ -351,7 +379,7 @@
                     "scope": "resource",
                     "type": "array"
                 },
-                "luahelper.project.ignoreFileOrDirError": {
+                "luahelper.base.ignoreFileOrDirError": {
                     "default": [
                         ".vscode/",
                         "one11.lua"
@@ -363,35 +391,42 @@
                     "scope": "resource",
                     "type": "array"
                 },
-                "luahelper.reference.maxNum": {
+                "luahelper.base.referenceMaxNum": {
                     "default": 3000,
                     "scope": "resource",
                     "type": "integer",
                     "description": "%luahelper.reference.maxNum%"
                 },
-                "luahelper.show.online": {
-                    "default": true,
-                    "scope": "resource",
-                    "type": "boolean",
-                    "description": "%luahelper.show.online%"
-                },
-                "luahelper.show.costTime": {
-                    "default": false,
-                    "scope": "resource",
-                    "type": "boolean",
-                    "description": "%luahelper.show.costTime%"
-                },
-                "luahelper.reference.incudeDefine": {
+                "luahelper.base.referenceIncudeDefine": {
                     "default": true,
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.reference.incudeDefine%"
                 },
-                "luahelper.format.errShow": {
+                "luahelper.base.showOnline": {
+                    "default": true,
+                    "scope": "resource",
+                    "type": "boolean",
+                    "description": "%luahelper.show.online%"
+                },
+               
+                "luahelper.base.showCostTime": {
+                    "default": false,
+                    "scope": "resource",
+                    "type": "boolean",
+                    "description": "%luahelper.show.costTime%"
+                },
+                "luahelper.base.formatErrShow": {
                     "default": true,
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.format.errShow%"
+                },
+                "luahelper.base.PreviewFieldsNum": {
+                    "default": 30,
+                    "scope": "resource",
+                    "type": "integer",
+                    "description": "%luahelper.base.PreviewFieldsNum%"
                 },
                 "luahelper.format.0 allReadMe": {
                     "default": "https://github.com/Koihik/LuaFormatter",
@@ -578,34 +613,7 @@
                     "scope": "resource",
                     "type": "integer",
                     "markdownDescription": "%luahelper.format.line_breaks_after_function_body%"
-                },
-                "luahelper.lspserver.log": {
-                    "default": false,
-                    "scope": "resource",
-                    "type": "boolean",
-                    "description": "%luahelper.lspserver.log%"
-                },
-                "luahelper.colors.Enable": {
-                    "default": true,
-                    "scope": "resource",
-                    "type": "boolean",
-                    "description": "%luahelper.colors.Enable%"
-                },
-                "luahelper.colors.Global Field Color": {
-                    "type": "string",
-                    "default": "#ee9d28",
-                    "description": "%luahelper.colors.globalfield%"
-                },
-                "luahelper.colors.Global Fun Color": {
-                    "type": "string",
-                    "default": "#ee9d28",
-                    "description": "%luahelper.colors.globalfun%"
-                },
-                "luahelper.colors.Type(annotation) Color": {
-                    "type": "string",
-                    "default": "#569CD6",
-                    "description": "%luahelper.colors.annotatetype%"
-                },
+                },             
                 "luahelper.Warn.AllEnable": {
                     "default": true,
                     "scope": "resource",

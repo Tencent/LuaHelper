@@ -23,9 +23,6 @@ type GlobalConfig struct {
 	// 如果是包含工程的入口文件，配置读取，后台专门定制的特性
 	ProjectFiles []string
 
-	// 后台专业的，用于解释tlog，用于调整定义到tlog中
-	TlogXMLPath string
-
 	// 是否开启告警
 	showWarnFlag bool
 
@@ -118,6 +115,7 @@ type GlobalConfig struct {
 
 	ReferenceMaxNum     int  // 查找引用时候，返回的最大的引用数量
 	ReferenceDefineFlag bool // 查找引用时候，是否需要显示定义
+	PreviewFieldsNum    int  // 当hover一个table时，显示最多field的数量
 
 	// 查询_G.a 这样的全局符号，a是否会扩大到全局符号定义
 	// 例如前面定义了a=1,  那么此时_G.a 会指向前面的a=1
@@ -143,6 +141,7 @@ func createDefaultGlobalConfig() {
 		ReferMatchPathFlag:     false,
 		showWarnFlag:           false,
 		ReferenceMaxNum:        3000,
+		PreviewFieldsNum:       30,
 		ReferenceDefineFlag:    true,
 		GVarExtendGlobalFlag:   true,
 		colonFlag:              0,
@@ -237,7 +236,6 @@ type (
 		ProtocolPreIngoreFlag int                 `json:"ProtocolPreIngoreFlag"` // 协议前缀变量未找到，是否告警, 默认告警
 		ReferFrameFiles       []referFrameFile    `json:"ReferFrameFiles"`       // 项目中引用其他的框架文件
 		PathSeparator         string              `json:"PathSeparator"`         // 项目中引入其他文件，路径分隔符，默认为. 例如require("one.b") 表示引入one/b.lua 文件
-		TlogXMLPath           string              `json:"tlogXmlPath"`           // 所有工程的根目录
 		AnntotateSets         []AnntotateSet      `json:"AnntotateSets"`         // 自动推导的注解方式
 	}
 )
@@ -266,7 +264,6 @@ func createDefaultJSONCfig() {
 		ProtocolPreIngoreFlag: 0,
 		ReferFrameFiles:       []referFrameFile{{Name: "import", Type: 0, SuffixFlag: 1}},
 		PathSeparator:         ".",
-		TlogXMLPath:           "",
 		AnntotateSets:         []AnntotateSet{},
 	}
 }
@@ -528,7 +525,6 @@ func (g *GlobalConfig) ReadConfig(strDir, configFileName string, checkFlagList [
 
 	g.ProjectFiles = jsonConfig.ProjectFiles
 
-	g.TlogXMLPath = jsonConfig.TlogXMLPath
 	g.ReferMatchPathFlag = (jsonConfig.ReferMatchPathFlag == 1)
 	g.showWarnFlag = (jsonConfig.ShowWarnFlag == 1)
 
@@ -645,6 +641,12 @@ func (g *GlobalConfig) SetRequirePathSeparator(pathSeparator string) {
 	}
 
 	GConfig.PathSeparator = pathSeparator
+}
+
+func (g *GlobalConfig) SetPreviewFieldsNum(num int) {
+	if num > 0 {
+		GConfig.PreviewFieldsNum = num
+	}
 }
 
 // InsertIngoreSystemModule 如果为本地形式运行，加载不了插件前端的Lua额外文件夹，忽略系统模块。批量插入

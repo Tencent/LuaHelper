@@ -433,3 +433,65 @@ func TestParseExpectTokenIllega(t *testing.T) {
 		t.Logf("is nil")
 	}
 }
+
+// 解析之前panic例子=
+func TestParseIllega1(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+	strRootPath := paths + "../../../../testdata/parse"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	fileName := strRootPath + "/" + "test2.lua"
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		t.Fatalf("read file errr")
+	}
+
+	parser := CreateParser([]byte(data), "test")
+	block, _, errList := parser.BeginAnalyze()
+
+	var expectLocList []lexer.Location
+
+	// 0
+	expectLocList = append(expectLocList, lexer.Location{
+		StartLine:   1,
+		StartColumn: 0,
+		EndLine:     1,
+		EndColumn:   9,
+	})
+	// 1
+	expectLocList = append(expectLocList, lexer.Location{
+		StartLine:   2,
+		StartColumn: 0,
+		EndLine:     2,
+		EndColumn:   8,
+	})
+	// 3
+	expectLocList = append(expectLocList, lexer.Location{
+		StartLine:   3,
+		StartColumn: 7,
+		EndLine:     3,
+		EndColumn:   10,
+	})
+	// 4
+	expectLocList = append(expectLocList, lexer.Location{
+		StartLine:   4,
+		StartColumn: 11,
+		EndLine:     4,
+		EndColumn:   14,
+	})
+
+	if len(errList) != len(expectLocList) {
+		t.Fatalf("parser errList len err")
+	}
+
+	for i, oneErr := range errList {
+		if !lexer.CompareTwoLoc(&oneErr.Loc, &expectLocList[i]) {
+			t.Fatalf("index=%d loc err", i)
+		}
+	}
+
+	if block == nil {
+		t.Logf("is nil")
+	}
+}
