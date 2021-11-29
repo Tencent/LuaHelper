@@ -515,8 +515,12 @@ func (p *Parser) checkVar(exp ast.Exp) ast.Exp {
 		return exp
 	}
 
-	l.NextTokenKind(-1) // trigger error
-	panic("unreachable!")
+	loc := l.GetNowTokenLoc()
+	return &ast.BadExpr{
+		Loc: loc,
+	}
+	// l.NextTokenKind(-1) // trigger error
+	// panic("unreachable!")
 }
 
 // function funcname funcbody
