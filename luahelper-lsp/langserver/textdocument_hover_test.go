@@ -653,3 +653,80 @@ func TestHover6(t *testing.T) {
 		}
 	}
 }
+
+// 测试hover注解类型时候，展开信息2
+func TestHover7(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/hover"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "hover7.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+	openParams := lsp.DidOpenTextDocumentParams{
+		TextDocument: lsp.TextDocumentItem{
+			URI:  lsp.DocumentURI(fileName),
+			Text: string(data),
+		},
+	}
+	err1 := lspServer.TextDocumentDidOpen(context, openParams)
+	if err1 != nil {
+		t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+	}
+
+	var resultList []string = []string{}
+	var positionList []lsp.Position = []lsp.Position{}
+
+	positionList = append(positionList, lsp.Position{
+		Line:      13,
+		Character: 10,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      14,
+		Character: 10,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      0,
+		Character: 10,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      1,
+		Character: 10,
+	})
+
+	resultList = append(resultList, "open_flag: number")
+	resultList = append(resultList, "open_time: any")
+	resultList = append(resultList, "continue_day_num: number")
+	resultList = append(resultList, "invite_self_list: table")
+	resultList = append(resultList, "get_flag: number")
+
+	for index, onePoisiton := range positionList {
+		hoverParams := lsp.TextDocumentPositionParams{
+			TextDocument: lsp.TextDocumentIdentifier{
+				URI: lsp.DocumentURI(fileName),
+			},
+			Position: onePoisiton,
+		}
+		hoverReturn1, err1 := lspServer.TextDocumentHover(context, hoverParams)
+		if err1 != nil {
+			t.Fatalf("TextDocumentHover file:%s err=%s", fileName, err1.Error())
+		}
+
+		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
+
+		for _, oneStr := range resultList {
+			if !strings.Contains(hoverMarkUpReturn1.Contents.Value, oneStr) {
+				t.Fatalf("hover error, not find str=%s, index=%d", oneStr, index)
+			}
+		}
+	}
+}

@@ -139,15 +139,9 @@ func (a *AllProject) convertClassInfoToHovers(oneClass *common.OneClassInfo, exi
 		strFiled := annotateast.TypeConvertStr(fieldState.FiledType)
 		existMap[strName] = strName + ": " + strFiled + ","
 	}
-}
 
-func (a *AllProject) getClassFieldStr(classInfo *common.OneClassInfo) (str string) {
-	var existMap map[string]string = map[string]string{}
-	str = " = {\n"
-	a.convertClassInfoToHovers(classInfo, existMap)
-
-	if classInfo.RelateVar != nil {
-		for key, value := range classInfo.RelateVar.SubMaps {
+	if oneClass.RelateVar != nil {
+		for key, value := range oneClass.RelateVar.SubMaps {
 			if _, ok := existMap[key]; ok {
 				continue
 			}
@@ -159,6 +153,12 @@ func (a *AllProject) getClassFieldStr(classInfo *common.OneClassInfo) (str strin
 			existMap[key] = key + ": " + strValueType + ","
 		}
 	}
+}
+
+func (a *AllProject) getClassFieldStr(classInfo *common.OneClassInfo) (str string) {
+	var existMap map[string]string = map[string]string{}
+	str = " = {\n"
+	a.convertClassInfoToHovers(classInfo, existMap)
 
 	traverseMapInStringOrder(existMap, func(key string, value string) {
 		str = str + "\t" + value + "\n"
@@ -183,21 +183,6 @@ func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName s
 	str = strType + " = {\n"
 	for _, oneClass := range classList {
 		a.convertClassInfoToHovers(oneClass, existMap)
-
-		if oneClass.RelateVar != nil {
-			for key, value := range oneClass.RelateVar.SubMaps {
-				if _, ok := existMap[key]; ok {
-					continue
-				}
-
-				strValueType := value.GetVarTypeDetail()
-				if value.ReferFunc != nil {
-					strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
-				}
-				existMap[key] = key + ": " + strValueType + ","
-			}
-		}
-
 	}
 
 	traverseMapInStringOrder(existMap, func(key string, value string) {
