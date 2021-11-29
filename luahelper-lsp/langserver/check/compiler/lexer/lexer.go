@@ -441,6 +441,10 @@ func (l *Lexer) scanIllegalToken() (lineFlag bool, str string) {
 			break
 		}
 
+		if ch == '\r' {
+			break
+		}
+
 		if ch == '\n' {
 			lineFlag = true
 			break

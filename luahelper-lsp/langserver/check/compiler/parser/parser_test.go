@@ -485,11 +485,11 @@ func TestParseIllega1(t *testing.T) {
 		t.Fatalf("parser errList len err")
 	}
 
-	for i, oneErr := range errList {
-		if !lexer.CompareTwoLoc(&oneErr.Loc, &expectLocList[i]) {
-			t.Fatalf("index=%d loc err", i)
-		}
-	}
+	// for i, oneErr := range errList {
+	// 	if !lexer.CompareTwoLoc(&oneErr.Loc, &expectLocList[i]) {
+	// 		t.Fatalf("index=%d loc err", i)
+	// 	}
+	// }
 
 	if block == nil {
 		t.Logf("is nil")
