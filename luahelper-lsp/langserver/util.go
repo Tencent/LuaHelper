@@ -192,7 +192,7 @@ func getCompeleteLineStr(contents []byte, offset int) (lineStr string) {
 // getOpenFileStr 判断是否为打开的文件，返回文件名
 // 当为require时候，可能返回两个文件名， 因为require("one") 含义可能是包含one.lua 也有可能是one/init.lua
 // firstStr 为优先级高的文件名，secondStr为优先级次之的文件名
-func getOpenFileStr(contents []byte, offset int, character int) (firstStr, secondStr string) {
+func getOpenFileStr(contents []byte, offset int, character int) []string {
 	// 获取当前行的所有内容
 	lineContents := getCompeleteLineStr(contents, offset)
 
@@ -274,21 +274,15 @@ func getOpenFileStr(contents []byte, offset int, character int) (firstStr, secon
 		}
 	}
 
-	if strOpenFile != "" && !strings.HasSuffix(strOpenFile, ".lua") {
-		strOpenFile = strOpenFile + ".lua"
+	if strOpenFile == "" {
+		return make([]string, 0)
 	}
-
-	firstStr = strOpenFile
-	if firstStr != "" && requireFlag {
-		secondStr = firstStr
-		if strings.HasSuffix(secondStr, ".lua") {
-			secondStr = secondStr[0 : len(secondStr)-4]
-		}
-
-		secondStr = secondStr + "/init.lua"
+	strModName := strings.TrimSuffix(strOpenFile, ".lua")
+	result := []string{strModName + ".lua", strModName + ".so"}
+	if requireFlag {
+		result = append(result, strModName+"/init.lua")
 	}
-
-	return
+	return result
 }
 
 // 如果输入的为 b["c"]，当对c查找定义时候，offset移动到]后面，再统一处理

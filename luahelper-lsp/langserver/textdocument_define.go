@@ -10,7 +10,7 @@ import (
 )
 
 // TextDocumentDefine 文件中查找变量的的定义
-func (l *LspServer)TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentPositionParams) (locList []lsp.Location, err error) {
+func (l *LspServer) TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentPositionParams) (locList []lsp.Location, err error) {
 	l.requestMutex.Lock()
 	defer l.requestMutex.Unlock()
 
@@ -28,17 +28,16 @@ func (l *LspServer)TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentPo
 	project := l.getAllProject()
 
 	// 1）判断查找的定义是否为打开一个文件
-	strFirst, strSecond := getOpenFileStr(fileRequest.contents, fileRequest.offset, (int)(fileRequest.pos.Character))
+	fileList := getOpenFileStr(fileRequest.contents, fileRequest.offset, (int)(fileRequest.pos.Character))
 	var openDefineVecs []check.DefineStruct
-	if strFirst != "" {
-		openDefineVecs = project.FindOpenFileDefine(strFile, strFirst)
-		if len(openDefineVecs) == 0 && strSecond != "" {
-			openDefineVecs = project.FindOpenFileDefine(strFile, strSecond)
+	for _, strItem := range fileList {
+		openDefineVecs = project.FindOpenFileDefine(strFile, strItem)
+		if len(openDefineVecs) > 0 {
+			break
 		}
-
-		locList = defineVecConvert(openDefineVecs)
-		return locList, nil
 	}
+	locList = defineVecConvert(openDefineVecs)
+	return locList, nil
 
 	// 2) 判断是否为---@ 注解引入的查找里面的类型定义
 	defineAnnotateVecs, flag := l.handleAnnotateTypeDefine(strFile, fileRequest.contents, fileRequest.offset,
@@ -65,7 +64,7 @@ func (l *LspServer)TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentPo
 }
 
 // handleAnnotateTypeDefine 处理注解系统带来的类型定义
-func (l *LspServer)handleAnnotateTypeDefine(strFile string, contents []byte, offset int,
+func (l *LspServer) handleAnnotateTypeDefine(strFile string, contents []byte, offset int,
 	posLine int, posCharacter int) (defineVecs []check.DefineStruct, flag bool) {
 	strLine := getCompeleteLineStr(contents, offset)
 	if strLine == "" {
