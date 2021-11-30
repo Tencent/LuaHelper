@@ -635,7 +635,7 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 	}
 
 	// 3.3) 把常用见的关键字放入进来
-	for _, strName := range common.GConfig.CodeCompleteVarVec {
+	for strName := range common.GConfig.CompKeyMap {
 		if completeVar.IgnoreKeyWord {
 			break
 		}
@@ -647,6 +647,18 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 		a.completeCache.InsertCompleteKey(strName)
 	}
 
+	// 3.4) 把snippet放入进来
+	for strName := range common.GConfig.CompSnippetMap {
+		if completeVar.IgnoreKeyWord {
+			break
+		}
+
+		if !common.IsCompleteNeedShow(strName, completeVar) || a.completeCache.ExistStr(strName) {
+			continue
+		}
+
+		a.completeCache.InsertCompleteSnippet(strName)
+	}
 	// 3.4) 把_G的函数也包含进来
 	// 默认只提示_G的函数，如果要提示_G的变量，需要配置打开，整体上会慢一点
 	a.gValueComplete(comParam, completeVar, false, fileName)

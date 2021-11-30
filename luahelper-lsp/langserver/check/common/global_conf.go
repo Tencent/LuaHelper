@@ -14,6 +14,12 @@ import (
 	"sync"
 )
 
+// SnippetItem 单个Snippet元素
+type SnippetItem struct {
+	InsertText string //  插入的文本
+	Detail     string // 描述信息
+}
+
 // GlobalConfig 对外封装的全局配置信息
 type GlobalConfig struct {
 	// 是否读取了ylua.json配置文件，如果读取到了配置文件，获取相应的配置；如果没有读取到配置，默认以客户端的模式
@@ -89,7 +95,10 @@ type GlobalConfig struct {
 	ProtocolPreIngoreFlag bool
 
 	// 代码补全时候，增加的提示关键字变量
-	CodeCompleteVarVec []string
+	CompKeyMap map[string]bool
+
+	// snippet代码补全
+	CompSnippetMap map[string]SnippetItem
 
 	// 忽略标准库中定义了为未使用的引用变量名
 	ignoreSysNoUseMap map[string]bool
@@ -368,42 +377,103 @@ func (g *GlobalConfig) IntialGlobalVar() {
 	g.IgnoreErrorTypeMap = map[CheckErrorType]bool{}
 
 	g.FileExistCacheMap = map[string]bool{}
+	g.CompKeyMap = map[string]bool{}
 
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "and")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "break")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "::")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "else")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "end")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "goto")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "in")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "local")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "not")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "or")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "return")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "until")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "false")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "nil")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "true")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "self")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "continue")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "_G")
+	g.CompKeyMap["and"] = true
+	g.CompKeyMap["break"] = true
+	g.CompKeyMap["::"] = true
 
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for .. ipairs")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for .. pairs")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "then .. end")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for i = ..")
+	g.CompKeyMap["end"] = true
+	g.CompKeyMap["goto"] = true
+	g.CompKeyMap["in"] = true
+	g.CompKeyMap["local"] = true
+	g.CompKeyMap["not"] = true
+	g.CompKeyMap["or"] = true
+	g.CompKeyMap["return"] = true
+	g.CompKeyMap["until"] = true
+	g.CompKeyMap["false"] = true
+	g.CompKeyMap["nil"] = true
+	g.CompKeyMap["true"] = true
+	g.CompKeyMap["self"] = true
+	g.CompKeyMap["continue"] = true
+	g.CompKeyMap["_G"] = true
+	g.CompKeyMap["local"] = true
 
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "local")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "if")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "elseif")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "fori")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "forp")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "do")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "while")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "repeat")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "local function")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "function")
+	g.CompSnippetMap = map[string]SnippetItem{}
+	g.CompSnippetMap["else"] = SnippetItem{
+		InsertText: "else\n\t",
+		Detail:     "else\n\t",
+	}
+
+	g.CompSnippetMap["for .. ipairs"] = SnippetItem{
+		InsertText: "for ${1:i}, ${2:v} in ipairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for i, v in ipairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["for .. pairs"] = SnippetItem{
+		InsertText: "for ${1:k}, ${2:v} in pairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for k, v in pairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["then .. end"] = SnippetItem{
+		InsertText: "then" + "\n" + "\t" + "${0:}" + "\n" + "end",
+		Detail:     "then" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["for i = .."] = SnippetItem{
+		InsertText: "for ${1:i} = ${2:1}, ${3:10}, ${4:1} do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for i = 1, 10, 1 do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["if"] = SnippetItem{
+		InsertText: "if ${1:condition} then\n\t${0:}\nend",
+		Detail:     "if condition then\n\nend",
+	}
+
+	g.CompSnippetMap["elseif"] = SnippetItem{
+		InsertText: "elseif ${1:condition} then\n\t${0:}",
+		Detail:     "elseif condition then ..",
+	}
+
+	g.CompSnippetMap["for"] = SnippetItem{
+		InsertText: "for ${1:k}, ${2:v} in pairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for k, v in pairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["fori"] = SnippetItem{
+		InsertText: "for ${1:i}, ${2:v} in ipairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for i, v in ipairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["forp"] = SnippetItem{
+		InsertText: "for ${1:k}, ${2:v} in pairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for k, v in pairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["do"] = SnippetItem{
+		InsertText: "do\n${0:}\nend",
+		Detail:     "do\n\nend",
+	}
+
+	g.CompSnippetMap["while"] = SnippetItem{
+		InsertText: "while ${1:condition} do\n\t${0:}\nend",
+		Detail:     "while\n\nend",
+	}
+
+	g.CompSnippetMap["repeat"] = SnippetItem{
+		InsertText: "repeat\n\t${0:}\nuntil ${1:condition}",
+		Detail:     "repeat\n\nuntil",
+	}
+
+	g.CompSnippetMap["local function"] = SnippetItem{
+		InsertText: "local function ${1:func}(${2:})\n\t${0:}\nend",
+		Detail:     "local function func()\n\nend",
+	}
+
+	g.CompSnippetMap["function"] = SnippetItem{
+		InsertText: "function ${1:func}(${2:})\n\t${0:}\nend",
+		Detail:     "function func()\n\nend",
+	}
 
 	// 设置系统忽略定义未使用的变量
 	g.setSysNotUseMap()

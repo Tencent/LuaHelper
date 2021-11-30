@@ -590,102 +590,12 @@ func (l *LspServer) TextDocumentCompleteResolve(ctx context.Context, vs lsp.Comp
 
 	strDoc := codingconv.ConvertStrToUtf8(item.Documentation)
 	strDetail := item.Detail
+
 	// json snippet 里面不能包含. 不然任意地方输入 . 时候会激活响应的snippet
-	if vs.Label == "then .. end" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "then" + "\n" + "\t" + "${0:}" + "\n" + "end"
+	if snippetItem, ok := common.GConfig.CompSnippetMap[vs.Label]; ok {
+		compItem.InsertText = snippetItem.InsertText
 		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "then" + "\n" + "end"
-	}
-
-	if vs.Label == "for .. ipairs" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "for ${1:i}, ${2:v} in ipairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "for i, v in ipairs(t) do" + "\n\n" + "end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "for .. pairs" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "for ${1:k}, ${2:v} in pairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "for k, v in pairs(t) do" + "\n\n" + "end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "for i = .." && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "for ${1:i} = ${2:1}, ${3:10}, ${4:1} do" + "\n\t" + "$0" + "\n" + "end"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "for i = 1, 10, 1 do" + "\n\n" + "end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "if" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "if ${1:condition} then\n\t${0:}\nend"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "if .. then .. end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "elseif" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "elseif ${1:condition} then\n\t${0:}"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "elseif .. then .."
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "for" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "for ${1:i} = ${2:1}, ${3:10} do\n\t${0:}\nend"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "for i = 1, n do end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "fori" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "for ${1:i}, ${2:v} in ipairs(${3:t}) do\n\t${0:}\nend"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "for i, value in ipairs(t) do end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "forp" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "for ${1:k}, ${2:v} in pairs(${3:t}) do\n\t${0:}\nend"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "for k, value in pairs(t) do end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "do" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "do\n${0:}\nend"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "do .. end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "while" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "while ${1:condition} do\n\t${0:}\nend"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "while condition .. end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "repeat" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "repeat\n\t${0:}\nuntil ${1:condition}"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "repeat .. until"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "local function" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "local function ${1:func}(${2:})\n\t${0:}\nend"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "local function func() .. end"
-		compItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "function" && vs.Kind == lsp.KeywordCompletion {
-		compItem.InsertText = "function ${1:func}(${2:})\n\t${0:}\nend"
-		compItem.InsertTextFormat = lsp.SnippetTextFormat
-		strDetail = "function func() .. end"
-		compItem.Kind = lsp.SnippetCompletion
+		strDetail = snippetItem.Detail
 	}
 
 	strMarkdown := fmt.Sprintf("```%s\n%s\n```", "lua", codingconv.ConvertStrToUtf8(strDetail))
