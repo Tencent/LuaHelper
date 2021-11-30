@@ -39,11 +39,11 @@ type OneCompleteData struct {
 	InsetText      string
 	Detail         string // 详细信息
 	Documentation  string
-	LuaFile        string    // 补全出现的文件名
-	VarInfo        *VarInfo  // 补全的变量名称
-	CacheKind      CacheKind // 缓存的类型
-	FieldState     *annotateast.AnnotateFieldState	// 提示为注解的class信息
-	FieldColonFlag	annotateast.FieldColonType		// 当为FieldState时候，是否为：函数
+	LuaFile        string                          // 补全出现的文件名
+	VarInfo        *VarInfo                        // 补全的变量名称
+	CacheKind      CacheKind                       // 缓存的类型
+	FieldState     *annotateast.AnnotateFieldState // 提示为注解的class信息
+	FieldColonFlag annotateast.FieldColonType      // 当为FieldState时候，是否为：函数
 	//IncludeSelfParam bool	// 当为VarInfo时候，是否补充第一个参数为self
 	CreateTypeInfo *CreateTypeInfo
 }
@@ -54,7 +54,7 @@ type CompleteCache struct {
 	maxNum     int                 // 上次提示的最大数量
 	excludeNum int                 // 上次提示时，排除的最大数量
 	dataList   []OneCompleteData   // 所有的缓存信息，用列表存储就ok
-	existMap   map[string]int 		// 为已经存在的map，防止重复
+	existMap   map[string]int      // 为已经存在的map，防止重复
 	excludeMap map[string]struct{} // 冒号语法需要排除的map
 	colonFlag  bool                // 代码补全最后是否为冒号语法
 }
@@ -125,7 +125,7 @@ func (cache *CompleteCache) SetColonFlag(flag bool) {
 }
 
 // GetColonFlag 获取最后的补全是否为冒号语法：
-func (cache *CompleteCache) GetColonFlag() bool{
+func (cache *CompleteCache) GetColonFlag() bool {
 	return cache.colonFlag
 }
 
@@ -204,6 +204,18 @@ func (cache *CompleteCache) InsertCompleteKey(label string) {
 	cache.existMap[label] = len(cache.dataList) - 1
 }
 
+// InsertCompleteSnippet 插入Snippet
+func (cache *CompleteCache) InsertCompleteSnippet(label string) {
+	oneComplete := OneCompleteData{
+		Label:     label,
+		Kind:      IKSnippet,
+		CacheKind: CKindNormal,
+	}
+
+	cache.dataList = append(cache.dataList, oneComplete)
+	cache.existMap[label] = len(cache.dataList) - 1
+}
+
 // InsertCompleteNormal 插入普通的
 func (cache *CompleteCache) InsertCompleteNormal(label, detail, documentation string, kind ItemKind) {
 	oneComplete := OneCompleteData{
@@ -230,14 +242,14 @@ func (cache *CompleteCache) InsertCompleteInnotateType(label string, creatType *
 }
 
 // InsertCompleteClassField 插入注解系统的class field域
-func (cache *CompleteCache) InsertCompleteClassField(luaFile, label string, field *annotateast.AnnotateFieldState, 
-		colonType annotateast.FieldColonType) {
+func (cache *CompleteCache) InsertCompleteClassField(luaFile, label string, field *annotateast.AnnotateFieldState,
+	colonType annotateast.FieldColonType) {
 	oneComplete := OneCompleteData{
-		Label:      label,
-		LuaFile:    luaFile,
-		Kind:       IKVariable, // 暂时定义为变量，可能为函数
-		FieldState: field,
-		CacheKind:  CkindClassField,
+		Label:          label,
+		LuaFile:        luaFile,
+		Kind:           IKVariable, // 暂时定义为变量，可能为函数
+		FieldState:     field,
+		CacheKind:      CkindClassField,
 		FieldColonFlag: colonType,
 	}
 
