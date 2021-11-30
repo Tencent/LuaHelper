@@ -106,22 +106,19 @@ func (l *LspServer) getHoverStr(comResult commFileRequest) (lableStr, docStr, lu
 
 // 判断是否悬停提示打开一个文件
 func (l *LspServer) hoverOpenFile(comResult commFileRequest) (fileName string) {
-	strFirstFile, strSecondFile := getOpenFileStr(comResult.contents, comResult.offset, (int)(comResult.pos.Character))
-	if strFirstFile == "" {
+	fileList := getOpenFileStr(comResult.contents, comResult.offset, (int)(comResult.pos.Character))
+	if len(fileList) == 0 {
 		return
 	}
-
-	log.Debug("strOpenFile=%s", strFirstFile)
-	fileName = strFirstFile
 
 	strFile := comResult.strFile
 	project := l.getAllProject()
 	// 如果require("one") 找到了one/init.lua hover显示的文件名为: one/init.lua
-	defineVecs := project.FindOpenFileDefine(strFile, strFirstFile)
-	if len(defineVecs) == 0 && strSecondFile != "" {
-		defineVecs = project.FindOpenFileDefine(strFile, strSecondFile)
+	for _, fileName := range fileList {
+		defineVecs := project.FindOpenFileDefine(strFile, fileName)
 		if len(defineVecs) > 0 {
-			fileName = strSecondFile
+			log.Debug("strOpenFile=%s", fileName)
+			return fileName
 		}
 	}
 
