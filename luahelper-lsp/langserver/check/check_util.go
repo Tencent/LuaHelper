@@ -474,6 +474,9 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 func StrToDefineVarStruct(str string) (defineVar common.DefineVarStruct) {
 	defineVar.ValidFlag = false
 
+	// common.GConfig.CodeCompleteVarVec
+	//if str == "local"
+
 	newParser := parser.CreateParser([]byte(str), "")
 	exp := newParser.BeginAnalyzeExp()
 	errList := newParser.GetErrList()
