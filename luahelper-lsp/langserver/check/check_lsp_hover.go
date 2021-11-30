@@ -172,7 +172,7 @@ func (a *AllProject) getClassFieldStr(classInfo *common.OneClassInfo) (str strin
 func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName string, line int) (str string) {
 	str = annotateast.TypeConvertStr(astType)
 	classList := a.getAllNormalAnnotateClass(astType, fileName, line)
-	if len(classList) == 0 || str == "number" || str == "any" || str == "string" {
+	if len(classList) == 0 || str == "number" || str == "any" || str == "string" || str == "boolean" {
 		// 没有找到相应的class成员，直接返回
 		return str
 	}
