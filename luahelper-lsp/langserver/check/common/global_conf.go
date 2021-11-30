@@ -393,6 +393,18 @@ func (g *GlobalConfig) IntialGlobalVar() {
 	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "then .. end")
 	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for i = ..")
 
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "local")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "if")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "elseif")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "fori")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "forp")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "do")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "while")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "repeat")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "local function")
+	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "function")
+
 	// 设置系统忽略定义未使用的变量
 	g.setSysNotUseMap()
 
