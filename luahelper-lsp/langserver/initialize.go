@@ -7,6 +7,7 @@ import (
 	"luahelper-lsp/langserver/log"
 	"luahelper-lsp/langserver/pathpre"
 	lsp "luahelper-lsp/langserver/protocol"
+	"os/user"
 	"strings"
 	"time"
 )
@@ -51,6 +52,11 @@ type InitializeParams struct {
 
 // Initialize lsp初始化函数
 func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.InitializeResult, error) {
+	go func(){
+		// check_lsp_annotate_complete.go 获取用户的信息比较卡顿，提前获取
+		user.Current()
+	}()
+
 	pathpre.InitialRootURIAndPath(string(vs.RootURI), string(vs.RootPath))
 
 	log.Debug("Initialize ..., rootDir=%s, rooturl=%s", vs.RootPath, vs.RootURI)
