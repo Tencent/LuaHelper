@@ -35,10 +35,10 @@ func (l *LspServer) TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentP
 		if len(openDefineVecs) > 0 {
 			break
 		}
+		locList = defineVecConvert(openDefineVecs)
+		return locList, nil
 	}
-	locList = defineVecConvert(openDefineVecs)
-	return locList, nil
-
+	
 	// 2) 判断是否为---@ 注解引入的查找里面的类型定义
 	defineAnnotateVecs, flag := l.handleAnnotateTypeDefine(strFile, fileRequest.contents, fileRequest.offset,
 		(int)(fileRequest.pos.Line), (int)(fileRequest.pos.Character))
