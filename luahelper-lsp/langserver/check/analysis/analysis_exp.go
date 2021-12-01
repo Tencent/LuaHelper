@@ -122,6 +122,11 @@ func (a *Analysis) cgFuncDefExp(node *ast.FuncDefExp) *common.FuncInfo {
 		subFi.ParamList = append(subFi.ParamList, param)
 	}
 
+	// 获取注解信息，并提取默认参数标记
+	if len(subFi.ParamList) > 0 {
+		subFi.ParamDefaultList = a.Projects.GetFuncDefaultParamInfo(a.curResult.Name, node.Loc.StartLine-1, subFi.ParamList)
+	}
+
 	// 备份
 	backupFunc := a.curFunc
 	backupScope := a.curScope

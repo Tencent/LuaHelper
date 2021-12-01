@@ -42,34 +42,36 @@ type ReturnInfo struct {
 
 // FuncInfo 函数信息
 type FuncInfo struct {
-	parent     *FuncInfo      // 父的funcInfo
-	labelVecs  []*LabelInfo   // 包含所有的labelInfo
-	ReturnVecs []*ReturnInfo  // 包含所有的函数返回信息, 函数可能有多处返回，用列表存储
-	MainScope  *ScopeInfo     // 函数指向的主的ScopeInfo
-	RelateVar  *FuncRelateVar // 函数反向关联的指针，当为冒号函数时候，即IsColon为true才存储
-	ParamList  []string       // 函数所有的参数列表
-	Loc        lexer.Location // 位置信息
-	ScopeLv    int            // 当前的作用域层级，初始值为0
-	FuncLv     int            // func的层级，最上层的func层级为0，子的func层级+1
-	FuncID     int            // funcInfo在AnalysisFileResult中出现的序号，默认从0开始
-	IsVararg   bool           // 是否含义可变参数
-	IsColon    bool           // 是否为: 这样的函数
+	parent           *FuncInfo      // 父的funcInfo
+	labelVecs        []*LabelInfo   // 包含所有的labelInfo
+	ReturnVecs       []*ReturnInfo  // 包含所有的函数返回信息, 函数可能有多处返回，用列表存储
+	MainScope        *ScopeInfo     // 函数指向的主的ScopeInfo
+	RelateVar        *FuncRelateVar // 函数反向关联的指针，当为冒号函数时候，即IsColon为true才存储
+	ParamList        []string       // 函数所有的参数列表
+	Loc              lexer.Location // 位置信息
+	ScopeLv          int            // 当前的作用域层级，初始值为0
+	FuncLv           int            // func的层级，最上层的func层级为0，子的func层级+1
+	FuncID           int            // funcInfo在AnalysisFileResult中出现的序号，默认从0开始
+	IsVararg         bool           // 是否含义可变参数
+	IsColon          bool           // 是否为: 这样的函数
+	ParamDefaultList []bool         // 注解标明参数是否可选，与参数列表对应，无注解时该列表为空
 }
 
 // CreateFuncInfo 创建一个函数指针
 func CreateFuncInfo(parent *FuncInfo, funcLv int, loc lexer.Location, isVararg bool, parentScope *ScopeInfo) *FuncInfo {
 	funcInfo := &FuncInfo{
-		parent:    parent,
-		labelVecs: nil,
-		MainScope: nil,
-		RelateVar: nil,
-		ParamList: nil,
-		Loc:       loc,
-		ScopeLv:   0,
-		FuncLv:    funcLv,
-		FuncID:    0,
-		IsVararg:  isVararg,
-		IsColon:   false,
+		parent:           parent,
+		labelVecs:        nil,
+		MainScope:        nil,
+		RelateVar:        nil,
+		ParamList:        nil,
+		Loc:              loc,
+		ScopeLv:          0,
+		FuncLv:           funcLv,
+		FuncID:           0,
+		IsVararg:         isVararg,
+		IsColon:          false,
+		ParamDefaultList: nil,
 	}
 
 	// 设置函数指向的主scope

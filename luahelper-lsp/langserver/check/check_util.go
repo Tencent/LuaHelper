@@ -253,6 +253,26 @@ func (a *AllProject) setCheckTerm(checkTerm results.CheckTerm) {
 	a.checkTerm = checkTerm
 }
 
+// GetFuncDefaultParamInfo 获取默认参数标记
+func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, paramNameList []string) (paramDefaultList []bool) {
+	annotateParamInfo := a.GetFuncParamInfo(fileName, lastLine)
+	if annotateParamInfo == nil {
+		return
+	}
+
+	for i, paramName := range paramNameList {
+		paramDefaultList = append(paramDefaultList, false)
+		for _, oneParam := range annotateParamInfo.ParamList {
+			if paramName == oneParam.Name && oneParam.IsOptional {
+				paramDefaultList[i] = true
+				break
+			}
+		}
+	}
+
+	return paramDefaultList
+}
+
 // GetFirstFileStuct 获取第一阶段文件处理的结果
 func (a *AllProject) GetFirstFileStuct(strFile string) (*results.FileStruct, bool) {
 	if a.checkTerm == results.CheckTermFirst {
@@ -411,7 +431,7 @@ func recurseExpToDefine(exp ast.Exp, defineVar *common.DefineVarStruct) {
 				defineVar.Exp = exp
 			}
 		}
-	
+
 		recurseExpToDefine(expV.PrefixExp, defineVar)
 		if expV.NameExp == nil {
 			if len(defineVar.IsFuncVec) > 0 {
