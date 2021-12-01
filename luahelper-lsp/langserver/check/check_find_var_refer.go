@@ -821,6 +821,7 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 	}
 
 	if funcSymbol.VarInfo.ReferFunc != nil {
+		// -- 这里获取第一个返回值有时推导不出来，因为函数可能有多个返回值，是否要获取最后一个返回值
 		flag, expReturn := funcSymbol.VarInfo.ReferFunc.GetReturnIndexExp(varIndex)
 		if !flag {
 			// 没有找到
