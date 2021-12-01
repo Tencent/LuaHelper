@@ -96,6 +96,24 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 		errorStr := fmt.Sprintf("%s call func param num(%d) > func define param num(%d)", referStr, nArgs, paramLen)
 		fileResult.InsertError(common.CheckErrorCallParam, errorStr, node.Loc)
 		return
+	} else if nArgs < paramLen {
+		if len(referFunc.ParamDefaultList) == 0 {
+			//无注解
+			return
+		}
+
+		defaultNum := 0
+		for _, isDefault := range referFunc.ParamDefaultList {
+			if isDefault {
+				defaultNum += 1
+			}
+		}
+
+		if nArgs+defaultNum != paramLen {
+			errorStr := fmt.Sprintf("%s call func param num(%d) < func define param num(%d)", referStr, nArgs, paramLen)
+			fileResult.InsertError(common.CheckErrorCallParam, errorStr, node.Loc)
+			return
+		}
 	}
 }
 
