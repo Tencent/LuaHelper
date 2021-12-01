@@ -1,5 +1,10 @@
 # Change Log
-
+## 0.2.7 (Dec 1, 2021)
++ define查找文件路径时进行了优化
++ 增强了函数参数个数不匹配的检测
++ 合并外网Pull Request
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+  
 ## 0.2.6 (Nov 23, 2021)
 + require语法功能增强
 + 增加require其他lua文件的路径分隔符
