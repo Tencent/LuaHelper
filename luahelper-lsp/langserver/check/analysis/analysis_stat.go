@@ -109,7 +109,8 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 			}
 		}
 
-		if nArgs+defaultNum != paramLen {
+		// 默认参数个数+调用填参个数 < 定义参数个数
+		if nArgs+defaultNum < paramLen {
 			errorStr := fmt.Sprintf("%s call func param num(%d) < func define param num(%d)", referStr, nArgs, paramLen)
 			fileResult.InsertError(common.CheckErrorCallParam, errorStr, node.Loc)
 			return
