@@ -474,7 +474,9 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 func StrToDefineVarStruct(str string) (defineVar common.DefineVarStruct) {
 	defineVar.ValidFlag = false
 
-	if _, ok := common.GConfig.CompSnippetMap[str]; ok {
+	_, ok1 := common.GConfig.CompKeyMap[str]
+	_, ok2 := common.GConfig.CompSnippetMap[str]
+	if ok1 || ok2 {
 		defineVar.ValidFlag = true
 		defineVar.ColonFlag = false
 		defineVar.StrVec = append(defineVar.StrVec, str)
