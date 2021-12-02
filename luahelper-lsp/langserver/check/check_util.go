@@ -254,23 +254,22 @@ func (a *AllProject) setCheckTerm(checkTerm results.CheckTerm) {
 }
 
 // GetFuncDefaultParamInfo 获取默认参数标记
-func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, paramNameList []string) (paramDefaultList []bool) {
+func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, paramNameList []string) (paramDefaultNum int) {
 	annotateParamInfo := a.GetFuncParamInfo(fileName, lastLine)
 	if annotateParamInfo == nil {
-		return
+		return -1
 	}
 
-	for i, paramName := range paramNameList {
-		paramDefaultList = append(paramDefaultList, false)
+	for _, paramName := range paramNameList {
 		for _, oneParam := range annotateParamInfo.ParamList {
 			if paramName == oneParam.Name && oneParam.IsOptional {
-				paramDefaultList[i] = true
+				paramDefaultNum += 1
 				break
 			}
 		}
 	}
 
-	return paramDefaultList
+	return paramDefaultNum
 }
 
 // GetFirstFileStuct 获取第一阶段文件处理的结果

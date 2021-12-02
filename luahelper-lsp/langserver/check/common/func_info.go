@@ -54,7 +54,8 @@ type FuncInfo struct {
 	FuncID           int            // funcInfo在AnalysisFileResult中出现的序号，默认从0开始
 	IsVararg         bool           // 是否含义可变参数
 	IsColon          bool           // 是否为: 这样的函数
-	ParamDefaultList []bool         // 注解标明参数是否可选，与参数列表对应，无注解时该列表为空
+	ParamDefaultNum  int            // 默认函数数量
+	ParamDefaultInit bool           // 是否获取过默认函数数量
 }
 
 // CreateFuncInfo 创建一个函数指针
@@ -71,7 +72,8 @@ func CreateFuncInfo(parent *FuncInfo, funcLv int, loc lexer.Location, isVararg b
 		FuncID:           0,
 		IsVararg:         isVararg,
 		IsColon:          false,
-		ParamDefaultList: nil,
+		ParamDefaultNum:  -1,
+		ParamDefaultInit: false,
 	}
 
 	// 设置函数指向的主scope

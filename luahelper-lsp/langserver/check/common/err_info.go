@@ -33,7 +33,7 @@ const (
 	// CheckErrorGotoLabel  goto时找不到对应的label标记
 	CheckErrorGotoLabel = 9
 
-	// CheckErrorCallParam 函数调用参数类型出错(调用参数个数大于定义的个数)
+	// CheckErrorCallParam 函数调用参数数量出错
 	CheckErrorCallParam = 10
 
 	// CheckErrorImportVar 引用import其他lua文件，例如 local a = import("one.lua")；调用a.bbb， 其中bbb在引用的one.lua文件中未定义
@@ -56,7 +56,7 @@ const (
 
 	// CheckErrorNoUseAssign 定义了的局部变量未使用, 后面只是简短的赋值
 	CheckErrorNoUseAssign = 17
-	
+
 	// CheckErrorAnnotate 注解系统引入的错误
 	CheckErrorAnnotate = 18
 )

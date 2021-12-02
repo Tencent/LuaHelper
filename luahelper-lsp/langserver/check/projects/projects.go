@@ -25,5 +25,5 @@ type Projects interface {
 	GetAllFilesMap() map[string]struct{}
 
 	// GetFuncDefaultParamInfo 在函数注解中获取默认参数标记
-	GetFuncDefaultParamInfo(fileName string, lastLine int, paramNameList []string) (paramDefaultList []bool)
+	GetFuncDefaultParamInfo(fileName string, lastLine int, paramNameList []string) (paramDefaultNum int)
 }
