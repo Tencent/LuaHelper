@@ -68,5 +68,7 @@ func (p *Parser) insertParserErr(loc lexer.Location, f string, a ...interface{})
 }
 
 func (p *Parser) insertErr(oneErr lexer.ParseError) {
-	p.parseErrs = append(p.parseErrs, oneErr)
+	if len(p.parseErrs) < 30 {
+		p.parseErrs = append(p.parseErrs, oneErr)
+	}
 }
