@@ -92,25 +92,28 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 	}
 
 	paramLen := len(referFunc.ParamList)
+
 	if nArgs > paramLen {
+		//调用处参数个数大于定义参数个数的，直接告警
 		errorStr := fmt.Sprintf("%s call func param num(%d) > func define param num(%d)", referStr, nArgs, paramLen)
 		fileResult.InsertError(common.CheckErrorCallParam, errorStr, node.Loc)
 		return
 	} else if nArgs < paramLen {
-		if len(referFunc.ParamDefaultList) == 0 {
-			//无注解
+		// 函数调用处参数个数小于定义参数个数的，支持注解辅助检查
+
+		// 如果未获取过
+		//if !referFunc.ParamDefaultInit {
+		referFunc.ParamDefaultInit = true
+		referFunc.ParamDefaultNum = a.Projects.GetFuncDefaultParamInfo(a.curResult.Name, referFunc.Loc.StartLine-1, referFunc.ParamList)
+		//}
+
+		// 如果没有注解 不告警
+		if referFunc.ParamDefaultNum == -1 {
 			return
 		}
 
-		defaultNum := 0
-		for _, isDefault := range referFunc.ParamDefaultList {
-			if isDefault {
-				defaultNum += 1
-			}
-		}
-
 		// 默认参数个数+调用填参个数 < 定义参数个数
-		if nArgs+defaultNum < paramLen {
+		if nArgs+referFunc.ParamDefaultNum < paramLen {
 			errorStr := fmt.Sprintf("%s call func param num(%d) < func define param num(%d)", referStr, nArgs, paramLen)
 			fileResult.InsertError(common.CheckErrorCallParam, errorStr, node.Loc)
 			return
