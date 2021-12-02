@@ -263,7 +263,7 @@ func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, para
 	for _, paramName := range paramNameList {
 		for _, oneParam := range annotateParamInfo.ParamList {
 			if paramName == oneParam.Name && oneParam.IsOptional {
-				paramDefaultNum += 1
+				paramDefaultNum++
 				break
 			}
 		}
@@ -283,7 +283,7 @@ func (a *AllProject) GetFirstFileStuct(strFile string) (*results.FileStruct, boo
 	return fileStruct, ok
 }
 
-// 如果为自定义的引入其他lua文件的方式，获取真实的引入的子类型
+// GetReferFrameType 如果为自定义的引入其他lua文件的方式，获取真实的引入的子类型
 func (a *AllProject) GetReferFrameType(referInfo *common.ReferInfo) (subReferType common.ReferFrameType) {
 	subReferType = common.RtypeNotValid
 	if referInfo == nil {
