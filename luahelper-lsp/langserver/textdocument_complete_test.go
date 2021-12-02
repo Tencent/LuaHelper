@@ -1407,25 +1407,6 @@ func TestComplete7(t *testing.T) {
 		testCompleteList = append(testCompleteList, oneComplete)
 	}
 
-	// 5)
-	{
-		var oneComplete TestCompleteInfo
-		oneComplete.changeRange = lsp.Range{
-			Start: lsp.Position{
-				Line:      13,
-				Character: 35,
-			},
-		}
-		oneComplete.changeRange.End = oneComplete.changeRange.Start
-		oneComplete.changText = "."
-		oneComplete.compLoc = lsp.Position{
-			Line:      oneComplete.changeRange.Start.Line,
-			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
-		}
-		oneComplete.resultList = []string{"b", "c", "f", "d", "e"}
-		testCompleteList = append(testCompleteList, oneComplete)
-	}
-
 	for index, oneComplete := range testCompleteList {
 		openParams := lsp.DidOpenTextDocumentParams{
 			TextDocument: lsp.TextDocumentItem{
