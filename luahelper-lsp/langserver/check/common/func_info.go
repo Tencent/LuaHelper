@@ -56,10 +56,12 @@ type FuncInfo struct {
 	IsColon          bool           // 是否为: 这样的函数
 	ParamDefaultNum  int            // 默认函数数量
 	ParamDefaultInit bool           // 是否获取过默认函数数量
+	FileName         string         // 函数所在的文件名
 }
 
 // CreateFuncInfo 创建一个函数指针
-func CreateFuncInfo(parent *FuncInfo, funcLv int, loc lexer.Location, isVararg bool, parentScope *ScopeInfo) *FuncInfo {
+func CreateFuncInfo(parent *FuncInfo, funcLv int, loc lexer.Location, isVararg bool, parentScope *ScopeInfo,
+	fileName string) *FuncInfo {
 	funcInfo := &FuncInfo{
 		parent:           parent,
 		labelVecs:        nil,
@@ -74,6 +76,7 @@ func CreateFuncInfo(parent *FuncInfo, funcLv int, loc lexer.Location, isVararg b
 		IsColon:          false,
 		ParamDefaultNum:  -1,
 		ParamDefaultInit: false,
+		FileName:         fileName,
 	}
 
 	// 设置函数指向的主scope

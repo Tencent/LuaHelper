@@ -56,7 +56,7 @@ func CreateFileResult(strName string, block *ast.Block, checkTerm CheckTerm, ent
 	if block != nil {
 		loc = block.Loc
 	}
-	funcInfo := common.CreateFuncInfo(nil, 0, loc, true, nil)
+	funcInfo := common.CreateFuncInfo(nil, 0, loc, true, nil, strName)
 
 	return &FileResult{
 		Name:         strName,

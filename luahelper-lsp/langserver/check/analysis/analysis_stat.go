@@ -102,10 +102,11 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 		// 函数调用处参数个数小于定义参数个数的，支持注解辅助检查
 
 		// 如果未获取过
-		//if !referFunc.ParamDefaultInit {
-		referFunc.ParamDefaultInit = true
-		referFunc.ParamDefaultNum = a.Projects.GetFuncDefaultParamInfo(a.curResult.Name, referFunc.Loc.StartLine-1, referFunc.ParamList)
-		//}
+		if !referFunc.ParamDefaultInit {
+			referFunc.ParamDefaultInit = true
+			referFunc.ParamDefaultNum = a.Projects.GetFuncDefaultParamInfo(referFunc.FileName, referFunc.Loc.StartLine-1,
+				referFunc.ParamList)
+		}
 
 		// 如果没有注解 不告警
 		if referFunc.ParamDefaultNum == -1 {

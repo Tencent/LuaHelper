@@ -101,7 +101,7 @@ func (a *Analysis) checkDuplicateFunParam(node *ast.FuncDefExp) {
 func (a *Analysis) cgFuncDefExp(node *ast.FuncDefExp) *common.FuncInfo {
 	fi := a.curFunc
 	scope := a.curScope
-	subFi := common.CreateFuncInfo(fi, fi.FuncLv+1, node.Loc, node.IsVararg, scope)
+	subFi := common.CreateFuncInfo(fi, fi.FuncLv+1, node.Loc, node.IsVararg, scope, a.curResult.Name)
 	subFi.IsColon = node.IsColon
 
 	fileResult := a.curResult
