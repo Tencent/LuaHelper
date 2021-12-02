@@ -23,6 +23,14 @@ type NilExp struct {
 	Loc lexer.Location
 }
 
+// A BadExpr node is a placeholder for an expression containing
+// syntax errors for which a correct expression node cannot be
+// created.
+//
+type BadExpr struct {
+	Loc lexer.Location
+}
+
 // TrueExp true
 type TrueExp struct {
 	Loc lexer.Location

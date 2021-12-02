@@ -3,7 +3,7 @@ import * as path from "path";
 import * as child_process from "child_process";
 
 function needShowFormatErr(): boolean {
-    let formatErrConfig = vscode.workspace.getConfiguration("luahelper.format", null).get("errShow");
+    let formatErrConfig = vscode.workspace.getConfiguration("luahelper.base", null).get("formatErrShow");
     var formatErrshow = true;
     if (formatErrConfig !== undefined) {
         formatErrshow = <boolean><any>formatErrConfig;

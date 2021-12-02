@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/common"
+	"sort"
 	"strings"
 )
 
@@ -49,25 +50,25 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 	dirManager := common.GConfig.GetDirManager()
 
 	for _, oneSymbol := range findList {
-		strType, strLable1, strDoc1, strPre, flag := a.getVarHoverInfo(oneSymbol, varStruct)
+		strType, strLabel1, strDoc1, strPre, flag := a.getVarHoverInfo(oneSymbol, varStruct)
 		if !preFirstFlag {
 			strPreFirst = strPre
 			preFirstFlag = true
 		}
 
 		if flag {
-			lableStr = strLable1
-			if strPreFirst == "_G." && strings.HasPrefix(strLable1, "function ") {
+			lableStr = strLabel1
+			if strPreFirst == "_G." && strings.HasPrefix(strLabel1, "function ") {
 				//  修复特殊的 _G.function a() 这样的显示
-				lableStr = "[_G] " + strLable1
+				lableStr = "[_G] " + strLabel1
 			} else {
-				if strPreFirst == "local " && strings.HasPrefix(strLable1, "function _G.") {
-					lableStr = strPreFirst + "function " + strings.TrimPrefix(strLable1, "function _G.")
+				if strPreFirst == "local " && strings.HasPrefix(strLabel1, "function _G.") {
+					lableStr = strPreFirst + "function " + strings.TrimPrefix(strLabel1, "function _G.")
 				} else {
-					if strings.HasPrefix(strLable1, "_G.") {
-						lableStr = strLable1
+					if strings.HasPrefix(strLabel1, "_G.") {
+						lableStr = strLabel1
 					} else {
-						lableStr = strPreFirst + strLable1
+						lableStr = strPreFirst + strLabel1
 					}
 				}
 			}
@@ -79,7 +80,7 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 
 		if strLastType == "" || strLastType == "any" {
 			strLastType = strType
-			strLastBefore = strLable1
+			strLastBefore = strLabel1
 			luaFileStr = dirManager.RemovePathDirPre(oneSymbol.FileName)
 		}
 
@@ -108,21 +109,147 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 	return
 }
 
+type mapEntryHandler func(string, string)
+
+// 按字母顺序遍历map
+func traverseMapInStringOrder(params map[string]string, handler mapEntryHandler) {
+	keys := make([]string, 0)
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for index, k := range keys {
+		if index == common.GConfig.PreviewFieldsNum {
+			strMore := fmt.Sprintf("...(+%d)", len(keys)-common.GConfig.PreviewFieldsNum)
+			handler(k, strMore)
+			break
+		} else {
+			handler(k, params[k])
+		}
+	}
+}
+
+func (a *AllProject) convertClassInfoToHovers(oneClass *common.OneClassInfo, existMap map[string]string) {
+	// 1) oneClass所有的成员
+	for strName, fieldState := range oneClass.FieldMap {
+		if _, ok := existMap[strName]; ok {
+			continue
+		}
+
+		strFiled := annotateast.TypeConvertStr(fieldState.FiledType)
+		existMap[strName] = strName + ": " + strFiled + ","
+	}
+
+	if oneClass.RelateVar != nil {
+		for key, value := range oneClass.RelateVar.SubMaps {
+			if _, ok := existMap[key]; ok {
+				continue
+			}
+
+			strValueType := value.GetVarTypeDetail()
+			if value.ReferFunc != nil {
+				strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
+			}
+			existMap[key] = key + ": " + strValueType + ","
+		}
+	}
+}
+
+func (a *AllProject) getClassFieldStr(classInfo *common.OneClassInfo) (str string) {
+	var existMap map[string]string = map[string]string{}
+	str = " = {\n"
+	a.convertClassInfoToHovers(classInfo, existMap)
+
+	traverseMapInStringOrder(existMap, func(key string, value string) {
+		str = str + "\t" + value + "\n"
+	})
+
+	str = str + "}"
+	return str
+}
+
+// 代码补全时，有注解类型的字段提示
+func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName string, line int) (str string) {
+	str = annotateast.TypeConvertStr(astType)
+	classList := a.getAllNormalAnnotateClass(astType, fileName, line)
+	if len(classList) == 0 || str == "number" || str == "any" || str == "string" || str == "boolean" {
+		// 没有找到相应的class成员，直接返回
+		return str
+	}
+
+	// 为已经存在的map，防止重复
+	var existMap map[string]string = map[string]string{}
+	strType := annotateast.TypeConvertStr(astType)
+	str = strType + " = {\n"
+	for _, oneClass := range classList {
+		a.convertClassInfoToHovers(oneClass, existMap)
+	}
+
+	traverseMapInStringOrder(existMap, func(key string, value string) {
+		str = str + "\t" + value + "\n"
+	})
+
+	str = str + "}"
+	return str
+}
+
+// hover 的时候是指向一个table，展开这个table的内容
+func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string) {
+	// 为已经存在的map，防止重复
+	var existMap map[string]string = map[string]string{}
+
+	// 1) 先判断是否有注解类型
+	if symbol.AnnotateType != nil {
+		strType := annotateast.TypeConvertStr(symbol.AnnotateType)
+
+		classList := a.getAllNormalAnnotateClass(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
+		if len(classList) == 0 || strType == "number" || strType == "any" || strType == "string" {
+			// 没有找到相应的class成员，直接返回
+			return strType
+		}
+
+		str = strType + " = {\n"
+		for _, oneClass := range classList {
+			a.convertClassInfoToHovers(oneClass, existMap)
+		}
+	} else {
+		str = "table = {\n"
+		if symbol.VarInfo == nil || len(symbol.VarInfo.SubMaps) == 0 {
+			return "table = { }"
+		}
+	}
+
+	if symbol.VarInfo != nil {
+		for key, value := range symbol.VarInfo.SubMaps {
+			if _, ok := existMap[key]; ok {
+				continue
+			}
+
+			strValueType := value.GetVarTypeDetail()
+			if value.ReferFunc != nil {
+				strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
+			}
+			existMap[key] = key + ": " + strValueType + ","
+		}
+	}
+
+	traverseMapInStringOrder(existMap, func(key string, value string) {
+		str = str + "\t" + value + "\n"
+	})
+
+	str = str + "}"
+	return str
+}
+
 func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.DefineVarStruct) (strType string,
-	strLable, strDoc, strPre string, findFlag bool) {
+	strLabel, strDoc, strPre string, findFlag bool) {
 	// 1) 首先提取注解类型
 	if symbol.AnnotateType != nil {
-		str := annotateast.TypeConvertStr(symbol.AnnotateType)
-		strLable = varStruct.Str + " : " + str
+		// 注解类型尝试推导扩展class的field成员信息
+		str := a.expandTableHover(symbol)
+		strLabel = varStruct.Str + " : " + str
 
-		// 判断是否关联成number，如果是number类型尝试获取具体的值
 		if symbol.VarInfo != nil {
-			// strType := symbol.VarInfo.GetVarTypeDetail()
-			// if strings.HasPrefix(strType, "number: ") {
-			// 	strLable = varStruct.Str + " : number = " + strings.TrimPrefix(strType, "number: ")
-			// }
-			// strLable = varStruct.Str + " : " + strType
-
 			if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 				strPre = "local "
 			}
@@ -138,7 +265,7 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 		return
 	}
 
-	// 2) 判断变量类型是否存在
+	// 2) 获取变量推动的类型，首先判断变量类型是否存在
 	if symbol.VarInfo == nil {
 		return
 	}
@@ -148,11 +275,15 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 		strType = symbol.VarInfo.ReferInfo.GetReferComment()
 	} else {
 		strType = symbol.VarInfo.GetVarTypeDetail()
+		// 判断是否指向的一个table，如果是展开table的具体内容
+		if strType == "table" || len(symbol.VarInfo.SubMaps) > 0 {
+			strType = a.expandTableHover(symbol)
+		}
+
 		referFunc := symbol.VarInfo.ReferFunc
 		if referFunc != nil {
 			if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 				strPre = "local "
-				strType = "function " + referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
 			}
 
 			if symbol.VarInfo.ExtraGlobal != nil && symbol.VarInfo.ExtraGlobal.GFlag {
@@ -163,13 +294,9 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 		}
 	}
 
-	strLable = strings.Join(varStruct.StrVec, ".")
+	strLabel = strings.Join(varStruct.StrVec, ".")
 	if symbol.VarInfo.ReferFunc == nil {
-		// if strings.HasPrefix(strType, "number: ") {
-		// 	strType = "number = " + strings.TrimPrefix(strType, "number: ")
-		// }
-
-		strLable = strLable + " : " + strType
+		strLabel = strLabel + " : " + strType
 		if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 			strPre = "local "
 		}
@@ -178,11 +305,10 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 			strPre = "_G."
 		}
 	} else {
-		strLable = strType
+		strLabel = strType
 	}
 
 	strDoc = a.GetLineComment(symbol.FileName, symbol.VarInfo.Loc.EndLine)
-	//strDoc = getFinalStrComment(strDoc, true)
 	strDoc = GetStrComment(strDoc)
 	return
 }

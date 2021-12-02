@@ -5,7 +5,6 @@ import (
 
 	"luahelper-lsp/langserver/check"
 	"luahelper-lsp/langserver/check/common"
-	"luahelper-lsp/langserver/lspcommon"
 	"luahelper-lsp/langserver/pathpre"
 
 	"luahelper-lsp/langserver/log"
@@ -53,18 +52,14 @@ type ComletionParams struct {
 }
 
 // ProjectParams 工程的设置
-type ProjectParams struct {
-	Mode                 string   `json:"mode,omitempty"`
-	Rootdir              string   `json:"rootdir,omitempty"`
+type BaseParams struct {
+	Rootdir              string   `json:"Rootdir,omitempty"`
 	IgnoreFileOrDir      []string `json:"IgnoreFileOrDir,omitempty"`
 	IgnoreFileOrDirError []string `json:"IgnoreFileOrDirError,omitempty"`
 	RequirePathSeparator string   `json:"RequirePathSeparator,omitempty"`
-}
-
-// ReferenceParams 引用的设置
-type ReferenceParams struct {
-	MaxNum              int  `json:"maxNum,omitempty"`
-	ReferenceDefineFlag bool `json:"incudeDefine,omitempty"`
+	ReferenceMaxNum      int      `json:"ReferenceMaxNum,omitempty"`
+	ReferenceDefineFlag  bool     `json:"ReferenceIncudeDefine,omitempty"`
+	PreviewFieldsNum     int      `json:"PreviewFieldsNum,omitempty"`
 }
 
 // WarnParams 引用的设置
@@ -92,9 +87,8 @@ type WarnParams struct {
 
 // LuahelperParams 整体的设置
 type LuahelperParams struct {
-	Project   ProjectParams   `json:"project,omitempty"`
-	Reference ReferenceParams `json:"reference,omitempty"`
-	WarnParam WarnParams      `json:"Warn,omitempty"`
+	Base      BaseParams `json:"base,omitempty"`
+	WarnParam WarnParams `json:"Warn,omitempty"`
 }
 
 // SettingsParam 设置参数
@@ -151,6 +145,10 @@ func getAssociationList(associationData interface{}) (associalList []string) {
 
 // ChangeConfiguration 修改配置请求
 func (l *LspServer) ChangeConfiguration(ctx context.Context, vs ChangeConfigurationParams) error {
+	base := vs.Settings.Luahelper.Base
+	setConfigSet(base.ReferenceMaxNum, base.ReferenceDefineFlag)
+	// 设置预览table成员的数量
+	common.GConfig.SetPreviewFieldsNum(base.PreviewFieldsNum)
 	if !l.changeConfFlag {
 		l.changeConfFlag = true
 		return nil
@@ -159,7 +157,6 @@ func (l *LspServer) ChangeConfiguration(ctx context.Context, vs ChangeConfigurat
 	l.requestMutex.Lock()
 	defer l.requestMutex.Unlock()
 
-	setConfigSet(vs.Settings.Luahelper.Reference.MaxNum, vs.Settings.Luahelper.Reference.ReferenceDefineFlag)
 	if common.GConfig.ReadJSONFlag {
 		return nil
 	}
@@ -170,11 +167,10 @@ func (l *LspServer) ChangeConfiguration(ctx context.Context, vs ChangeConfigurat
 	// 按顺序插入
 	checkFlagList := getWarnCheckList(&vs.Settings.Luahelper.WarnParam)
 
-	common.GConfig.HandleChangeCheckList(checkFlagList, vs.Settings.Luahelper.Project.IgnoreFileOrDir,
-		vs.Settings.Luahelper.Project.IgnoreFileOrDirError)
+	common.GConfig.HandleChangeCheckList(checkFlagList, base.IgnoreFileOrDir, base.IgnoreFileOrDirError)
 
 	// 设置require其他lua文件的路径分割
-	common.GConfig.SetRequirePathSeparator(vs.Settings.Luahelper.Project.RequirePathSeparator)
+	common.GConfig.SetRequirePathSeparator(base.RequirePathSeparator)
 
 	return l.handleChange(ctx)
 }
@@ -186,8 +182,8 @@ func (l *LspServer) clearLspServer(ctx context.Context) {
 	}
 
 	l.fileErrorMap = map[string][]common.CheckError{}
-	l.fileChangeErrorMap = map[string]common.CheckError{}
-	l.fileCache = lspcommon.CreateFileMapCache()
+	l.fileChangeErrorMap = map[string][]common.CheckError{}
+	//l.fileCache = lspcommon.CreateFileMapCache()
 }
 
 func (l *LspServer) handleChange(ctx context.Context) error {

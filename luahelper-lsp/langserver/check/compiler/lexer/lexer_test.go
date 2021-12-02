@@ -15,16 +15,6 @@ func setNowToken(l *Lexer) {
 	l.nowToken.tokenStr = "fjsofjo"
 }
 
-func setPreToken(l *Lexer) {
-	l.preToken.valid = true
-	l.preToken.tokenStr = "dfjosf"
-	l.preToken.tokenKind = TkSepRparen
-	l.preToken.line = 1
-	l.preToken.lineStartPos = 232
-	l.preToken.rangeFromPos = 334
-	l.preToken.rangeToPos = 300
-}
-
 func setAheardToken(l *Lexer) {
 	l.aheadToken.valid = true
 	l.aheadToken.tokenStr = "dfjosf"
@@ -45,9 +35,9 @@ func constructCopyone(l *Lexer) {
 	l.aheadToken = nextToken
 }
 
-var backPreToken TokenStruct
-var backNowToken TokenStruct
-var nextToken TokenStruct
+var backPreToken Token
+var backNowToken Token
+var nextToken Token
 
 func constructConstCopy(l *Lexer) {
 	backPreToken = l.preToken
@@ -150,7 +140,6 @@ func BenchmarkEveryCopy(b *testing.B) {
 	}
 }
 
-
 func isLetterTest(c byte) bool {
 	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
 }
@@ -165,6 +154,7 @@ var a_one byte = 'a'
 var z_one byte = 'z'
 var A_one byte = 'A'
 var Z_one byte = 'Z'
+
 func isLettersTest(c byte) bool {
 	return c >= a_one && c <= z_one || c >= A_one && c <= Z_one
 }
@@ -174,7 +164,6 @@ func BenchmarkIsLetter(b *testing.B) {
 		isLettersTest('e')
 	}
 }
-
 
 type LexerOne struct {
 	chunk string
@@ -195,22 +184,20 @@ func (l *LexerOne) test(s string) bool {
 	return true
 }
 
-
 // BenchmarkLexerTest 改写的字符串匹配
 func BenchmarkLexerTest(b *testing.B) {
 	l := &LexerOne{
-		chunk:  "abdfsof",
+		chunk: "abdfsof",
 	}
 	for i := 0; i < b.N; i++ {
 		l.test("ab")
 	}
 }
 
-
 // BenchmarkLexerTestOld  利用字符串自带的方法匹配
 func BenchmarkLexerTestOld(b *testing.B) {
 	l := &LexerOne{
-		chunk:  "abdfsof",
+		chunk: "abdfsof",
 	}
 	for i := 0; i < b.N; i++ {
 		strings.HasSuffix(l.chunk, "ab")
@@ -229,11 +216,10 @@ func (l *LexerOne) testSpecial() bool {
 	return false
 }
 
-
 // BenchmarkLexerTestSpecial 匹配特殊的
 func BenchmarkLexerTestSpecial(b *testing.B) {
 	l := &LexerOne{
-		chunk:  "abdfsof",
+		chunk: "abdfsof",
 	}
 	for i := 0; i < b.N; i++ {
 		l.testSpecial()

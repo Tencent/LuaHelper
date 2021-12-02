@@ -48,6 +48,8 @@ func (p *Parser) parseStat() ast.Stat {
 		return p.parseFuncDefStat()
 	case lexer.TkKwLocal:
 		return p.parseLocalAssignOrFuncDefStat()
+	case lexer.IKIllegal:
+		return p.parseIKIllegalStat()
 	default:
 		return p.parseAssignOrFuncCallStat()
 	}
@@ -55,13 +57,13 @@ func (p *Parser) parseStat() ast.Stat {
 
 // ;
 func (p *Parser) parseEmptyStat() *ast.EmptyStat {
-	p.l.NextTokenOfKind(lexer.TkSepSemi)
+	p.l.NextTokenKind(lexer.TkSepSemi)
 	return _statEmpty
 }
 
 // break
 func (p *Parser) parseBreakStat() *ast.BreakStat {
-	p.l.NextTokenOfKind(lexer.TkKwBreak)
+	p.l.NextTokenKind(lexer.TkKwBreak)
 
 	return &ast.BreakStat{
 		//Loc: l.GetNowTokenLoc(),
@@ -70,10 +72,10 @@ func (p *Parser) parseBreakStat() *ast.BreakStat {
 
 // ‘::’ Name ‘::’
 func (p *Parser) parseLabelStat() *ast.LabelStat {
-	p.l.NextTokenOfKind(lexer.TkSepLabel) // ::
-	_, name := p.l.NextIdentifier()       // name
+	p.l.NextTokenKind(lexer.TkSepLabel) // ::
+	_, name := p.l.NextIdentifier()     // name
 	loc := p.l.GetNowTokenLoc()
-	p.l.NextTokenOfKind(lexer.TkSepLabel) // ::
+	p.l.NextTokenKind(lexer.TkSepLabel) // ::
 	return &ast.LabelStat{
 		Name: name,
 		Loc:  loc,
@@ -82,8 +84,8 @@ func (p *Parser) parseLabelStat() *ast.LabelStat {
 
 // goto Name
 func (p *Parser) parseGotoStat() *ast.GotoStat {
-	p.l.NextTokenOfKind(lexer.TkKwGoto) // goto
-	_, name := p.l.NextIdentifier()     // name
+	p.l.NextTokenKind(lexer.TkKwGoto) // goto
+	_, name := p.l.NextIdentifier()   // name
 	return &ast.GotoStat{
 		Name: name,
 		Loc:  p.l.GetNowTokenLoc(),
@@ -93,7 +95,7 @@ func (p *Parser) parseGotoStat() *ast.GotoStat {
 // do block end
 func (p *Parser) parseDoStat() *ast.DoStat {
 	l := p.l
-	l.NextTokenOfKind(lexer.TkKwDo) // do
+	l.NextTokenKind(lexer.TkKwDo) // do
 	beginLoc := l.GetNowTokenLoc()
 
 	blockBeginLoc := l.GetHeardTokenLoc()
@@ -101,7 +103,7 @@ func (p *Parser) parseDoStat() *ast.DoStat {
 	blockEndLoc := l.GetNowTokenLoc()
 	block.Loc = lexer.GetRangeLoc(&blockBeginLoc, &blockEndLoc)
 
-	l.NextTokenOfKind(lexer.TkKwEnd) // end
+	l.NextTokenKind(lexer.TkKwEnd) // end
 	endLoc := l.GetNowTokenLoc()
 
 	loc := lexer.GetRangeLoc(&beginLoc, &endLoc)
@@ -114,17 +116,17 @@ func (p *Parser) parseDoStat() *ast.DoStat {
 // while exp do block end
 func (p *Parser) parseWhileStat() *ast.WhileStat {
 	l := p.l
-	l.NextTokenOfKind(lexer.TkKwWhile) // while
+	l.NextTokenKind(lexer.TkKwWhile) // while
 	beginLoc := l.GetNowTokenLoc()
-	exp := p.parseExp()             // exp
-	l.NextTokenOfKind(lexer.TkKwDo) // do
+	exp := p.parseExp()           // exp
+	l.NextTokenKind(lexer.TkKwDo) // do
 
 	blockBeginLoc := l.GetHeardTokenLoc()
 	block := p.parseBlock() // block
 	blockEndLoc := l.GetNowTokenLoc()
 	block.Loc = lexer.GetRangeLoc(&blockBeginLoc, &blockEndLoc)
 
-	l.NextTokenOfKind(lexer.TkKwEnd) // end
+	l.NextTokenKind(lexer.TkKwEnd) // end
 	endLoc := l.GetNowTokenLoc()
 	loc := lexer.GetRangeLoc(&beginLoc, &endLoc)
 
@@ -138,7 +140,7 @@ func (p *Parser) parseWhileStat() *ast.WhileStat {
 // repeat block until exp
 func (p *Parser) parseRepeatStat() *ast.RepeatStat {
 	l := p.l
-	l.NextTokenOfKind(lexer.TkKwRepeat) // repeat
+	l.NextTokenKind(lexer.TkKwRepeat) // repeat
 	beginLoc := l.GetNowTokenLoc()
 
 	blockBeginLoc := l.GetHeardTokenLoc()
@@ -146,8 +148,8 @@ func (p *Parser) parseRepeatStat() *ast.RepeatStat {
 	blockEndLoc := l.GetNowTokenLoc()
 	block.Loc = lexer.GetRangeLoc(&blockBeginLoc, &blockEndLoc)
 
-	l.NextTokenOfKind(lexer.TkKwUntil) // until
-	exp := p.parseExp()                // exp
+	l.NextTokenKind(lexer.TkKwUntil) // until
+	exp := p.parseExp()              // exp
 	endLoc := l.GetNowTokenLoc()
 	loc := lexer.GetRangeLoc(&beginLoc, &endLoc)
 
@@ -164,11 +166,11 @@ func (p *Parser) parseIfStat() *ast.IfStat {
 	exps := make([]ast.Exp, 0, 1)
 	blocks := make([]*ast.Block, 0, 1)
 
-	l.NextTokenOfKind(lexer.TkKwIf) // if
+	l.NextTokenKind(lexer.TkKwIf) // if
 	beginLoc := l.GetNowTokenLoc()
 
 	exps = append(exps, p.parseExp()) // exp
-	l.NextTokenOfKind(lexer.TkKwThen) // then
+	l.NextTokenKind(lexer.TkKwThen)   // then
 
 	thenBlockBeginLoc := l.GetHeardTokenLoc()
 	thenBlock := p.parseBlock()
@@ -179,7 +181,7 @@ func (p *Parser) parseIfStat() *ast.IfStat {
 	for l.LookAheadKind() == lexer.TkKwElseif {
 		l.NextToken()                     // elseif
 		exps = append(exps, p.parseExp()) // exp
-		l.NextTokenOfKind(lexer.TkKwThen) // then
+		l.NextTokenKind(lexer.TkKwThen)   // then
 
 		elseifBlockBeginLoc := l.GetHeardTokenLoc()
 		elseifBlock := p.parseBlock()
@@ -205,7 +207,7 @@ func (p *Parser) parseIfStat() *ast.IfStat {
 		blocks = append(blocks, elseBlock) // block
 	}
 
-	l.NextTokenOfKind(lexer.TkKwEnd) // end
+	l.NextTokenKind(lexer.TkKwEnd) // end
 
 	endLoc := l.GetNowTokenLoc()
 	loc := lexer.GetRangeLoc(&beginLoc, &endLoc)
@@ -220,7 +222,7 @@ func (p *Parser) parseIfStat() *ast.IfStat {
 // for namelist in explist do block end
 func (p *Parser) parseForStat() ast.Stat {
 	l := p.l
-	lineOfFor, _ := l.NextTokenOfKind(lexer.TkKwFor)
+	lineOfFor, _ := l.NextTokenKind(lexer.TkKwFor)
 	beginLoc := l.GetNowTokenLoc()
 
 	_, name := l.NextIdentifier()
@@ -234,10 +236,10 @@ func (p *Parser) parseForStat() ast.Stat {
 func (p *Parser) finishForNumStat(lineOfFor int, varName string, beginLoc *lexer.Location) *ast.ForNumStat {
 	l := p.l
 	varNameLoc := l.GetNowTokenLoc()
-	l.NextTokenOfKind(lexer.TkOpAssign) // for name =
-	initExp := p.parseExp()             // exp
-	l.NextTokenOfKind(lexer.TkSepComma) // ,
-	limitExp := p.parseExp()            // exp
+	l.NextTokenKind(lexer.TkOpAssign) // for name =
+	initExp := p.parseExp()           // exp
+	l.NextTokenKind(lexer.TkSepComma) // ,
+	limitExp := p.parseExp()          // exp
 
 	var stepExp ast.Exp
 	if l.LookAheadKind() == lexer.TkSepComma {
@@ -251,14 +253,14 @@ func (p *Parser) finishForNumStat(lineOfFor int, varName string, beginLoc *lexer
 		}
 	}
 
-	l.NextTokenOfKind(lexer.TkKwDo) // do
+	l.NextTokenKind(lexer.TkKwDo) // do
 
 	blockBeginLoc := l.GetHeardTokenLoc()
 	block := p.parseBlock() // block
 	blockEndLoc := l.GetNowTokenLoc()
 	block.Loc = lexer.GetRangeLoc(&blockBeginLoc, &blockEndLoc)
 
-	l.NextTokenOfKind(lexer.TkKwEnd) // end
+	l.NextTokenKind(lexer.TkKwEnd) // end
 
 	endLoc := l.GetNowTokenLoc()
 	loc := lexer.GetRangeLoc(beginLoc, &endLoc)
@@ -281,16 +283,16 @@ func (p *Parser) finishForInStat(name0 string, beginLoc *lexer.Location) *ast.Fo
 	l := p.l
 	varLoc0 := l.GetNowTokenLoc()
 	nameList, nameLocList := p.finishNameList(name0, varLoc0) // for namelist
-	l.NextTokenOfKind(lexer.TkKwIn)                           // in
+	l.NextTokenKind(lexer.TkKwIn)                             // in
 	expList := p.parseExpList()                               // explist
-	l.NextTokenOfKind(lexer.TkKwDo)                           // do
+	l.NextTokenKind(lexer.TkKwDo)                             // do
 
 	blockBeginLoc := l.GetHeardTokenLoc()
 	block := p.parseBlock() // block
 	blockEndLoc := l.GetNowTokenLoc()
 	block.Loc = lexer.GetRangeLoc(&blockBeginLoc, &blockEndLoc)
 
-	l.NextTokenOfKind(lexer.TkKwEnd) // end
+	l.NextTokenKind(lexer.TkKwEnd) // end
 
 	endLoc := l.GetNowTokenLoc()
 	loc := lexer.GetRangeLoc(beginLoc, &endLoc)
@@ -325,13 +327,16 @@ func (p *Parser) getLocalAttribute() ast.LocalAttr {
 	if l.LookAheadKind() == lexer.TkOpLt {
 		l.NextToken()
 		_, attr := l.NextIdentifier()
-		l.NextTokenOfKind(lexer.TkOpGt)
+
 		if attr == "close" {
+			l.NextTokenKind(lexer.TkOpGt)
 			return ast.RDKTOCLOSE
 		} else if attr == "const" {
+			l.NextTokenKind(lexer.TkOpGt)
 			return ast.RDKCONST
 		} else {
-			l.ErrorPrint("unrecognized local varible attribute '%s' ", attr)
+			p.insertParserErr(l.GetNowTokenLoc(), "unrecognized local varible attribute '%s' ", attr)
+			l.NextTokenKind(lexer.TkOpGt)
 		}
 	}
 	return ast.VDKREG
@@ -360,7 +365,7 @@ func (p *Parser) finishLocalNameList(name0 string, varLoc0 lexer.Location, kind 
 		kind := p.getLocalAttribute()
 		if kind == ast.RDKTOCLOSE {
 			if index != -1 {
-				l.ErrorPrint("more than one to_be_close variables found in local list")
+				p.insertParserErr(l.GetPreTokenLoc(), "more than one to_be_close variables found in local list")
 			} else {
 				index++
 			}
@@ -376,7 +381,7 @@ func (p *Parser) finishLocalNameList(name0 string, varLoc0 lexer.Location, kind 
 // local namelist [‘=’ explist]
 func (p *Parser) parseLocalAssignOrFuncDefStat() ast.Stat {
 	l := p.l
-	l.NextTokenOfKind(lexer.TkKwLocal)
+	l.NextTokenKind(lexer.TkKwLocal)
 	if l.LookAheadKind() == lexer.TkKwFunction {
 		return p.finishLocalFuncDefStat()
 	}
@@ -403,8 +408,8 @@ func (p *Parser) finishLocalFuncDefStat() *ast.LocalFuncDefStat {
 	l := p.l
 	beginLoc := l.GetNowTokenLoc()
 
-	l.NextTokenOfKind(lexer.TkKwFunction) // local function
-	_, name := l.NextIdentifier()         // name
+	l.NextTokenKind(lexer.TkKwFunction) // local function
+	_, name := l.NextIdentifier()       // name
 	nameLoc := l.GetNowTokenLoc()
 	fdExp := p.parseFuncDefExp(&beginLoc) // funcbody
 
@@ -449,27 +454,40 @@ func (p *Parser) parseAssignOrFuncCallStat() ast.Stat {
 	l := p.l
 	beginLoc := l.GetHeardTokenLoc()
 	prefixExp := p.parsePrefixExp()
+	if _, ok := prefixExp.(*ast.BadExpr); ok {
+		return &ast.EmptyStat{}
+	}
+
 	if fc, ok := prefixExp.(*ast.FuncCallExp); ok {
 		endLoc := l.GetNowTokenLoc()
 		fc.Loc = lexer.GetRangeLoc(&beginLoc, &endLoc)
 		return fc
 	}
 
-	assignStat := p.parseAssignStat(prefixExp)
-	endLoc := l.GetNowTokenLoc()
-	assignStat.Loc = lexer.GetRangeLoc(&beginLoc, &endLoc)
+	assignStat := p.parseAssignStat(beginLoc, prefixExp)
+
 	return assignStat
 }
 
 // varlist ‘=’ explist |
-func (p *Parser) parseAssignStat(var0 ast.Exp) *ast.AssignStat {
+func (p *Parser) parseAssignStat(preLoc lexer.Location, var0 ast.Exp) ast.Stat {
 	l := p.l
 	beginLoc := l.GetNowTokenLoc()
-	symList := p.finishVarList(var0)    // varlist
-	l.NextTokenOfKind(lexer.TkOpAssign) // =
-	expList := p.parseExpList()         // explist
+	symList := p.finishVarList(var0) // varlist
+
+	aheadKind := l.LookAheadKind()
+	if aheadKind != lexer.TkOpAssign {
+		nowLoc := l.GetNowTokenLoc()
+		loc := lexer.GetRangeLoc(&preLoc, &nowLoc)
+		p.insertParserErr(loc, "expression cannot be used as a statement")
+		return &ast.EmptyStat{}
+	}
+
+	l.NextTokenKind(lexer.TkOpAssign) // =
+	expList := p.parseExpList()       // explist
 	endLoc := l.GetNowTokenLoc()
 	loc := lexer.GetRangeLoc(&beginLoc, &endLoc)
+
 	return &ast.AssignStat{
 		VarList: symList,
 		ExpList: expList,
@@ -493,12 +511,16 @@ func (p *Parser) finishVarList(var0 ast.Exp) []ast.Exp {
 func (p *Parser) checkVar(exp ast.Exp) ast.Exp {
 	l := p.l
 	switch exp.(type) {
-	case *ast.NameExp, *ast.TableAccessExp:
+	case *ast.NameExp, *ast.TableAccessExp, *ast.BadExpr:
 		return exp
 	}
 
-	l.NextTokenOfKind(-1) // trigger error
-	panic("unreachable!")
+	loc := l.GetNowTokenLoc()
+	return &ast.BadExpr{
+		Loc: loc,
+	}
+	// l.NextTokenKind(-1) // trigger error
+	// panic("unreachable!")
 }
 
 // function funcname funcbody
@@ -508,7 +530,7 @@ func (p *Parser) checkVar(exp ast.Exp) ast.Exp {
 // namelist ::= Name {‘,’ Name}
 func (p *Parser) parseFuncDefStat() *ast.AssignStat {
 	l := p.l
-	l.NextTokenOfKind(lexer.TkKwFunction) // function
+	l.NextTokenKind(lexer.TkKwFunction) // function
 	beginLoc := l.GetNowTokenLoc()
 	fnExp, hasColon := p.parseFuncName() // funcname
 	selfLoc := l.GetNowTokenLoc()
@@ -584,4 +606,19 @@ func (p *Parser) parseFuncName() (exp ast.Exp, hasColon bool) {
 	}
 
 	return
+}
+
+// func (p *Parser) parseIKIllegalStat() *ast.IllegalStat{
+// 	l := p.l
+// 	loc := l.GetNowTokenLoc()
+// 	l.NextToken()
+// 	return &ast.IllegalStat{
+// 		Name: "",
+// 		Loc:  loc,
+// 	}
+// }
+
+func (p *Parser) parseIKIllegalStat() *ast.EmptyStat {
+	p.l.NextToken()
+	return _statEmpty
 }

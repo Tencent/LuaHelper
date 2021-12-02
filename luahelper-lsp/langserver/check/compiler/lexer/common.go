@@ -8,13 +8,11 @@ type Location struct {
 	EndColumn   int
 }
 
-// LuaParseError check的错误信息
-type LuaParseError struct {
-	ErrStr      string      // 简单的错误信息
-	ShowStr     string      // 完整的错误信息
-	ErrToken    TokenStruct // 出错的token
-	Loc         Location    // 错误的位置区域
-	ReadFileErr bool        // 读取文件是否失败
+// ParseError check的错误信息
+type ParseError struct {
+	ErrStr      string   // 简单的错误信息
+	Loc         Location // 错误的位置区域
+	ReadFileErr bool     // 读取文件是否失败
 }
 
 // CommentLine 当行的注释信息
@@ -29,11 +27,6 @@ type CommentInfo struct {
 	LineVec   []CommentLine // 多行的内容存储
 	ShortFlag bool          // 是否是短注释，true表示短注释
 	HeadFlag  bool          // 是否为头部注释， 例如一行中 --这样开头的就为头部注释
-}
-
-// Error err string
-func (l LuaParseError) Error() string {
-	return l.ShowStr
 }
 
 // GetRangeLoc 获取两个位置的范围，为[]

@@ -38,7 +38,7 @@ export class OnlinePeople {
 function sendRequest(statusBar: StatusBarItem, client: LanguageClient) {
     let params: notifications.GetOnlineParams = { Req: 0 };
     client.sendRequest<notifications.GetOnlineReturn>("luahelper/getOnlineReq", params).then(onelineReturn => {
-        let showConfig = vscode.workspace.getConfiguration("luahelper.show", null).get("online");
+        let showConfig = vscode.workspace.getConfiguration("luahelper.base", null).get("showOnline");
         var openFlag = false;
         if (showConfig !== undefined) {
             openFlag = <boolean><any>showConfig;

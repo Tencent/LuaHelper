@@ -14,6 +14,12 @@ import (
 	"sync"
 )
 
+// SnippetItem 单个Snippet元素
+type SnippetItem struct {
+	InsertText string //  插入的文本
+	Detail     string // 描述信息
+}
+
 // GlobalConfig 对外封装的全局配置信息
 type GlobalConfig struct {
 	// 是否读取了ylua.json配置文件，如果读取到了配置文件，获取相应的配置；如果没有读取到配置，默认以客户端的模式
@@ -22,9 +28,6 @@ type GlobalConfig struct {
 
 	// 如果是包含工程的入口文件，配置读取，后台专门定制的特性
 	ProjectFiles []string
-
-	// 后台专业的，用于解释tlog，用于调整定义到tlog中
-	TlogXMLPath string
 
 	// 是否开启告警
 	showWarnFlag bool
@@ -92,7 +95,10 @@ type GlobalConfig struct {
 	ProtocolPreIngoreFlag bool
 
 	// 代码补全时候，增加的提示关键字变量
-	CodeCompleteVarVec []string
+	CompKeyMap map[string]bool
+
+	// snippet代码补全
+	CompSnippetMap map[string]SnippetItem
 
 	// 忽略标准库中定义了为未使用的引用变量名
 	ignoreSysNoUseMap map[string]bool
@@ -118,6 +124,7 @@ type GlobalConfig struct {
 
 	ReferenceMaxNum     int  // 查找引用时候，返回的最大的引用数量
 	ReferenceDefineFlag bool // 查找引用时候，是否需要显示定义
+	PreviewFieldsNum    int  // 当hover一个table时，显示最多field的数量
 
 	// 查询_G.a 这样的全局符号，a是否会扩大到全局符号定义
 	// 例如前面定义了a=1,  那么此时_G.a 会指向前面的a=1
@@ -143,6 +150,7 @@ func createDefaultGlobalConfig() {
 		ReferMatchPathFlag:     false,
 		showWarnFlag:           false,
 		ReferenceMaxNum:        3000,
+		PreviewFieldsNum:       30,
 		ReferenceDefineFlag:    true,
 		GVarExtendGlobalFlag:   true,
 		colonFlag:              0,
@@ -237,7 +245,6 @@ type (
 		ProtocolPreIngoreFlag int                 `json:"ProtocolPreIngoreFlag"` // 协议前缀变量未找到，是否告警, 默认告警
 		ReferFrameFiles       []referFrameFile    `json:"ReferFrameFiles"`       // 项目中引用其他的框架文件
 		PathSeparator         string              `json:"PathSeparator"`         // 项目中引入其他文件，路径分隔符，默认为. 例如require("one.b") 表示引入one/b.lua 文件
-		TlogXMLPath           string              `json:"tlogXmlPath"`           // 所有工程的根目录
 		AnntotateSets         []AnntotateSet      `json:"AnntotateSets"`         // 自动推导的注解方式
 	}
 )
@@ -266,7 +273,6 @@ func createDefaultJSONCfig() {
 		ProtocolPreIngoreFlag: 0,
 		ReferFrameFiles:       []referFrameFile{{Name: "import", Type: 0, SuffixFlag: 1}},
 		PathSeparator:         ".",
-		TlogXMLPath:           "",
 		AnntotateSets:         []AnntotateSet{},
 	}
 }
@@ -371,38 +377,103 @@ func (g *GlobalConfig) IntialGlobalVar() {
 	g.IgnoreErrorTypeMap = map[CheckErrorType]bool{}
 
 	g.FileExistCacheMap = map[string]bool{}
+	g.CompKeyMap = map[string]bool{}
 
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "and")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "break")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "do")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "do .. end")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "::")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "if")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "else")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "elseif")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "end")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for i = ..")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for .. ipairs")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "for .. pairs")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "function")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "goto")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "in")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "local")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "not")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "or")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "repeat")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "return")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "then")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "then .. end")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "until")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "while")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "false")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "nil")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "true")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "self")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "continue")
-	g.CodeCompleteVarVec = append(g.CodeCompleteVarVec, "_G")
+	g.CompKeyMap["and"] = true
+	g.CompKeyMap["break"] = true
+	g.CompKeyMap["::"] = true
+
+	g.CompKeyMap["end"] = true
+	g.CompKeyMap["goto"] = true
+	g.CompKeyMap["in"] = true
+	g.CompKeyMap["local"] = true
+	g.CompKeyMap["not"] = true
+	g.CompKeyMap["or"] = true
+	g.CompKeyMap["return"] = true
+	g.CompKeyMap["until"] = true
+	g.CompKeyMap["false"] = true
+	g.CompKeyMap["nil"] = true
+	g.CompKeyMap["true"] = true
+	g.CompKeyMap["self"] = true
+	g.CompKeyMap["continue"] = true
+	g.CompKeyMap["_G"] = true
+	g.CompKeyMap["local"] = true
+
+	g.CompSnippetMap = map[string]SnippetItem{}
+	g.CompSnippetMap["else"] = SnippetItem{
+		InsertText: "else\n\t",
+		Detail:     "else\n\t",
+	}
+
+	g.CompSnippetMap["for .. ipairs"] = SnippetItem{
+		InsertText: "for ${1:i}, ${2:v} in ipairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for i, v in ipairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["for .. pairs"] = SnippetItem{
+		InsertText: "for ${1:k}, ${2:v} in pairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for k, v in pairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["then .. end"] = SnippetItem{
+		InsertText: "then" + "\n" + "\t" + "${0:}" + "\n" + "end",
+		Detail:     "then" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["for i = .."] = SnippetItem{
+		InsertText: "for ${1:i} = ${2:1}, ${3:10}, ${4:1} do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for i = 1, 10, 1 do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["if"] = SnippetItem{
+		InsertText: "if ${1:condition} then\n\t${0:}\nend",
+		Detail:     "if condition then\n\nend",
+	}
+
+	g.CompSnippetMap["elseif"] = SnippetItem{
+		InsertText: "elseif ${1:condition} then\n\t${0:}",
+		Detail:     "elseif condition then ..",
+	}
+
+	g.CompSnippetMap["for"] = SnippetItem{
+		InsertText: "for ${1:k}, ${2:v} in pairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for k, v in pairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["fori"] = SnippetItem{
+		InsertText: "for ${1:i}, ${2:v} in ipairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for i, v in ipairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["forp"] = SnippetItem{
+		InsertText: "for ${1:k}, ${2:v} in pairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end",
+		Detail:     "for k, v in pairs(t) do" + "\n\n" + "end",
+	}
+
+	g.CompSnippetMap["do"] = SnippetItem{
+		InsertText: "do\n${0:}\nend",
+		Detail:     "do\n\nend",
+	}
+
+	g.CompSnippetMap["while"] = SnippetItem{
+		InsertText: "while ${1:condition} do\n\t${0:}\nend",
+		Detail:     "while\n\nend",
+	}
+
+	g.CompSnippetMap["repeat"] = SnippetItem{
+		InsertText: "repeat\n\t${0:}\nuntil ${1:condition}",
+		Detail:     "repeat\n\nuntil",
+	}
+
+	g.CompSnippetMap["local function"] = SnippetItem{
+		InsertText: "local function ${1:func}(${2:})\n\t${0:}\nend",
+		Detail:     "local function func()\n\nend",
+	}
+
+	g.CompSnippetMap["function"] = SnippetItem{
+		InsertText: "function ${1:func}(${2:})\n\t${0:}\nend",
+		Detail:     "function func()\n\nend",
+	}
 
 	// 设置系统忽略定义未使用的变量
 	g.setSysNotUseMap()
@@ -536,7 +607,6 @@ func (g *GlobalConfig) ReadConfig(strDir, configFileName string, checkFlagList [
 
 	g.ProjectFiles = jsonConfig.ProjectFiles
 
-	g.TlogXMLPath = jsonConfig.TlogXMLPath
 	g.ReferMatchPathFlag = (jsonConfig.ReferMatchPathFlag == 1)
 	g.showWarnFlag = (jsonConfig.ShowWarnFlag == 1)
 
@@ -653,6 +723,12 @@ func (g *GlobalConfig) SetRequirePathSeparator(pathSeparator string) {
 	}
 
 	GConfig.PathSeparator = pathSeparator
+}
+
+func (g *GlobalConfig) SetPreviewFieldsNum(num int) {
+	if num > 0 {
+		GConfig.PreviewFieldsNum = num
+	}
 }
 
 // InsertIngoreSystemModule 如果为本地形式运行，加载不了插件前端的Lua额外文件夹，忽略系统模块。批量插入

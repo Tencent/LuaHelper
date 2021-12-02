@@ -526,7 +526,7 @@ func (f *FileResult) FindAllSymbol() (symbolVec []common.FileSymbolStruct) {
 	}
 
 	// todo 包含局部变量的时候，定位不准
-	
+
 	// 3) 查找这个文件的所有协议前缀
 	if len(f.ProtocolMaps) != 0 {
 		protocolSymbols := make(map[string]common.FileSymbolStruct)
@@ -614,21 +614,15 @@ func (f *FileResult) IsExistGlobalVarTableStrKey(strTableKey string, line int, c
 }
 
 // GetAstCheckError 获取AST的错误
-func (f *FileResult) GetAstCheckError() (hasAstErrFlag bool, errVec common.CheckError) {
+func (f *FileResult) GetAstCheckError() (errList []common.CheckError) {
 	fileError := f.CheckErrVec
-	// 如果这个文件是关联其他的文件（即文件的后缀不是以.lua结尾）
-	// 判断这个文件是否有成功的一句语句，如果有，不进行错误提示
-	if len(fileError) == 1 && fileError[0].ErrType == common.CheckErrorSyntax && fileError[0].Loc.StartLine == 1 {
-		return false, common.CheckError{}
-	}
-
 	for _, oneErr := range fileError {
 		if oneErr.ErrType == common.CheckErrorSyntax {
-			return true, oneErr
+			errList = append(errList, oneErr)
 		}
 	}
 
-	return false, common.CheckError{}
+	return errList
 }
 
 // GetFileLineComment 获取某一行的注释
