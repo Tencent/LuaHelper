@@ -123,7 +123,6 @@ func (a *AllProject) CodeCompleteFile(strFile string, referNameStr string, refer
 
 		a.completeCache.InsertCompleteNormal(strName, oneTip.StrDesc, "", common.IKVariable)
 	}
-	return
 }
 
 // CodeComplete 代码进行补全
@@ -174,7 +173,6 @@ func (a *AllProject) CodeComplete(strFile string, completeVar common.CompleteVar
 
 	a.completeCache.SetColonFlag(completeVar.ColonFlag)
 	a.lspCodeComplete(comParam, &completeVar)
-	return
 }
 
 // FuncCommentComplete 生成函数的注释提示
@@ -248,8 +246,6 @@ func (a *AllProject) protocolCodeComplete(strProPre string, secondProject *resul
 			a.completeCache.InsertCompleteVar(oneVar.ExtraGlobal.FileName, strName, oneVar)
 		}
 	}
-
-	return
 }
 
 // _G所有变量的代码补全
@@ -309,8 +305,6 @@ func (a *AllProject) gValueComplete(comParam *CommonFuncParam, completeVar *comm
 
 		a.completeCache.InsertCompleteVar(fileName, strName, oneVar)
 	}
-
-	return
 }
 
 // 前缀是_G符号
@@ -469,13 +463,12 @@ func (a *AllProject) getFileCompleteExt(luaInFile string, strFind string, comPar
 	go goCompleteExtension(copleteParam, retCompleteResultCh)
 
 	// 3) 接收一个协程的数据
-	resultch1, _ := <-retCompleteResultCh
+	resultch1 := <-retCompleteResultCh
 	a.insertFileCacheStrMap(resultch1.strMap)
 
 	// 4) 接收另外一个协程的数据
-	resultch2, _ := <-retCompleteResultCh
+	resultch2 := <-retCompleteResultCh
 	a.insertFileCacheStrMap(resultch2.strMap)
-	return
 }
 
 // import文件的所有成员放入进来
@@ -589,7 +582,7 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 
 	// 1) 判断是否为系统模块函数提示
 	if lenStrVec == 1 && completeVar.LastEmptyFlag {
-		
+
 		// 2) 是否为协议前缀
 		if common.GConfig.IsStrProtocol(strFind) {
 			// 为协议前缀，返回所有的返回
@@ -642,7 +635,11 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 	}
 
 	// 3.3) 把常用见的关键字放入进来
-	for _, strName := range common.GConfig.CodeCompleteVarVec {
+	for strName := range common.GConfig.CompKeyMap {
+		if completeVar.IgnoreKeyWord {
+			break
+		}
+
 		if !common.IsCompleteNeedShow(strName, completeVar) || a.completeCache.ExistStr(strName) {
 			continue
 		}
@@ -650,6 +647,18 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 		a.completeCache.InsertCompleteKey(strName)
 	}
 
+	// 3.4) 把snippet放入进来
+	for strName := range common.GConfig.CompSnippetMap {
+		if completeVar.IgnoreKeyWord {
+			break
+		}
+
+		if !common.IsCompleteNeedShow(strName, completeVar) || a.completeCache.ExistStr(strName) {
+			continue
+		}
+
+		a.completeCache.InsertCompleteSnippet(strName)
+	}
 	// 3.4) 把_G的函数也包含进来
 	// 默认只提示_G的函数，如果要提示_G的变量，需要配置打开，整体上会慢一点
 	a.gValueComplete(comParam, completeVar, false, fileName)
@@ -674,8 +683,6 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 		detail := ""
 		a.completeCache.InsertCompleteNormal(strName, detail, "", common.IKVariable)
 	}
-
-	return
 }
 
 // 代码补全进行的分发
@@ -694,7 +701,6 @@ func (a *AllProject) lspCodeComplete(comParam *CommonFuncParam, completeVar *com
 
 	// 3）模块变量的代码补全
 	a.otherPreComplete(comParam, completeVar)
-	return
 }
 
 // GetCompleteCacheItems 获取所有的
@@ -774,9 +780,14 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 		symbol := common.GetDefaultSymbol(item.LuaFile, varInfo)
 		astType, strComment, strPreComment := a.getInfoFileAnnotateType(item.Label, symbol)
 		if astType != nil {
-			str := annotateast.TypeConvertStr(astType)
+			//str := annotateast.TypeConvertStr(astType)
+			str := a.completeAnnotatTypeStr(astType, item.LuaFile, symbol.GetLine())
 			if strPreComment != "" {
-				item.Detail = strPreComment + "  " + str
+				if strPreComment == "type" {
+					item.Detail = item.Label + " : " + str
+				} else {
+					item.Detail = strPreComment + "  " + str
+				}
 			} else {
 				item.Detail = str
 			}
@@ -796,7 +807,13 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 		}
 
 		item.Detail = varInfo.GetVarTypeDetail()
-		if item.Detail == "any" {
+		expandFlag := false
+		if item.Detail == "table" || len(varInfo.SubMaps) > 0 {
+			item.Detail = a.expandTableHover(symbol)
+			expandFlag = true
+		}
+
+		if item.Detail == "any" || expandFlag {
 			comParam := a.getCommFunc(item.LuaFile, varInfo.Loc.StartLine, varInfo.Loc.StartColumn)
 			if comParam == nil {
 				return
@@ -806,23 +823,29 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 			findExpList := []common.FindExpFile{}
 			// 这里也需要做判断，函数返回的变量逐层跟踪，目前只跟踪了一层
 			symList := a.FindDeepSymbolList(item.LuaFile, item.VarInfo.ReferExp, comParam, &findExpList, true, 1)
-			for _, varFileTmp := range symList {
+			for _, symbolTmp := range symList {
 				// 判断是否为注解类型
-				if varFileTmp.AnnotateType != nil {
-					item.Detail = annotateast.TypeConvertStr(varFileTmp.AnnotateType)
-				} else if varFileTmp.VarInfo != nil {
-					strDetail := varFileTmp.VarInfo.GetVarTypeDetail()
+				if symbolTmp.AnnotateType != nil {
+					//item.Detail = annotateast.TypeConvertStr(varFileTmp.AnnotateType)
+					item.Detail = item.Label + " : " + a.expandTableHover(symbolTmp)
+					break
+				} else if symbolTmp.VarInfo != nil {
+					strDetail := symbolTmp.VarInfo.GetVarTypeDetail()
+					if strDetail == "table" || len(symbolTmp.VarInfo.SubMaps) > 0 {
+						strDetail = a.expandTableHover(symbolTmp)
+					}
+
 					if strDetail != "any" {
 						item.Detail = strDetail
 					}
 
-					if varFileTmp.VarInfo.ReferFunc != nil {
-						item.Detail = "function " + varFileTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
+					if symbolTmp.VarInfo.ReferFunc != nil {
+						item.Detail = "function " + symbolTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
 					}
 
 					// 如果为引用的模块
-					if varFileTmp.VarInfo.ReferInfo != nil {
-						item.Detail = varFileTmp.VarInfo.ReferInfo.GetReferComment()
+					if symbolTmp.VarInfo.ReferInfo != nil {
+						item.Detail = symbolTmp.VarInfo.ReferInfo.GetReferComment()
 					}
 				}
 			}
@@ -864,6 +887,8 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 			item.Detail = "class " + typeOne.ClassInfo.ClassState.Name
 			if len(typeOne.ClassInfo.ClassState.ParentNameList) > 0 {
 				item.Detail = item.Detail + " : " + strings.Join(typeOne.ClassInfo.ClassState.ParentNameList, " , ")
+			} else {
+				item.Detail = "class " + typeOne.ClassInfo.ClassState.Name + a.getClassFieldStr(typeOne.ClassInfo)
 			}
 
 			strComment := typeOne.ClassInfo.ClassState.Comment

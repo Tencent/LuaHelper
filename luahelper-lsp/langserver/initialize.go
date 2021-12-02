@@ -7,16 +7,16 @@ import (
 	"luahelper-lsp/langserver/log"
 	"luahelper-lsp/langserver/pathpre"
 	lsp "luahelper-lsp/langserver/protocol"
+	"os/user"
 	"strings"
 	"time"
 )
 
 // InitializationOptions 初始化选项
 type InitializationOptions struct {
-	Client                 string      `json:"client,omitempty"`
-	PluginPath             string      `json:"PluginPath,omitempty"`
-	ReferenceMaxNum        int         `json:"referenceMaxNum,omitempty"`
-	ReferenceDefineFlag    bool        `json:"referenceDefineFlag,omitempty"`
+	Client     string `json:"client,omitempty"`
+	PluginPath string `json:"PluginPath,omitempty"`
+
 	LocalRun               bool        `json:"LocalRun,omitempty"`
 	FileAssociationsConfig interface{} `json:"FileAssociationsConfig,omitempty"`
 
@@ -52,6 +52,11 @@ type InitializeParams struct {
 
 // Initialize lsp初始化函数
 func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.InitializeResult, error) {
+	go func(){
+		// check_lsp_annotate_complete.go 获取用户的信息比较卡顿，提前获取
+		user.Current()
+	}()
+
 	pathpre.InitialRootURIAndPath(string(vs.RootURI), string(vs.RootPath))
 
 	log.Debug("Initialize ..., rootDir=%s, rooturl=%s", vs.RootPath, vs.RootURI)
@@ -66,8 +71,6 @@ func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.In
 		initOptions = getDefaultIntialOptions()
 	}
 	dirManager.SetClientPluginPath(initOptions.PluginPath)
-
-	setConfigSet(initOptions.ReferenceMaxNum, initOptions.ReferenceDefineFlag)
 
 	// 初始化时获取其他后缀关联到的lua
 	associalList := getInitAssociationList(initOptions.FileAssociationsConfig)
@@ -101,7 +104,7 @@ func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.In
 				CompletionProvider: lsp.CompletionOptions{
 					ResolveProvider: true,
 					//TriggerCharacters: strings.Split("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:", ""),
-					TriggerCharacters: []string{".", "\"", "'", ":", "-", "@"},
+					TriggerCharacters: []string{".", "\"", "'", ":", "-", "@", "#"},
 					//AllCommitCharacters:[]string{".", "\"", "'", ":", "-", "@"},
 				},
 				ColorProvider:           false,
@@ -237,8 +240,6 @@ func getInitAssociationList(associationInitData interface{}) (associalList []str
 func getDefaultIntialOptions() (initOptions *InitializationOptions) {
 	initOptions = &InitializationOptions{
 		Client:                         "vsc",
-		ReferenceMaxNum:                3000,
-		ReferenceDefineFlag:            true,
 		LocalRun:                       true,
 		AllEnable:                      true,
 		CheckSyntax:                    true,

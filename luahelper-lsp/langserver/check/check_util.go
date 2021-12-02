@@ -423,7 +423,6 @@ func recurseExpToDefine(exp ast.Exp, defineVar *common.DefineVarStruct) {
 	case *ast.NameExp:
 		defineVar.StrVec = append(defineVar.StrVec, expV.Name)
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
-		break
 	case *ast.FuncCallExp:
 		if subExp, flag := expV.PrefixExp.(*ast.NameExp); flag {
 			if subExp.Name == "require" {
@@ -442,19 +441,14 @@ func recurseExpToDefine(exp ast.Exp, defineVar *common.DefineVarStruct) {
 			defineVar.StrVec = append(defineVar.StrVec, expV.NameExp.Str)
 			defineVar.IsFuncVec = append(defineVar.IsFuncVec, true)
 		}
-
-		break
 	case *ast.TableAccessExp:
 		recurseExpToDefine(expV.PrefixExp, defineVar)
 
 		defineVar.StrVec = append(defineVar.StrVec, common.GetExpName(expV.KeyExp))
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
-
-		break
 	default:
 		defineVar.StrVec = append(defineVar.StrVec, "$1")
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
-		break
 	}
 }
 
@@ -465,8 +459,6 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 		defineVar.StrVec = append(defineVar.StrVec, expV.Name)
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
 		defineVar.ValidFlag = true
-		//defineVar.Exp = exp
-		break
 	case *ast.FuncCallExp:
 		defineVar.ValidFlag = true
 		if subExp, flag := expV.PrefixExp.(*ast.NameExp); flag {
@@ -485,21 +477,15 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 			defineVar.IsFuncVec = append(defineVar.IsFuncVec, true)
 			defineVar.ColonFlag = true
 		}
-
-		break
-
 	case *ast.TableAccessExp:
 		defineVar.ValidFlag = true
-		//defineVar.Exp = exp
 		recurseExpToDefine(expV.PrefixExp, &defineVar)
-
 		defineVar.StrVec = append(defineVar.StrVec, common.GetExpName(expV.KeyExp))
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
-		break
+
 	case *ast.ParensExp:
 		defineVar.ValidFlag = true
 		recurseExpToDefine(expV.Exp, &defineVar)
-		break
 	default:
 		break
 	}
@@ -511,9 +497,20 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 func StrToDefineVarStruct(str string) (defineVar common.DefineVarStruct) {
 	defineVar.ValidFlag = false
 
+	_, ok1 := common.GConfig.CompKeyMap[str]
+	_, ok2 := common.GConfig.CompSnippetMap[str]
+	if ok1 || ok2 {
+		defineVar.ValidFlag = true
+		defineVar.ColonFlag = false
+		defineVar.StrVec = append(defineVar.StrVec, str)
+		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
+		return defineVar
+	}
+
 	newParser := parser.CreateParser([]byte(str), "")
 	exp := newParser.BeginAnalyzeExp()
-	if exp == nil {
+	errList := newParser.GetErrList()
+	if exp == nil || len(errList) > 0 {
 		return defineVar
 	}
 

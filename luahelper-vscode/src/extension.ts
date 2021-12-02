@@ -127,7 +127,7 @@ export function deactivate() {
 }
 
 async function startServer() {
-    let showConfig = vscode.workspace.getConfiguration("luahelper.show", null).get("costTime");
+    let showConfig = vscode.workspace.getConfiguration("luahelper.base", null).get("showCostTime");
     var openFlag = false;
     if (showConfig !== undefined) {
         openFlag = <boolean><any>showConfig;
@@ -170,38 +170,19 @@ function changeExMod() {
 async function doStartServer() {
     changeExMod();
 
-    let filterArray: string[] | undefined = vscode.workspace.getConfiguration("luahelper.source", null).get("roots");
-    if (filterArray !== undefined) {
-        for (let str of filterArray) {
-            console.log(str);
-        }
-    }
-
-    let referenceMaxConfig = vscode.workspace.getConfiguration("luahelper.reference", null).get("maxNum");
-    var referenceMaxNum = 3000;
-    if (referenceMaxConfig !== undefined) {
-        referenceMaxNum = <number><any>referenceMaxConfig;
-    }
-
-    let referenceDefineConfig = vscode.workspace.getConfiguration("luahelper.reference", null).get("incudeDefine");
-    var referenceDefineFlag = true;
-    if (referenceDefineConfig !== undefined) {
-        referenceDefineFlag = <boolean><any>referenceDefineConfig;
-    }
-
-    let lspConfig = vscode.workspace.getConfiguration("luahelper.project", null).get("lsp");
+    let lspConfig = vscode.workspace.getConfiguration("luahelper.base", null).get("lsp");
     var lspStr: string = "cmd rpc";
     if (lspConfig !== undefined) {
         lspStr = <string><any>lspConfig;
     }
 
-    let requirePathSeparatorConfig = vscode.workspace.getConfiguration("luahelper.project", null).get("requirePathSeparator");
+    let requirePathSeparatorConfig = vscode.workspace.getConfiguration("luahelper.base", null).get("requirePathSeparator");
     var requirePathSeparator: string = ".";
     if (lspConfig !== undefined) {
         requirePathSeparator = <string><any>requirePathSeparatorConfig;
     }
 
-    let lspLogConfig = vscode.workspace.getConfiguration("luahelper.lspserver", null).get("log");
+    let lspLogConfig = vscode.workspace.getConfiguration("luahelper.base", null).get("lspserverLog");
     var lspLogFlag = false;
     if (lspLogConfig !== undefined) {
         lspLogFlag = <boolean><any>lspLogConfig;
@@ -225,8 +206,8 @@ async function doStartServer() {
         }
     }
 
-    let ignoreFileOrDirArr: string[] | undefined = vscode.workspace.getConfiguration("luahelper.project", null).get("ignoreFileOrDir");
-    let ignoreFileOrDirErrArr: string[] | undefined = vscode.workspace.getConfiguration("luahelper.project", null).get("ignoreFileOrDirError");
+    let ignoreFileOrDirArr: string[] | undefined = vscode.workspace.getConfiguration("luahelper.base", null).get("ignoreFileOrDir");
+    let ignoreFileOrDirErrArr: string[] | undefined = vscode.workspace.getConfiguration("luahelper.base", null).get("ignoreFileOrDirError");
 
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{ scheme: 'file', language: LANGUAGE_ID }],
@@ -237,8 +218,6 @@ async function doStartServer() {
         initializationOptions: {
             client: 'vsc',
             PluginPath: savedContext.extensionPath,
-            referenceMaxNum: referenceMaxNum,
-            referenceDefineFlag: referenceDefineFlag,
             FileAssociationsConfig: fileAssociationsConfig,
             AllEnable: getWarnCheckFlag("AllEnable"),
             CheckSyntax: getWarnCheckFlag("CheckSyntax"),

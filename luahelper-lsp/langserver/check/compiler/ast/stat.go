@@ -135,3 +135,9 @@ type LocalFuncDefStat struct {
 	Exp     *FuncDefExp
 	Loc     lexer.Location // 整体函数的位置信息
 }
+
+// IllegalStat Illegal stat token
+type IllegalStat struct {
+	Name string
+	Loc lexer.Location
+}

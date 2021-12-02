@@ -40,11 +40,10 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 
 	project := l.getAllProject()
 	project.ClearCompleteCache()
-
 	strFile := comResult.strFile
 
 	// 1) 判断是否输入的为 --- 注释，用于快捷生成函数定义的注释
-	// 输入-时候，传人的为空，特殊处理 
+	// 输入-时候，传人的为空，特殊处理
 	if vs.Context.TriggerCharacter == "" && judgeBeforeCommentHorizontal(comResult.contents, comResult.offset) {
 		// 处理快捷生成注解, 以及提升注解系统
 		comList, _ := l.handleGenerateComment(strFile, comResult.contents, comResult.offset, (int)(comResult.pos.Line))
@@ -70,26 +69,52 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 	}
 
 	// 4) 判断是否为提示输入引入其他文件路径补全
-	flag, compeleteFileList := l.judgeCompeleteFile(strFile, comResult.contents, comResult.offset)
+	compFileList, flag := l.judgeCompeleteFile(strFile, comResult.contents, comResult.offset)
 	if flag {
-		return compeleteFileList, nil
+		return compFileList, nil
 	}
 
 	// 5.1) 获取这个代码补全的前缀字符串
-	preCompeleteStr := getCompeletePreStr(comResult.contents, comResult.offset)
-	if preCompeleteStr == "" {
+	preCompStr := getCompeletePreStr(comResult.contents, comResult.offset)
+	if preCompStr == "" {
 		return
 	}
 
-	// 5.2) 按照.进行分割字符串
-	validFlag, completeVar := getComplelteStruct(preCompeleteStr, (int)(comResult.pos.Line), (int)(comResult.pos.Character))
-	if !validFlag {
-		return
+	var compVar common.CompleteVarStruct
+	// #字代码补全特殊处理，前面拼接#
+	preStr := ""
+
+	// 5.2) 输入的为#代码补全
+	if preCompStr == "#" {
+		compVar = common.CompleteVarStruct{
+			PosLine:       (int)(comResult.pos.Line),
+			PosCh:         (int)(comResult.pos.Character),
+			StrVec:        []string{"#"},
+			IsFuncVec:     []bool{false},
+			ColonFlag:     false,
+			LastEmptyFlag: false,
+			IgnoreKeyWord: true,
+		}
+		preStr = "#"
+	} else {
+		// 5.2) 按照.进行分割字符串
+		compVar, flag = getComplelteStruct(preCompStr, (int)(comResult.pos.Line), (int)(comResult.pos.Character))
+		if !flag {
+			return
+		}
+
+		if len(compVar.StrVec) == 1 && !compVar.LastEmptyFlag {
+			beforeIndex := comResult.offset - len(preCompStr) - 1
+			if beforeIndex >= 0 && comResult.contents[beforeIndex] == '#' {
+				compVar.IgnoreKeyWord = true
+				preStr = "#"
+			}
+		}
 	}
 
-	project.CodeComplete(strFile, completeVar)
-	items := l.convertToCompletionItems()
-	log.Error("TextDocumentComplete str=%s, veclen=%d", preCompeleteStr, len(items))
+	project.CodeComplete(strFile, compVar)
+	items := l.convertToCompItems(preStr)
+	log.Debug("TextDocumentComplete str=%s, veclen=%d", preCompStr, len(items))
 	return CompletionListTmp{
 		IsIncomplete: false,
 		Items:        items,
@@ -133,7 +158,7 @@ func (l *LspServer) handleGenerateAnnotateType(strFile string, contents []byte, 
 	project := l.getAllProject()
 	project.AnnotateTypeComplete(strFile, annotateStr, strWord, posLine)
 	comList.IsIncomplete = false
-	comList.Items = l.convertToCompletionItems()
+	comList.Items = l.convertToCompItems("")
 	return
 }
 
@@ -221,8 +246,7 @@ func getCompeletePreStr(contents []byte, offset int) (preStr string) {
 }
 
 // 判断是否为文件目录补全
-func (l *LspServer) judgeCompeleteFile(strFile string, contents []byte, offset int) (flag bool,
-	comList CompletionListTmp) {
+func (l *LspServer) judgeCompeleteFile(strFile string, contents []byte, offset int) (comList CompletionListTmp, flag bool) {
 	comList.IsIncomplete = false
 
 	// 获取当前行的所有内容
@@ -271,13 +295,13 @@ func (l *LspServer) judgeCompeleteFile(strFile string, contents []byte, offset i
 	preFileStr := matchReferStr[referIndex+1:]
 	project := l.getAllProject()
 	project.CodeCompleteFile(strFile, referNameStr, referType, preFileStr)
-	comList.Items = l.convertToCompletionItems()
+	comList.Items = l.convertToCompItems("")
 	flag = true
 	return
 }
 
 // 字符串进行拆分
-func getComplelteStruct(str string, line, character int) (validFlag bool, completeVar common.CompleteVarStruct) {
+func getComplelteStruct(str string, line, character int) (completeVar common.CompleteVarStruct, flag bool) {
 	lastEmptyFlag := false
 	colonFlag := false
 	lastCh := str[len(str)-1]
@@ -367,7 +391,7 @@ func getComplelteStruct(str string, line, character int) (validFlag bool, comple
 		return
 	}
 
-	validFlag = true
+	flag = true
 	completeVar = common.CompleteVarStruct{
 		PosLine:       line,
 		PosCh:         character,
@@ -467,11 +491,11 @@ func (l *LspServer) handleGenerateComment(strFile string, contents []byte, offse
 		oneLspComplete.Kind = lsp.TextCompletion
 		oneLspComplete.Detail = oneComplete.Detail
 
-		 oneLspComplete.Documentation = lsp.MarkupContent{
-		 	Kind:  lsp.Markdown,
+		oneLspComplete.Documentation = lsp.MarkupContent{
+			Kind:  lsp.Markdown,
 			Value: oneComplete.Documentation,
-		 }
-		
+		}
+
 		//oneLspComplete.Documentation = oneComplete.Documentation
 
 		oneLspComplete.InsertText = oneComplete.InsetText
@@ -507,19 +531,24 @@ func (l *LspServer) handleGenerateAnnotateArea(strFile string, contents []byte, 
 
 	project := l.getAllProject()
 	project.CompleteAnnotateArea()
-	comList.Items = l.convertToCompletionItems()
+	comList.Items = l.convertToCompItems("")
 	return
 }
 
-func (l *LspServer) convertToCompletionItems() (items []CompletionItemTmp) {
+func (l *LspServer) convertToCompItems(preStr string) (items []CompletionItemTmp) {
 	project := l.getAllProject()
 	cacheItem := project.GetCompleteCacheItems()
 
-	items = make([]CompletionItemTmp, len(cacheItem), len(cacheItem))
+	items = make([]CompletionItemTmp, len(cacheItem))
 	for i := 0; i < len(cacheItem); i++ {
 		oneComplete := &(cacheItem[i])
 		item := &items[i]
-		item.Label = oneComplete.Label
+		if preStr == "" {
+			item.Label = oneComplete.Label
+		} else {
+			item.Label = preStr + oneComplete.Label
+		}
+
 		item.Kind = lsp.VariableCompletion
 		if oneComplete.Kind == common.IKFunction {
 			item.Kind = lsp.FunctionCompletion
@@ -541,9 +570,9 @@ func (l *LspServer) convertToCompletionItems() (items []CompletionItemTmp) {
 
 // TextDocumentCompleteResolve test
 // 当代码补全，客户端预览其中某一个结果时候，提示部分信息
-func (l *LspServer) TextDocumentCompleteResolve(ctx context.Context, vs lsp.CompletionItem) (completionItem lsp.CompletionItem,
+func (l *LspServer) TextDocumentCompleteResolve(ctx context.Context, vs lsp.CompletionItem) (compItem lsp.CompletionItem,
 	err error) {
-	completionItem = vs
+	compItem = vs
 	log.Debug("TextDocumentCompleteResolve sss...")
 	floatValue, flag := vs.Data.(float64)
 	if !flag {
@@ -560,51 +589,25 @@ func (l *LspServer) TextDocumentCompleteResolve(ctx context.Context, vs lsp.Comp
 	}
 
 	strDoc := codingconv.ConvertStrToUtf8(item.Documentation)
-	strMarkdown := fmt.Sprintf("```%s\n%s\n```", "lua", codingconv.ConvertStrToUtf8(item.Detail))
+	strDetail := item.Detail
+
+	// json snippet 里面不能包含. 不然任意地方输入 . 时候会激活响应的snippet
+	if snippetItem, ok := common.GConfig.CompSnippetMap[vs.Label]; ok {
+		compItem.InsertText = snippetItem.InsertText
+		compItem.InsertTextFormat = lsp.SnippetTextFormat
+		strDetail = snippetItem.Detail
+	}
+
+	strMarkdown := fmt.Sprintf("```%s\n%s\n```", "lua", codingconv.ConvertStrToUtf8(strDetail))
 	strMarkdown = fmt.Sprintf("%s\n%s", strMarkdown, strDoc)
 	if luaFileStr != "" {
 		strMarkdown = fmt.Sprintf("%s\n\r%s", strMarkdown, luaFileStr)
 	}
 
-	completionItem.Detail = ""
-	completionItem.Documentation = lsp.MarkupContent{
+	compItem.Detail = ""
+	compItem.Documentation = lsp.MarkupContent{
 		Kind:  lsp.Markdown,
 		Value: strMarkdown,
-	}
-
-	if vs.Label == "do .. end" && vs.Kind == lsp.KeywordCompletion {
-		completionItem.InsertText = "do" + "\n" + "\t" + "${0:}" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "do" + "\n" + "end"
-	}
-
-	if vs.Label == "then .. end" && vs.Kind == lsp.KeywordCompletion {
-		completionItem.InsertText = "then" + "\n" + "\t" + "${0:}" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "then" + "\n" + "end"
-	}
-
-	if vs.Label == "for .. ipairs" && vs.Kind == lsp.KeywordCompletion {
-		//completionItem.InsertText = "for $1, $2, $3 end"
-		completionItem.InsertText = "for ${1:i}, ${2:v} in ipairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "for i, v in ipairs(t) do" + "\n\n" + "end"
-		completionItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "for .. pairs" && vs.Kind == lsp.KeywordCompletion {
-		//completionItem.InsertText = "for ${0:k} end"
-		completionItem.InsertText = "for ${1:k}, ${2:v} in pairs(${3:t}) do" + "\n\t" + "$0" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "for k, v in pairs(t) do" + "\n\n" + "end"
-		completionItem.Kind = lsp.SnippetCompletion
-	}
-
-	if vs.Label == "for i = .." && vs.Kind == lsp.KeywordCompletion {
-		completionItem.InsertText = "for ${1:i} = ${2:1}, ${3:10}, ${4:1} do" + "\n\t" + "$0" + "\n" + "end"
-		completionItem.InsertTextFormat = lsp.SnippetTextFormat
-		completionItem.Detail = "for i = 1, 10, 1 do" + "\n\n" + "end"
-		completionItem.Kind = lsp.SnippetCompletion
 	}
 
 	return
