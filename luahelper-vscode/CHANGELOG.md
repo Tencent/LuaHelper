@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.9 (Dec 3, 2021)
++ 修复require中的路径跳转功能失效的bug
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+  
 ## 0.2.8 (Dec 2, 2021)
 + snippet关键词进行了优化
 + 增强了# 特殊字符串的代码补全
