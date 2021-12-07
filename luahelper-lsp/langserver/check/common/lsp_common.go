@@ -75,6 +75,7 @@ type CompleteVarStruct struct {
 	IsFuncVec           []bool   // 切分出来的数据是否为函数, 与StrVec一一对应
 	ColonFlag           bool     // 是否包含 :
 	LastEmptyFlag       bool     // 最后一个字符是否为空白
+	IgnoreKeyWord       bool     // 是否忽略关键字
 	FilterCharacterFlag bool     // 查找的结果，是否过滤指定的字符
 	FilterOneChar       rune     // 过滤的第一个字符（忽略大小写）
 	FilterTwoChar       rune     // 过滤的第二个字符（忽略大小写）

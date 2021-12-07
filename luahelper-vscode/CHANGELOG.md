@@ -1,4 +1,17 @@
 # Change Log
+
+## 0.2.9 (Dec 3, 2021)
++ 修复require中的路径跳转功能失效的bug
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+  
+## 0.2.8 (Dec 2, 2021)
++ snippet关键词进行了优化
++ 增强了# 特殊字符串的代码补全
++ 代码补全提示table时，会展开table的成员信息
++ hover一个table时，会详细信息table的信息
++ 函数参数个数不匹配告警进行了优化
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+  
 ## 0.2.7 (Dec 1, 2021)
 + define查找文件路径时进行了优化
 + 增强了函数参数个数不匹配的检测

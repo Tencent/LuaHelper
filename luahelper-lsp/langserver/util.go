@@ -277,6 +277,7 @@ func getOpenFileStr(contents []byte, offset int, character int) []string {
 	if strOpenFile == "" {
 		return make([]string, 0)
 	}
+
 	strModName := strings.TrimSuffix(strOpenFile, ".lua")
 	result := []string{strModName + ".lua", strModName + ".so"}
 	if requireFlag {
@@ -374,27 +375,6 @@ func getContentBracketsFlag(contents []byte, offset int) (beforeIndex int, endIn
 	}
 
 	return beforeIndex, endIndex, bracketsFlag
-}
-
-// 判断最后切词是否以：冒号结尾
-func isLastColonSplitStr(str string) bool {
-	// 判断最后一个单词是否由：分割
-	colonIndex := strings.LastIndex(str, ":")
-	if colonIndex == -1 {
-		return false
-	}
-
-	pointIndex := strings.LastIndex(str, ".")
-	bracketIndex := strings.LastIndex(str, "]")
-	if colonIndex < pointIndex {
-		return false
-	}
-
-	if colonIndex < bracketIndex {
-		return false
-	}
-
-	return true
 }
 
 // getVarStruct 根据内容的坐标信息，解析出对应的表达式结构

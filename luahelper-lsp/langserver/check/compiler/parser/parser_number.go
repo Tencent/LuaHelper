@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-var reInteger = regexp.MustCompile(`^[+-]?[0-9]+$|^-?0x[0-9a-f]+$`)
 var reHexFloat = regexp.MustCompile(`^([0-9a-f]+(\.[0-9a-f]*)?|([0-9a-f]*\.[0-9a-f]+))(p[+\-]?[0-9]+)?$`)
 
 // 判断是否为简单整型, ^[+-]?[0-9]+$
@@ -58,7 +57,6 @@ func isLuajitSimpleInterger(str string) bool {
 	return true
 }
 
-
 // 判断是否为十六进制整型, ^-?0x[0-9a-f]+$
 func isHexInteger(str string) bool {
 	strLen := len(str)
@@ -96,7 +94,6 @@ func isHexInteger(str string) bool {
 
 	return true
 }
-
 
 // 判断是否为十六进制Luajit整型
 func isLuajitHexInteger(str string) bool {
@@ -162,7 +159,7 @@ func parseInteger(str string) (int64, bool) {
 	if str[0] == '+' {
 		str = str[1:]
 	}
-	if strings.Index(str, "0x") < 0 { // decimal
+	if !strings.Contains(str, "0x") { // decimal
 		i, err := strconv.ParseInt(str, 10, 64)
 		return i, err == nil
 	}
@@ -215,7 +212,7 @@ func parseLuajitNum(str string) (int64, bool) {
 		return 0, false
 	}
 
-	if !isLuajitSimpleInterger(str) && !isLuajitHexInteger(str){
+	if !isLuajitSimpleInterger(str) && !isLuajitHexInteger(str) {
 		return 0, false
 	}
 
@@ -223,13 +220,13 @@ func parseLuajitNum(str string) (int64, bool) {
 		str = str[1:]
 	}
 
-	if str[len(str) - 3] == 'u'{
-		str = str[0: len(str) - 3]
-	}else{
-		str = str[0: len(str) - 2]
+	if str[len(str)-3] == 'u' {
+		str = str[0 : len(str)-3]
+	} else {
+		str = str[0 : len(str)-2]
 	}
 
-	if strings.Index(str, "0x") < 0 { // decimal
+	if !strings.Contains(str, "0x") { // decimal
 		i, err := strconv.ParseInt(str, 10, 64)
 		return i, err == nil
 	}

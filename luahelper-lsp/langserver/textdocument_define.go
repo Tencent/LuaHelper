@@ -29,16 +29,19 @@ func (l *LspServer) TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentP
 
 	// 1）判断查找的定义是否为打开一个文件
 	fileList := getOpenFileStr(fileRequest.contents, fileRequest.offset, (int)(fileRequest.pos.Character))
-	var openDefineVecs []check.DefineStruct
-	for _, strItem := range fileList {
-		openDefineVecs = project.FindOpenFileDefine(strFile, strItem)
-		if len(openDefineVecs) > 0 {
-			break
+	if len(fileList) > 0 {
+		var openDefineVecs []check.DefineStruct
+		for _, strItem := range fileList {
+			openDefineVecs = project.FindOpenFileDefine(strFile, strItem)
+			if len(openDefineVecs) > 0 {
+				locList = defineVecConvert(openDefineVecs)
+				return locList, nil
+			}
 		}
-		locList = defineVecConvert(openDefineVecs)
+
 		return locList, nil
 	}
-	
+
 	// 2) 判断是否为---@ 注解引入的查找里面的类型定义
 	defineAnnotateVecs, flag := l.handleAnnotateTypeDefine(strFile, fileRequest.contents, fileRequest.offset,
 		(int)(fileRequest.pos.Line), (int)(fileRequest.pos.Character))

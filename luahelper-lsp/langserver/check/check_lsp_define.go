@@ -486,6 +486,11 @@ func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, c
 
 	// 2) 遍历位置信息
 	typeStr, noticeStr, commentStr := annotateast.GetStateLocInfo(annotateState, col)
+
+	if typeStr == "" && noticeStr == "class name" {
+		typeStr = strWord
+	}
+
 	if typeStr != "" {
 		createType := a.getAnnotateStrTypeInfo(typeStr, strFile, line)
 		if createType == nil {
@@ -498,15 +503,19 @@ func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, c
 			if strComment != "" {
 				strHover = strComment
 			}
-			
-			strLuaFile =  dirManager.RemovePathDirPre(createType.AliasInfo.LuaFile)
+
+			strLuaFile = dirManager.RemovePathDirPre(createType.AliasInfo.LuaFile)
 			return
 		}
 
 		if createType.ClassInfo != nil {
+			//str := a.expandTableHover(symbol)
 			strLabel = "class " + typeStr
+
 			if len(createType.ClassInfo.ClassState.ParentNameList) > 0 {
 				strLabel = strLabel + " : " + strings.Join(createType.ClassInfo.ClassState.ParentNameList, " , ")
+			} else {
+				strLabel = "class " + typeStr + a.getClassFieldStr(createType.ClassInfo)
 			}
 
 			strComment := createType.ClassInfo.ClassState.Comment
@@ -514,7 +523,7 @@ func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, c
 				strHover = strComment
 			}
 
-			strLuaFile =  dirManager.RemovePathDirPre(createType.ClassInfo.LuaFile)
+			strLuaFile = dirManager.RemovePathDirPre(createType.ClassInfo.LuaFile)
 			return
 		}
 	}
