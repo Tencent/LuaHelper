@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"luahelper-lsp/langserver/check/analysis"
 	"luahelper-lsp/langserver/check/common"
-	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/check/compiler/parser"
 	"luahelper-lsp/langserver/check/results"
 	"luahelper-lsp/langserver/log"
@@ -73,14 +72,11 @@ func (allProject *AllProject) analysisFirstLuaFile(f *results.FileStruct, luaFil
 	f.FileResult = firstFile
 
 	newParser := parser.CreateParser(f.Contents, luaFile)
-	mainAst, commentMap, err := newParser.BeginAnalyze()
-	if err != nil {
-		luaParseErr := err.(lexer.LuaParseError)
-		firstFile.InsertError(common.CheckErrorSyntax, luaParseErr.ErrStr, luaParseErr.Loc)
-		// 如果生成AST出错，把错误信息放入到firstFileResult中
-		handleResult = results.FileHandleSyntaxErr
-		changeFlag = true
-		return
+	mainAst, commentMap, errList := newParser.BeginAnalyze()
+	if len(errList) > 0 {
+		for _, oneErr := range errList {
+			firstFile.InsertError(common.CheckErrorSyntax, oneErr.ErrStr, oneErr.Loc)
+		}
 	}
 
 	// 设置指向的AST

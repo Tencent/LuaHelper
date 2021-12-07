@@ -33,13 +33,13 @@ func (l *LspServer) TextDocumentHover(ctx context.Context, vs lsp.TextDocumentPo
 		return nil, nil
 	}
 
-	strLable, strDoc, strLuaFile := l.getHoverStr(comResult)
-	if strLable == "" && strDoc == "" && strLuaFile == "" {
+	strLabel, strDoc, strLuaFile := l.getHoverStr(comResult)
+	if strLabel == "" && strDoc == "" && strLuaFile == "" {
 		return nil, nil
 	}
 
 	var contents lsp.MarkupContent
-	if strLable == "" {
+	if strLabel == "" {
 		contents.Kind = lsp.PlainText
 		contents.Value = strDoc
 		if strLuaFile != "" {
@@ -47,7 +47,7 @@ func (l *LspServer) TextDocumentHover(ctx context.Context, vs lsp.TextDocumentPo
 		}
 	} else {
 		contents.Kind = lsp.Markdown
-		contents.Value = fmt.Sprintf("```%s\n%s\n```", "lua", strLable)
+		contents.Value = fmt.Sprintf("```%s\n%s\n```", "lua", strLabel)
 
 		if strDoc != "" || strLuaFile != "" {
 			contents.Value = fmt.Sprintf("%s\n%s\n", contents.Value, "---")
@@ -85,8 +85,8 @@ func (l *LspServer) getHoverStr(comResult commFileRequest) (lableStr, docStr, lu
 	}
 
 	// 2) 判断是否为注解类型的悬停提示
-	if strLable, annotateStr, fileStr, flag := l.handleAnnotateTypeHover(comResult); flag {
-		lableStr = strLable
+	if strLabel, annotateStr, fileStr, flag := l.handleAnnotateHover(comResult); flag {
+		lableStr = strLabel
 		docStr = codingconv.ConvertStrToUtf8(annotateStr)
 		luaFileStr = fileStr
 		return
@@ -127,7 +127,7 @@ func (l *LspServer) hoverOpenFile(comResult commFileRequest) (fileName string) {
 
 // 判断是否为注解带来的悬停提示打开一个文件
 // 处理注解系统带来的类型定义
-func (l *LspServer) handleAnnotateTypeHover(comResult commFileRequest) (strLabl, strHover, strFile string, flag bool) {
+func (l *LspServer) handleAnnotateHover(comResult commFileRequest) (strLabl, strHover, strFile string, flag bool) {
 	strLine := getCompeleteLineStr(comResult.contents, comResult.offset)
 	if strLine == "" {
 		return
@@ -143,7 +143,7 @@ func (l *LspServer) handleAnnotateTypeHover(comResult commFileRequest) (strLabl,
 
 	// 1) 判断是否为类似的 ---@param 注解
 	strArea := "---@" + strWord
-	if strings.Index(strLine, strArea) >= 0 {
+	if strings.Contains(strLine, strArea) {
 		return "", getAnnotateAreaHoverStr(strWord), "", true
 	}
 

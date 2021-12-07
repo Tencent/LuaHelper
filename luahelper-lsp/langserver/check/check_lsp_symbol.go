@@ -621,19 +621,6 @@ func (rs *resultSorter) getQuerySymbols(fileResult *results.FileResult) {
 	}
 }
 
-// 全局变量下满足的符号信息
-func (rs *resultSorter) getGlobalMapsSymbols(globalMaps map[string]*common.VarInfo, fileName string) {
-	for strPreName, oneVar := range globalMaps {
-		if oneVar.ExtraGlobal.GFlag {
-			continue
-		}
-		// 查找submaps
-		for strName, oneVar := range oneVar.SubMaps {
-			rs.collect(strName, fileName, strPreName, true, oneVar)
-		}
-	}
-}
-
 // 协议变量下满足的符号信息
 func (rs *resultSorter) getProtocolMapsSymbols(protocolMaps map[string]*common.VarInfo, fileName string) {
 	if protocolMaps == nil {
@@ -813,7 +800,7 @@ func handleAllFilesSymbols(pattern string, allProject *AllProject, results *resu
 func goroutineFindSymbols(ch chan symbolsChan) {
 	for {
 		request := <-ch
-		if request.sendRunFlag == false {
+		if !request.sendRunFlag {
 			// 协程停止运行
 			break
 		}

@@ -13,7 +13,7 @@ import (
 )
 
 // 插件定义的版本号
-var clientVerStr string = "0.2.7"
+var clientVerStr string = "0.2.9"
 
 type serverState int
 
@@ -39,7 +39,7 @@ type LspServer struct {
 	fileErrorMap map[string][]common.CheckError
 
 	// 所有文件的诊断错误信息, 动态的，文件实时修改了，但是没有保存的错误
-	fileChangeErrorMap map[string]common.CheckError
+	fileChangeErrorMap map[string][]common.CheckError
 
 	// 请求互斥锁
 	requestMutex sync.Mutex
@@ -66,7 +66,7 @@ func CreateLspServer() *LspServer {
 		server:             nil,
 		project:            nil,
 		fileErrorMap:       map[string][]common.CheckError{},
-		fileChangeErrorMap: map[string]common.CheckError{},
+		fileChangeErrorMap: map[string][]common.CheckError{},
 		fileCache:          lspcommon.CreateFileMapCache(),
 		onlineReport: OnlineReport{
 			ClientType:  "vsc",
@@ -142,11 +142,7 @@ func (g *LspServer) setColorTime(timeValue int64) {
 func (g *LspServer) isCanHighlight() bool {
 	// 如果修改文件的时间太频繁，返回false
 	nowTime := time.Now().Unix()
-	if nowTime-g.colorTime >= 3 {
-		return true
-	}
-
-	return false
+	return nowTime-g.colorTime >= 3
 }
 
 // setConfigSet 设置配置

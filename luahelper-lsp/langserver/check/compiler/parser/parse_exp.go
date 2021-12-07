@@ -111,7 +111,7 @@ func (p *Parser) parseSubExp(limit int) ast.Exp {
 			nowPriority--
 		}
 
-		_, tokenKind, _ = l.NextToken()
+		l.NextToken()
 		subExp := p.parseSubExp(nowPriority)
 		tokenKind = l.LookAheadKind()
 		endLoc := l.GetNowTokenLoc()
@@ -185,13 +185,13 @@ func (p *Parser) parseNumberExp() ast.Exp {
 			Val: f,
 			//Loc: l.GetNowTokenLoc(),
 		}
-	}else if n, ok := parseLuajitNum(token); ok{
+	} else if n, ok := parseLuajitNum(token); ok {
 		return &ast.IntegerExp{
 			Val: n,
 			//Loc: l.GetNowTokenLoc(),
 		}
 	} else { // todo
-		l.ErrorPrint("not a number: " + token)
+		p.insertParserErr(l.GetPreTokenLoc(), "not a number: "+token)
 		return &ast.FloatExp{
 			Val: 0,
 			//Loc: l.GetNowTokenLoc(),
@@ -203,16 +203,16 @@ func (p *Parser) parseNumberExp() ast.Exp {
 // funcbody ::= ‘(’ [parlist] ‘)’ block end
 func (p *Parser) parseFuncDefExp(beginLoc *lexer.Location) *ast.FuncDefExp {
 	l := p.l
-	l.NextTokenOfKind(lexer.TkSepLparen)              // (
+	l.NextTokenKind(lexer.TkSepLparen)                // (
 	parList, parLocList, isVararg := p.parseParList() // [parlist]
-	l.NextTokenOfKind(lexer.TkSepRparen)              // )
+	l.NextTokenKind(lexer.TkSepRparen)                // )
 
 	blockBeginLoc := l.GetHeardTokenLoc()
 	block := p.parseBlock() // block
 	blockEndLoc := l.GetNowTokenLoc()
 	block.Loc = lexer.GetRangeLoc(&blockBeginLoc, &blockEndLoc)
 
-	l.NextTokenOfKind(lexer.TkKwEnd) // end
+	l.NextTokenKind(lexer.TkKwEnd) // end
 
 	endLoc := l.GetNowTokenLoc()
 	loc := lexer.GetRangeLoc(beginLoc, &endLoc)
@@ -250,7 +250,7 @@ func (p *Parser) parseParList() (names []string, locVec []lexer.Location, isVara
 			names = append(names, name)
 			locVec = append(locVec, l.GetNowTokenLoc())
 		} else {
-			l.NextTokenOfKind(lexer.TkVararg)
+			l.NextTokenKind(lexer.TkVararg)
 			isVararg = true
 			break
 		}
@@ -261,10 +261,10 @@ func (p *Parser) parseParList() (names []string, locVec []lexer.Location, isVara
 // tableconstructor ::= ‘{’ [fieldlist] ‘}’
 func (p *Parser) parseTableConstructorExp() *ast.TableConstructorExp {
 	l := p.l
-	l.NextTokenOfKind(lexer.TkSepLcurly) // {
+	l.NextTokenKind(lexer.TkSepLcurly) // {
 	beginLoc := l.GetNowTokenLoc()
 	keyExps, valExps := p.parseFieldList() // [fieldlist]
-	l.NextTokenOfKind(lexer.TkSepRcurly)   // }
+	l.NextTokenKind(lexer.TkSepRcurly)     // }
 	endLoc := l.GetNowTokenLoc()
 	loc := lexer.GetRangeLoc(&beginLoc, &endLoc)
 	return &ast.TableConstructorExp{
@@ -305,11 +305,11 @@ func _isFieldSep(tokenKind lexer.TkKind) bool {
 func (p *Parser) parseField() (k, v ast.Exp) {
 	l := p.l
 	if l.LookAheadKind() == lexer.TkSepLbrack {
-		l.NextToken()                        // [
-		k = p.parseExp()                     // exp
-		l.NextTokenOfKind(lexer.TkSepRbrack) // ]
-		l.NextTokenOfKind(lexer.TkOpAssign)  // =
-		v = p.parseExp()                     // exp
+		l.NextToken()                      // [
+		k = p.parseExp()                   // exp
+		l.NextTokenKind(lexer.TkSepRbrack) // ]
+		l.NextTokenKind(lexer.TkOpAssign)  // =
+		v = p.parseExp()                   // exp
 		return
 	}
 

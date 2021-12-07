@@ -25,7 +25,6 @@ func (l *LspServer) RunLocalDiagnostices(localpath string) {
 	initOptions := &InitializationOptions{
 		AllEnable: true,
 	}
-	setConfigSet(initOptions.ReferenceMaxNum, initOptions.ReferenceDefineFlag)
 
 	// 按顺序插入
 	checkFlagList := getCheckFlagList(initOptions)

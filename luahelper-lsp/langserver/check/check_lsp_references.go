@@ -316,5 +316,4 @@ func handleAllFilesReference(fileList []string, allProject *AllProject, referenc
 	for i := 0; i < corNum; i++ {
 		close(chs[i])
 	}
-	return
 }

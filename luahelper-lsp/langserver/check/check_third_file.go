@@ -131,7 +131,6 @@ func (a *AllProject) handleFiles(third *results.AnalysisThird) {
 	for i := 0; i < corNum; i++ {
 		close(chs[i])
 	}
-	return
 }
 
 // 扫描散落的文件，包含的所有文件
