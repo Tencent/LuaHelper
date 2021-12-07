@@ -301,6 +301,22 @@ func IsVarargOrFuncCall(exp ast.Exp) bool {
 	return false
 }
 
+// IsOneValueType 判断exp是否为单值类型 如：整数，字符串等 不完全 区别于函数返回值可能有多个值
+func IsOneValueType(exp ast.Exp) bool {
+	switch (exp).(type) {
+	case *ast.NameExp,
+		*ast.StringExp,
+		*ast.LuajitNum,
+		*ast.FloatExp,
+		*ast.IntegerExp,
+		*ast.FalseExp,
+		*ast.TrueExp,
+		*ast.NilExp:
+		return true
+	}
+	return false
+}
+
 // IsVararg 判断是否是可变参数
 func IsVararg(exp ast.Exp) bool {
 	switch exp.(type) {

@@ -437,9 +437,28 @@ func (a *Analysis) cgLocalVarDeclStat(node *ast.LocalVarDeclStat) {
 	nNames := len(node.NameList)
 	nExps := len(node.ExpList)
 	fileResult := a.curResult
-	if nExps > nNames && a.isFirstTerm() {
-		errStr := fmt.Sprintf("local param num(%d) > define param(%d) error", nExps, nNames)
-		fileResult.InsertError(common.CheckErrorLocalParamNum, errStr, node.Loc)
+	if a.isFirstTerm() {
+		if nNames < nExps {
+			errStr := fmt.Sprintf("local define param(%d) < param num(%d) error", nExps, nNames)
+			fileResult.InsertError(common.CheckErrorLocalParamNum, errStr, node.Loc)
+		} else if nNames > nExps && nExps > 0 {
+			canWarning := true
+			for i := 0; i < nExps; i++ {
+				expNode := node.ExpList[i]
+
+				if common.IsOneValueType(expNode) {
+					//当右边表达式类型全部是单值时 才能报警
+				} else {
+					canWarning = false
+					break
+				}
+			}
+
+			if canWarning {
+				errStr := fmt.Sprintf("local define param num(%d) > assign param num(%d) error", nNames, nExps)
+				fileResult.InsertError(common.CheckErrorLocalParamNum, errStr, node.Loc)
+			}
+		}
 	}
 
 	// 最后一个表达式，是否为函数调用
@@ -1006,10 +1025,28 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 		}
 	}
 
-	if nVars < nExps {
-		if a.isFirstTerm() {
-			errStr := fmt.Sprintf("assign pram num(%d) > define param num(%d) error", nExps, nVars)
+	if a.isFirstTerm() {
+		if nVars < nExps {
+			errStr := fmt.Sprintf("define param num(%d) < assign param num(%d) error", nVars, nExps)
 			fileResult.InsertError(common.CheckErrorAssignParamNum, errStr, node.Loc)
+
+		} else if nVars > nExps {
+			canWarning := true
+			for i := 0; i < nExps; i++ {
+				expNode := node.ExpList[i]
+
+				if common.IsOneValueType(expNode) {
+					//当右边表达式类型全部是单值时 才能报警
+				} else {
+					canWarning = false
+					break
+				}
+			}
+
+			if canWarning {
+				errStr := fmt.Sprintf("define param num(%d) > assign param num(%d) error", nVars, nExps)
+				fileResult.InsertError(common.CheckErrorAssignParamNum, errStr, node.Loc)
+			}
 		}
 	}
 
