@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"luahelper-lsp/langserver/check/compiler/ast"
 	"luahelper-lsp/langserver/check/compiler/lexer"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -540,6 +541,93 @@ func GetAllExpSimpleNotValue(node ast.Exp, notNum int, strArr *[]string) {
 			}
 		}
 	}
+}
+
+// 比较两个exp是否内容重复，只针对部分类型，
+func CompExp(node1 ast.Exp, node2 ast.Exp) bool {
+	switch exp1 := node1.(type) {
+	case *ast.NilExp:
+		_, ok := node2.(*ast.NilExp)
+		return ok
+	case *ast.FalseExp:
+		_, ok := node2.(*ast.FalseExp)
+		return ok
+	case *ast.TrueExp:
+		_, ok := node2.(*ast.TrueExp)
+		return ok
+	case *ast.IntegerExp:
+		exp2, ok := node2.(*ast.IntegerExp)
+		return ok && exp1.Val == exp2.Val
+	case *ast.FloatExp:
+		exp2, ok := node2.(*ast.FloatExp)
+		return ok && math.Abs(exp1.Val-exp2.Val) < 0.000001
+	case *ast.StringExp:
+		exp2, ok := node2.(*ast.StringExp)
+		return ok && exp1.Str == exp2.Str
+	case *ast.ParensExp:
+		exp2, ok := node2.(*ast.ParensExp)
+		return ok && CompExp(exp1.Exp, exp2.Exp)
+	case *ast.VarargExp:
+		_, ok := node2.(*ast.VarargExp)
+		return ok
+	case *ast.NameExp:
+		exp2, ok := node2.(*ast.NameExp)
+		return ok && exp1.Name == exp2.Name
+	case *ast.FuncDefExp:
+	case *ast.TableConstructorExp:
+		return false //这两种暂不做比较
+	case *ast.UnopExp:
+		exp2, ok := node2.(*ast.UnopExp)
+		if ok && exp1.Op == exp2.Op {
+			return CompExp(exp1.Exp, exp2.Exp)
+		} else {
+			return false
+		}
+	case *ast.BinopExp:
+		exp2, ok := node2.(*ast.BinopExp)
+		if ok && exp1.Op == exp2.Op {
+			return CompExp(exp1.Exp1, exp2.Exp1) && CompExp(exp1.Exp2, exp2.Exp2)
+		} else {
+			return false
+		}
+	case *ast.TableAccessExp:
+		exp2, ok := node2.(*ast.TableAccessExp)
+		return ok && CompExp(exp1.PrefixExp, exp2.PrefixExp) && CompExp(exp1.KeyExp, exp2.KeyExp)
+	case *ast.FuncCallExp:
+		exp2, ok := node2.(*ast.FuncCallExp)
+		if !ok {
+			return false
+		}
+
+		if !CompExp(exp1.PrefixExp, exp2.PrefixExp) {
+			return false
+		}
+
+		if (exp1.NameExp == nil && exp2.NameExp != nil) ||
+			(exp1.NameExp != nil && exp2.NameExp == nil) {
+			return false
+		}
+
+		if (exp1.NameExp == nil && exp2.NameExp == nil) ||
+			//(exp1.NameExp != nil && exp2.NameExp != nil) 到这只能是都不为空
+			!CompExp(exp1.NameExp, exp2.NameExp) {
+			return false
+		}
+
+		if len(exp1.Args) == len(exp2.Args) {
+			for i := 0; i < len(exp1.Args); i++ {
+				if !CompExp(exp1.Args[i], exp2.Args[i]) {
+					return false
+				}
+			}
+		} else {
+			return false
+		}
+
+		return true
+	}
+
+	return false
 }
 
 // GetAllExpSimpleValue 获取if 条件里面所有的 if a then, 提前里面的a

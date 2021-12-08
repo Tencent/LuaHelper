@@ -59,4 +59,7 @@ const (
 
 	// CheckErrorAnnotate 注解系统引入的错误
 	CheckErrorAnnotate = 18
+
+	// CheckErrorDuplicateIf 分支条件重复
+	CheckErrorDuplicateIf = 19
 )
