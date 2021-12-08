@@ -201,6 +201,21 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 	//     ss.test()
 	// end
 
+	// 检查重复条件
+	if a.isFirstTerm() {
+		for i, _ := range node.Exps {
+			for j := i + 1; j < len(node.Exps); j++ {
+				if common.CompExp(node.Exps[i], node.Exps[j]) {
+					errStr := fmt.Sprintf("same if condition one")
+					a.curResult.InsertError(common.CheckErrorNotIfVar, errStr, common.GetExpLoc(node.Exps[i]))
+
+					errStr = fmt.Sprintf("same if condition another")
+					a.curResult.InsertError(common.CheckErrorNotIfVar, errStr, common.GetExpLoc(node.Exps[j]))
+				}
+			}
+		}
+	}
+
 	scope := a.curScope
 	// 临时的这样的结果
 	var midNotVarMap map[string]common.NotValStruct
@@ -288,6 +303,7 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 
 		a.curScope = backupScope
 	}
+
 }
 
 // for var=exp1,exp2,exp3 do
