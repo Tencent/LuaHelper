@@ -608,8 +608,7 @@ func CompExp(node1 ast.Exp, node2 ast.Exp) bool {
 			return false
 		}
 
-		if (exp1.NameExp == nil && exp2.NameExp == nil) ||
-			//(exp1.NameExp != nil && exp2.NameExp != nil) 到这只能是都不为空
+		if (exp1.NameExp != nil && exp2.NameExp != nil) &&
 			!CompExp(exp1.NameExp, exp2.NameExp) {
 			return false
 		}
