@@ -287,6 +287,19 @@ func (a *Analysis) cgBinopExp(node *ast.BinopExp, parentVar *common.VarInfo) {
 		}
 	}
 
+	//浮点数做等于或不等于判断 告警
+	if !common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorFloatEq) {
+		if node.Op == lexer.TkOpEq || node.Op == lexer.TkOpNe {
+			_, ok1 := node.Exp1.(*ast.FloatExp)
+			_, ok2 := node.Exp2.(*ast.FloatExp)
+
+			if ok1 || ok2 {
+				errStr := fmt.Sprintf("float compare error")
+				fileResult.InsertError(common.CheckErrorFloatEq, errStr, node.Loc)
+			}
+		}
+	}
+
 	// 第一阶段，判断两边的是否一样
 	//lexer.TkOpOr                        // or
 	//lexer.TkOpAnd                       // and
@@ -321,6 +334,7 @@ func (a *Analysis) cgBinopExp(node *ast.BinopExp, parentVar *common.VarInfo) {
 			}
 		}
 	}
+
 }
 
 // r[a] := f(args)
