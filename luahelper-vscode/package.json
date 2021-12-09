@@ -727,6 +727,24 @@
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.Warn.CheckAnnotateType%"
+                },
+                "luahelper.Warn.CheckDuplicateIf": {
+                    "default": true,
+                    "scope": "resource",
+                    "type": "boolean",
+                    "description": "%luahelper.Warn.CheckDuplicateIf%"
+                },
+                "luahelper.Warn.CheckSelfAssign": {
+                    "default": true,
+                    "scope": "resource",
+                    "type": "boolean",
+                    "description": "%luahelper.Warn.CheckSelfAssign%"
+                },
+                "luahelper.Warn.CheckFloatEq": {
+                    "default": true,
+                    "scope": "resource",
+                    "type": "boolean",
+                    "description": "%luahelper.Warn.CheckFloatEq%"
                 }
             }
         },
