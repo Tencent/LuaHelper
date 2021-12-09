@@ -202,7 +202,7 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 	// end
 
 	// 检查重复条件
-	if a.isFirstTerm() {
+	if a.isFirstTerm() && !common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorDuplicateIf) {
 		for i, _ := range node.Exps {
 			for j := i + 1; j < len(node.Exps); j++ {
 				if common.CompExp(node.Exps[i], node.Exps[j]) {
@@ -1062,6 +1062,20 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 			if canWarning {
 				errStr := fmt.Sprintf("define param num(%d) > assign param num(%d) error", nVars, nExps)
 				fileResult.InsertError(common.CheckErrorAssignParamNum, errStr, node.Loc)
+			}
+		} else {
+			if !common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorSelfAssign) {
+				isSame := true
+				for i := 0; i < nExps; i++ {
+					if !common.CompExp(node.VarList[i], node.ExpList[i]) {
+						isSame = false
+					}
+				}
+
+				if isSame {
+					errStr := fmt.Sprintf("self assign error")
+					fileResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
+				}
 			}
 		}
 	}
