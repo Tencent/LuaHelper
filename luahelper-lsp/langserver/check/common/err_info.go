@@ -65,4 +65,7 @@ const (
 
 	// CheckErrorSelfAssign 变量自身赋值
 	CheckErrorSelfAssign = 20
+
+	// CheckErrorFloatEq 浮点数做等于或不等于判断
+	CheckErrorFloatEq = 21
 )
