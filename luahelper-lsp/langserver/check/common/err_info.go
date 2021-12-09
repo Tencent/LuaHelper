@@ -62,4 +62,7 @@ const (
 
 	// CheckErrorDuplicateIf 分支条件重复
 	CheckErrorDuplicateIf = 19
+
+	// CheckErrorSelfAssign 变量自身赋值
+	CheckErrorSelfAssign = 20
 )
