@@ -83,6 +83,9 @@ type WarnParams struct {
 	CheckErrorAndAlwaysFalse       bool `json:"CheckErrorAndAlwaysFalse,omitempty"`
 	CheckNoUseAssign               bool `json:"CheckNoUseAssign,omitempty"`
 	CheckAnnotateType              bool `json:"CheckAnnotateType,omitempty"`
+	CheckDuplicateIf               bool `json:"CheckDuplicateIf,omitempty"`
+	CheckSelfAssign                bool `json:"CheckSelfAssign,omitempty"`
+	CheckFloatEq                   bool `json:"CheckFloatEq,omitempty"`
 }
 
 // LuahelperParams 整体的设置
@@ -258,6 +261,9 @@ func getWarnCheckList(warnParam *WarnParams) (checkFlagList []bool) {
 		warnParam.CheckErrorAndAlwaysFalse,
 		warnParam.CheckNoUseAssign,
 		warnParam.CheckAnnotateType,
+		warnParam.CheckDuplicateIf,
+		warnParam.CheckSelfAssign,
+		warnParam.CheckFloatEq,
 	}
 
 	return checkFlagList

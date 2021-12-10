@@ -39,6 +39,9 @@ type InitializationOptions struct {
 	CheckErrorAndAlwaysFalse       bool     `json:"CheckErrorAndAlwaysFalse,omitempty"`
 	CheckNoUseAssign               bool     `json:"CheckNoUseAssign,omitempty"`
 	CheckAnnotateType              bool     `json:"CheckAnnotateType,omitempty"`
+	CheckDuplicateIf               bool     `json:"CheckDuplicateIf,omitempty"`
+	CheckSelfAssign                bool     `json:"CheckSelfAssign,omitempty"`
+	CheckFloatEq                   bool     `json:"CheckFloatEq,omitempty"`
 	IgnoreFileOrDir                []string `json:"IgnoreFileOrDir,omitempty"`
 	IgnoreFileOrDirError           []string `json:"IgnoreFileOrDirError,omitempty"`
 	RequirePathSeparator           string   `json:"RequirePathSeparator,omitempty"`
@@ -52,7 +55,7 @@ type InitializeParams struct {
 
 // Initialize lsp初始化函数
 func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.InitializeResult, error) {
-	go func(){
+	go func() {
 		// check_lsp_annotate_complete.go 获取用户的信息比较卡顿，提前获取
 		user.Current()
 	}()
@@ -260,6 +263,9 @@ func getDefaultIntialOptions() (initOptions *InitializationOptions) {
 		CheckErrorAndAlwaysFalse:       false,
 		CheckNoUseAssign:               false,
 		CheckAnnotateType:              false,
+		CheckDuplicateIf:               false,
+		CheckSelfAssign:                false,
+		CheckFloatEq:                   false,
 	}
 
 	return initOptions
@@ -288,6 +294,9 @@ func getCheckFlagList(initOptions *InitializationOptions) (checkFlagList []bool)
 		initOptions.CheckErrorAndAlwaysFalse,
 		initOptions.CheckNoUseAssign,
 		initOptions.CheckAnnotateType,
+		initOptions.CheckDuplicateIf,
+		initOptions.CheckSelfAssign,
+		initOptions.CheckFloatEq,
 	}
 
 	return checkFlagList
