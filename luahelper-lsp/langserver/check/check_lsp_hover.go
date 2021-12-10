@@ -10,34 +10,14 @@ import (
 
 // GetLspHoverVarStr 提示信息hover
 func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineVarStruct) (lableStr, docStr, luaFileStr string) {
-	// 1) 判断是否为系统的函数提示
-	//strVecLen := len(varStruct.StrVec)
-
-	var lastSymbol *common.Symbol
-	var findList []*common.Symbol
-	for {
-		symbol, symList := a.FindVarDefine(strFile, varStruct)
-		// 原生的变量没有找到, 直接返回
-		if symbol == nil {
-			return
-		}
-
-		if len(symList) == 0 {
-			// 没有追踪到，切短下次，继续找
-			subLen := len(varStruct.StrVec) - 1
-			if subLen == 0 {
-				// 子项不能再切分了，退出
-				return
-			}
-			varStruct.StrVec = varStruct.StrVec[0:subLen]
-		} else {
-			lastSymbol = symList[len(symList)-1]
-			findList = symList
-			//lastSymbol = symList[0]
-			break
-		}
+	symbol, findList := a.FindVarDefine(strFile, varStruct)
+	// 原生的变量没有找到, 直接返回
+	if symbol == nil || len(findList) == 0 {
+		lableStr = varStruct.Str + " : any"
+		return
 	}
 
+	lastSymbol := findList[len(findList)-1]
 	if lastSymbol == nil {
 		return
 	}

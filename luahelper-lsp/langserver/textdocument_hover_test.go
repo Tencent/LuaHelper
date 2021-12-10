@@ -437,7 +437,7 @@ func TestHover4(t *testing.T) {
 		Line:      2,
 		Character: 13,
 	})
-	resultList = append(resultList, "import")
+	resultList = append(resultList, "any")
 
 	positionList = append(positionList, lsp.Position{
 		Line:      3,
@@ -455,7 +455,7 @@ func TestHover4(t *testing.T) {
 		Line:      5,
 		Character: 13,
 	})
-	resultList = append(resultList, "import")
+	resultList = append(resultList, "any")
 
 	for index, onePoisiton := range positionList {
 		hoverParams := lsp.TextDocumentPositionParams{
