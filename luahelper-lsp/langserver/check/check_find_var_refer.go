@@ -81,10 +81,10 @@ func (a *AllProject) FindVarReferSymbol(luaInFile string, node ast.Exp, comParam
 		return a.getTableAccessRelateSymbol(luaInFile, exp, comParam, findExpList)
 	case *ast.TableConstructorExp:
 		// 如果函数返回的是table的构造，那么table的构造是一个匿名的变量，先构造下匿名变量
-		newVar := common.CreateVarInfo(common.LuaTypeTable, exp, exp.Loc, 1)
+		newVar := common.CreateVarInfo(luaInFile, common.LuaTypeTable, exp, exp.Loc, 1)
 
 		// 构造这个变量的table 构造的成员，都构造出来
-		newVar.MakeVarMemTable(node, exp.Loc)
+		newVar.MakeVarMemTable(node, luaInFile, exp.Loc)
 		symbol := common.GetDefaultSymbol(luaInFile, newVar)
 		return symbol
 	case *ast.FuncCallExp:
@@ -97,8 +97,8 @@ func (a *AllProject) FindVarReferSymbol(luaInFile string, node ast.Exp, comParam
 // 创建一个变量的时候，创建完整的信息, 里面会设置变量的注解类型
 // fileName 为变量出现的文件名
 // strName 为变量的名称
-func (a *AllProject) createAnnotateSymbol(fileName, strName string, varInfo *common.VarInfo) (symbol *common.Symbol) {
-	symbol = common.GetDefaultSymbol(fileName, varInfo)
+func (a *AllProject) createAnnotateSymbol(strName string, varInfo *common.VarInfo) (symbol *common.Symbol) {
+	symbol = common.GetDefaultSymbol(varInfo.FileName, varInfo)
 
 	a.setInfoFileAnnotateTypes(strName, symbol)
 	return symbol
@@ -119,7 +119,7 @@ func (a *AllProject) findLocReferSymbol(fileResult *results.FileResult, posLine 
 	if !gFlag {
 		findOk, locVarInfo := minScope.FindLocVar(strName, loc)
 		if findOk {
-			return a.createAnnotateSymbol(luaInFile, strName, locVarInfo)
+			return a.createAnnotateSymbol(strName, locVarInfo)
 		}
 	}
 
@@ -127,12 +127,12 @@ func (a *AllProject) findLocReferSymbol(fileResult *results.FileResult, posLine 
 		// 非底层的函数，需要查找全局的变量
 		findOk, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, "")
 		if findOk {
-			return a.createAnnotateSymbol(oneVar.ExtraGlobal.FileName, strName, oneVar)
+			return a.createAnnotateSymbol(strName, oneVar)
 		}
 
 		findOk, oneVar = comParam.secondProject.FindGlobalGInfo(strName, results.CheckTermFirst, "")
 		if findOk {
-			return a.createAnnotateSymbol(oneVar.ExtraGlobal.FileName, strName, oneVar)
+			return a.createAnnotateSymbol(strName, oneVar)
 		}
 	}
 
@@ -140,13 +140,13 @@ func (a *AllProject) findLocReferSymbol(fileResult *results.FileResult, posLine 
 		// 非底层的函数，需要查找全局的变量
 		findOk, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, "")
 		if findOk {
-			return a.createAnnotateSymbol(oneVar.ExtraGlobal.FileName, strName, oneVar)
+			return a.createAnnotateSymbol( strName, oneVar)
 		}
 
 		// 查找所有的
 		findOk, oneVar = comParam.thirdStruct.FindThirdGlobalGInfo(gFlag, strName, "")
 		if findOk {
-			return a.createAnnotateSymbol(oneVar.ExtraGlobal.FileName, strName, oneVar)
+			return a.createAnnotateSymbol( strName, oneVar)
 		}
 	}
 
@@ -242,7 +242,7 @@ func (a *AllProject) getClassInfoSubMem(classInfo *common.OneClassInfo, strKey s
 		// 自己的子项中，含有
 		subVar, flag := classInfo.RelateVar.SubMaps[strKey]
 		if flag {
-			symbol = a.createAnnotateSymbol(classInfo.LuaFile, strKey, subVar)
+			symbol = a.createAnnotateSymbol(strKey, subVar)
 			return symbol
 		}
 	}
@@ -380,7 +380,7 @@ func (a *AllProject) getReferReferInfoSymbol(referFile *results.FileResult, refe
 	referSubType := a.GetReferFrameType(referInfo)
 	if referSubType == common.RtypeImport {
 		if subVar, ok := referFile.GlobalMaps[strKey]; ok {
-			symbol := a.createAnnotateSymbol(referFile.Name, strKey, subVar)
+			symbol := a.createAnnotateSymbol(strKey, subVar)
 			return symbol
 		}
 		return
@@ -445,17 +445,17 @@ func (a *AllProject) symbolHasSubKey(oldSymbol *common.Symbol, strKey string,
 
 	// 判断这个注解类型是否包含子key
 	// 递归查找子成员
-	symbol = a.varInfoHasSubKey(oldSymbol.VarInfo, oldSymbol.FileName, strKey, comParam, findExpList)
+	symbol = a.varInfoHasSubKey(oldSymbol.VarInfo, strKey, comParam, findExpList)
 	return symbol
 }
 
 // 判断变量是否含有子的strKey子项
-func (a *AllProject) varInfoHasSubKey(varInfo *common.VarInfo, luaInFile string, strKey string,
+func (a *AllProject) varInfoHasSubKey(varInfo *common.VarInfo, strKey string,
 	comParam *CommonFuncParam, findExpList *[]common.FindExpFile) (symbol *common.Symbol) {
 	// 自己的子项中，含有
 	subVar, ok := varInfo.SubMaps[strKey]
 	if ok {
-		symbol := a.createAnnotateSymbol(luaInFile, strKey, subVar)
+		symbol := a.createAnnotateSymbol(strKey, subVar)
 		return symbol
 	}
 

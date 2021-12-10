@@ -194,9 +194,9 @@ func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName s
 }
 
 // hover 的时候是指向一个table，展开这个table的内容
-func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string) {
+func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existMap map[string]string) {
 	// 为已经存在的map，防止重复
-	var existMap map[string]string = map[string]string{}
+	existMap = map[string]string{}
 
 	// 1) 先判断是否有注解类型
 	if symbol.AnnotateType != nil {
@@ -205,7 +205,7 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string) {
 		classList := a.getAllNormalAnnotateClass(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
 		if len(classList) == 0 || strType == "number" || strType == "any" || strType == "string" {
 			// 没有找到相应的class成员，直接返回
-			return strType
+			return strType, existMap
 		}
 
 		str = strType + " = {\n"
@@ -215,7 +215,7 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string) {
 	} else {
 		str = "table = {\n"
 		if symbol.VarInfo == nil || len(symbol.VarInfo.SubMaps) == 0 {
-			return "table = { }"
+			return "table = { }", existMap
 		}
 	}
 
@@ -238,7 +238,7 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string) {
 	})
 
 	str = str + "}"
-	return str
+	return str, existMap
 }
 
 func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.DefineVarStruct) (strType string,
@@ -246,7 +246,7 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 	// 1) 首先提取注解类型
 	if symbol.AnnotateType != nil {
 		// 注解类型尝试推导扩展class的field成员信息
-		str := a.expandTableHover(symbol)
+		str, _ := a.expandTableHover(symbol)
 		strLabel = varStruct.Str + " : " + str
 
 		if symbol.VarInfo != nil {
@@ -277,7 +277,7 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 		strType = symbol.VarInfo.GetVarTypeDetail()
 		// 判断是否指向的一个table，如果是展开table的具体内容
 		if strType == "table" || len(symbol.VarInfo.SubMaps) > 0 {
-			strType = a.expandTableHover(symbol)
+			strType, _ = a.expandTableHover(symbol)
 		}
 
 		referFunc := symbol.VarInfo.ReferFunc
@@ -313,7 +313,7 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 	return
 }
 
-// 对注释进行一些处理, 提取出注解的特殊的markdown格式
+// GetStrComment 对注释进行一些处理, 提取出注解的特殊的markdown格式
 func GetStrComment(strComment string) (str string) {
 	if strComment == "" {
 		return strComment

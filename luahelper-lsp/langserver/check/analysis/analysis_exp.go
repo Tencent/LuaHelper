@@ -114,7 +114,8 @@ func (a *Analysis) cgFuncDefExp(node *ast.FuncDefExp) *common.FuncInfo {
 	for index, param := range node.ParList {
 		varIndex := uint8(index + 1)
 
-		locVar := subFi.MainScope.AddLocVar(param, common.LuaTypeAll, nil, node.ParLocList[index], varIndex)
+		locVar := subFi.MainScope.AddLocVar(fileResult.Name, param, common.LuaTypeAll, nil, node.ParLocList[index],
+			 varIndex)
 		locVar.IsParam = true
 		locVar.IsUse = true
 
@@ -161,7 +162,7 @@ func (a *Analysis) cgTableConstructorExp(node *ast.TableConstructorExp, parentVa
 		var subVar *common.VarInfo
 		if parentVar != nil && strKeySimple != "" {
 			// 创建子的subKey
-			subVar = common.CreateVarInfo(common.GetExpType(valExp), nil, strExp.Loc, 1)
+			subVar = common.CreateVarInfo(fileResult.Name, common.GetExpType(valExp), nil, strExp.Loc, 1)
 		}
 
 		a.cgExp(keyExp, nil, nil)
@@ -372,6 +373,16 @@ func (a *Analysis) cgTableAccessExp(node *ast.TableAccessExp, binParentExp *ast.
 	a.cgExp(node.KeyExp, nil, nil)
 
 	if a.isFirstTerm() {
+		if oneName, ok := node.PrefixExp.(*ast.NameExp); ok {
+			if oneName.Name == "_G" {
+				if strExp , ok1 := node.KeyExp.(*ast.StringExp); ok1 {
+					a.analysisNoDefineStr(strExp) 
+				}
+			}
+		}
+
+	
+
 		a.checkIfNotTableAccess(node, binParentExp)
 		return
 	}

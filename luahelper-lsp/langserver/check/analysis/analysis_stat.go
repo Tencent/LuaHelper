@@ -323,7 +323,7 @@ func (a *Analysis) cgForNumStat(node *ast.ForNumStat) {
 	a.cgExp(node.StepExp, nil, nil)
 	a.cgExp(node.LimitExp, nil, nil)
 
-	locVar := subScope.AddLocVar(node.VarName, common.LuaTypeInter, nil, node.VarLoc, 1)
+	locVar := subScope.AddLocVar(a.curResult.Name, node.VarName, common.LuaTypeInter, nil, node.VarLoc, 1)
 	locVar.IsUse = true
 
 	a.cgBlock(node.Block)
@@ -384,7 +384,7 @@ func (a *Analysis) cgForInStat(node *ast.ForInStat) {
 	referExp, ipairsFlag := getForCycleData(node.ExpList)
 	for index, name := range node.NameList {
 		varIndex := uint8(index + 1)
-		locVar := subScope.AddLocVar(name, common.LuaTypeRefer, nil, node.NameLocList[index], varIndex)
+		locVar := subScope.AddLocVar(a.curResult.Name, name, common.LuaTypeRefer, nil, node.NameLocList[index], varIndex)
 		locVar.IsForParam = true
 		locVar.IsUse = true
 		if referExp != nil {
@@ -443,7 +443,7 @@ func (a *Analysis) cgGotoStat(node *ast.GotoStat) {
 
 func (a *Analysis) cgLocalFuncDefStat(node *ast.LocalFuncDefStat) {
 	scope := a.curScope
-	locVar := scope.AddLocVar(node.Name, common.LuaTypeFunc, node.Exp, node.NameLoc, 1)
+	locVar := scope.AddLocVar(a.curResult.Name, node.Name, common.LuaTypeFunc, node.Exp, node.NameLoc, 1)
 
 	subFi := a.cgFuncDefExp(node.Exp)
 	locVar.ReferFunc = subFi
@@ -484,7 +484,7 @@ func (a *Analysis) cgLocalVarDeclStat(node *ast.LocalVarDeclStat) {
 	// 1) 首先给匹配的变量赋明确的值
 	for i, exp := range node.ExpList {
 		varIndex := uint8(i + 1)
-		tempVar := common.CreateVarInfo(common.LuaTypeAll, nil, lexer.Location{}, varIndex)
+		tempVar := common.CreateVarInfo(fileResult.Name, common.LuaTypeAll, nil, lexer.Location{}, varIndex)
 		oneFunc, oneRefer := a.cgExp(exp, tempVar, nil)
 		if i >= nNames {
 			break
@@ -496,7 +496,7 @@ func (a *Analysis) cgLocalVarDeclStat(node *ast.LocalVarDeclStat) {
 		}
 
 		nowLoc := node.VarLocList[i]
-		varInfo := scope.AddLocVar(strName, common.GetExpType(exp), exp, nowLoc, varIndex)
+		varInfo := scope.AddLocVar(a.curResult.Name, strName, common.GetExpType(exp), exp, nowLoc, varIndex)
 		oneAttr := node.AttrList[i]
 		if oneAttr == ast.RDKTOCLOSE {
 			varInfo.IsClose = true
@@ -537,14 +537,14 @@ func (a *Analysis) cgLocalVarDeclStat(node *ast.LocalVarDeclStat) {
 		nowLoc := node.VarLocList[i]
 		oneAttr := node.AttrList[i]
 		if lastExpFuncFlag {
-			locVar := scope.AddLocVar(node.NameList[i], common.LuaTypeRefer, nil, nowLoc, varIndex)
+			locVar := scope.AddLocVar(a.curResult.Name, node.NameList[i], common.LuaTypeRefer, nil, nowLoc, varIndex)
 			if oneAttr == ast.RDKTOCLOSE {
 				locVar.IsClose = true
 			}
 			// 关联到函数的表达式
 			locVar.ReferExp = node.ExpList[nExps-1]
 		} else {
-			locVar := scope.AddLocVar(node.NameList[i], common.LuaTypeNil, nil, nowLoc, varIndex)
+			locVar := scope.AddLocVar(a.curResult.Name, node.NameList[i], common.LuaTypeNil, nil, nowLoc, varIndex)
 			if oneAttr == ast.RDKTOCLOSE {
 				locVar.IsClose = true
 			}
@@ -663,6 +663,10 @@ func (a *Analysis) checkLeftAssign(valExp ast.Exp) (needDefine bool, flagG bool,
 		// 找到了，b的定义
 		if findFlag {
 			varInfo = findVar
+		} else {
+			if findVar, ok := fileResult.NodefineMaps[strName]; ok {
+				varInfo = findVar
+			}
 		}
 
 		strVec = append(strVec, splitArray[1:]...)
@@ -735,7 +739,7 @@ func (a *Analysis) handleTableMemConstruct(strMemName string, strMemValue string
 	// 1) 先在局部变量中查找
 	findOk, locVarInfo := scope.FindLocVar(strMemName, loc)
 	if findOk && !locVarInfo.IsExistMember(strMemValue) {
-		newVar := common.CreateOneVarInfo(loc, newRefer, oneFunc, 1)
+		newVar := common.CreateOneVarInfo(fileResult.Name, loc, newRefer, oneFunc, 1)
 		if oneFunc != nil && oneFunc.IsColon {
 			//目前只有冒号函数才进行反向关联函数的变量
 			oneFunc.RelateVar = common.CreateFuncRelateVar(strMemName, locVarInfo)
@@ -758,7 +762,7 @@ func (a *Analysis) handleTableMemConstruct(strMemName string, strMemValue string
 
 	// 定义在本文件中的global 变量，尝试构建所有的成员信息
 	if findMemFlag && !memVar.IsExistMember(strMemValue) {
-		newVar := common.CreateOneVarInfo(loc, newRefer, oneFunc, 1)
+		newVar := common.CreateOneVarInfo(fileResult.Name, loc, newRefer, oneFunc, 1)
 		if oneFunc != nil && oneFunc.IsColon {
 			//目前只有冒号函数才进行反向关联函数的变量
 			oneFunc.RelateVar = common.CreateFuncRelateVar(strMemName, memVar)
@@ -819,7 +823,7 @@ func (a *Analysis) handleNotNeedDefine(node *ast.AssignStat, findVar *common.Var
 		// 不存在这个key，需要创建
 		if j != strVecLen-1 {
 			// 中间的key
-			newSubVar := common.CreateOneVarInfo(subLoc, nil, nil, 1)
+			newSubVar := common.CreateOneVarInfo(a.curResult.Name, subLoc, nil, nil, 1)
 			newSubVar.VarType = common.LuaTypeTable
 			parentVar.InsertSubMember(strKeyValue, newSubVar)
 			parentVar = newSubVar
@@ -827,7 +831,7 @@ func (a *Analysis) handleNotNeedDefine(node *ast.AssignStat, findVar *common.Var
 		}
 
 		// 最后一次，需要绑定详细的信息
-		newSubVar := common.CreateOneVarInfo(subLoc, newRefer, newFunc, 1)
+		newSubVar := common.CreateOneVarInfo(a.curResult.Name, subLoc, newRefer, newFunc, 1)
 		newSubVar.SubMaps = tmpVar.SubMaps
 		strMemName := strVec[j-1]
 		if (j - 1) != 0 {
@@ -883,7 +887,7 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 		var newRefer *common.ReferInfo
 		var newFunc *common.FuncInfo
 		varIndex := uint8(i + 1)
-		tmpVar := common.CreateVarInfo(common.LuaTypeAll, nil, lexer.Location{}, varIndex)
+		tmpVar := common.CreateVarInfo(fileResult.Name, common.LuaTypeAll, nil, lexer.Location{}, varIndex)
 		if nExps >= (i + 1) {
 			expNode := node.ExpList[i]
 
@@ -914,7 +918,7 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 
 		// 需要定义变量
 		if needDefineFlag {
-			newVar = common.CreateOneGlobal(fi.FuncLv, fi.ScopeLv, loc, gGlag, newRefer, newFunc, fileResult.Name)
+			newVar = common.CreateOneGlobal(fileResult.Name, fi.FuncLv, fi.ScopeLv, loc, gGlag, newRefer, newFunc, fileResult.Name)
 			newVar.VarIndex = varIndex
 			newVar.ExtraGlobal.StrProPre = strProPre
 

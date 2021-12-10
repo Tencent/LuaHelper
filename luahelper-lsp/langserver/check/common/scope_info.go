@@ -58,8 +58,10 @@ func (scope *ScopeInfo) AppendSubScope(subScope *ScopeInfo) {
 }
 
 // AddLocVar 块里面增加一个变量（局部变量）
-func (scope *ScopeInfo) AddLocVar(name string, LuaType LuaType, exp ast.Exp, loc lexer.Location, varIndex uint8) *VarInfo {
+func (scope *ScopeInfo) AddLocVar(fileName string, name string, LuaType LuaType, exp ast.Exp, loc lexer.Location,
+	 varIndex uint8) *VarInfo {
 	newVar := &VarInfo{
+		FileName:  fileName,
 		VarType:   LuaType,
 		ReferExp:  exp,
 		SubMaps:   nil,

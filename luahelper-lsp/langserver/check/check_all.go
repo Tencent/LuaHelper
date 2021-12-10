@@ -45,6 +45,7 @@ type AllProject struct {
 	checkTerm results.CheckTerm
 }
 
+
 // CreateAllProject 创建整个检查工程
 func CreateAllProject(allFilesList []string, entryFileArr []string, clientExpPathList []string) *AllProject {
 	// 第一阶段（生成AST，第一次遍历AST），用多协程分析所有的扫描出来的文件
