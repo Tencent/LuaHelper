@@ -68,4 +68,7 @@ const (
 
 	// CheckErrorFloatEq 浮点数做等于或不等于判断
 	CheckErrorFloatEq = 21
+
+	// CheckErrorMax
+	CheckErrorMax = 22
 )
