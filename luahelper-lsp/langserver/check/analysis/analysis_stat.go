@@ -687,6 +687,12 @@ func (a *Analysis) checkLeftAssign(valExp ast.Exp) (needDefine bool, flagG bool,
 
 		if flag, findVar := fileResult.FindGlobalVar(strName, fi.FuncLv, fi.ScopeLv, loc, "", false); flag {
 			varInfo = findVar
+			return
+		}
+
+		if findVar, ok := fileResult.NodefineMaps[strName]; ok {
+			varInfo = findVar
+			return
 		}
 	}
 	return
