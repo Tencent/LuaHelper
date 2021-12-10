@@ -540,7 +540,7 @@ func (g *GlobalConfig) handleNotJSONCheckFlag(checkFlagList []bool, ignoreFileOr
 	// 是否全部屏蔽
 	if !checkFlagList[0] {
 		g.showWarnFlag = false
-		for i := CheckErrorSyntax; i <= CheckErrorAnnotate; i++ {
+		for i := CheckErrorSyntax; i < CheckErrorMax; i++ {
 			g.IgnoreErrorTypeMap[(CheckErrorType)(i)] = true
 		}
 		return
@@ -548,7 +548,7 @@ func (g *GlobalConfig) handleNotJSONCheckFlag(checkFlagList []bool, ignoreFileOr
 
 	g.showWarnFlag = true
 	g.IgnoreErrorTypeMap = map[CheckErrorType]bool{}
-	for i := CheckErrorSyntax; i <= CheckErrorAnnotate; i++ {
+	for i := CheckErrorSyntax; i < CheckErrorMax; i++ {
 		if i > listLen-1 {
 			g.IgnoreErrorTypeMap[(CheckErrorType)(i)] = true
 		} else {
