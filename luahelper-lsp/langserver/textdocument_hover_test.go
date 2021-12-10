@@ -730,3 +730,97 @@ func TestHover7(t *testing.T) {
 		}
 	}
 }
+
+// 测试hover全局变量多个文件定义
+func TestHover8(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/project/globalVar"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "three.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+	openParams := lsp.DidOpenTextDocumentParams{
+		TextDocument: lsp.TextDocumentItem{
+			URI:  lsp.DocumentURI(fileName),
+			Text: string(data),
+		},
+	}
+	err1 := lspServer.TextDocumentDidOpen(context, openParams)
+	if err1 != nil {
+		t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+	}
+
+	var resultList []string = []string{}
+	var positionList []lsp.Position = []lsp.Position{}
+
+	positionList = append(positionList, lsp.Position{
+		Line:      0,
+		Character: 9,
+	})
+
+	resultList = append(resultList, "aaa: number")
+	resultList = append(resultList, "bbb: number")
+	resultList = append(resultList, "ccc: number")
+	resultList = append(resultList, "ddd: number")
+	resultList = append(resultList, "eee: number")
+
+	for index, onePoisiton := range positionList {
+		hoverParams := lsp.TextDocumentPositionParams{
+			TextDocument: lsp.TextDocumentIdentifier{
+				URI: lsp.DocumentURI(fileName),
+			},
+			Position: onePoisiton,
+		}
+		hoverReturn1, err1 := lspServer.TextDocumentHover(context, hoverParams)
+		if err1 != nil {
+			t.Fatalf("TextDocumentHover file:%s err=%s", fileName, err1.Error())
+		}
+
+		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
+
+		for _, oneStr := range resultList {
+			if !strings.Contains(hoverMarkUpReturn1.Contents.Value, oneStr) {
+				t.Fatalf("hover error, not find str=%s, index=%d", oneStr, index)
+			}
+		}
+	}
+
+	positionList = []lsp.Position{}
+	positionList = append(positionList, lsp.Position{
+		Line:      0,
+		Character: 13,
+	})
+
+	resultList = []string{}
+	resultList = append(resultList, "ccc : number")
+	for index, onePoisiton := range positionList {
+		hoverParams := lsp.TextDocumentPositionParams{
+			TextDocument: lsp.TextDocumentIdentifier{
+				URI: lsp.DocumentURI(fileName),
+			},
+			Position: onePoisiton,
+		}
+		hoverReturn1, err1 := lspServer.TextDocumentHover(context, hoverParams)
+		if err1 != nil {
+			t.Fatalf("TextDocumentHover file:%s err=%s", fileName, err1.Error())
+		}
+
+		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
+
+		for _, oneStr := range resultList {
+			if !strings.Contains(hoverMarkUpReturn1.Contents.Value, oneStr) {
+				t.Fatalf("hover error, not find str=%s, index=%d", oneStr, index)
+			}
+		}
+	}
+}
