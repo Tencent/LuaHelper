@@ -13,7 +13,7 @@ import (
 
 // 查找全局的变量信息
 func (a *AllProject) findGlobalVarDefineInfo(comParam *CommonFuncParam, strName string,
-	strProPre string, gFlag bool) (*common.VarInfo) {
+	strProPre string, gFlag bool) *common.VarInfo {
 	if ok, findVar := comParam.fileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
 		return findVar
 	}
@@ -149,8 +149,8 @@ func (a *AllProject) findMaxSecondProject(strFile string) (secondProject *result
 // 变量查找引用时候，跟踪到变量import或require引入的关系
 func (a *AllProject) findLspReferenceVarDefine(comParam *CommonFuncParam, varStruct *common.DefineVarStruct) (findInFile string,
 	findLocVar *common.VarInfo) {
-	 _, findLocVar = a.findOldDefineInfo(comParam, varStruct)
-	if  findLocVar == nil {
+	_, findLocVar = a.findOldDefineInfo(comParam, varStruct)
+	if findLocVar == nil {
 		// 直接返回
 		return "", findLocVar
 	}
@@ -364,7 +364,7 @@ func (a *AllProject) findOldDefineInfo(comParam *CommonFuncParam, varStruct *com
 		gFlag := !common.GConfig.GetGVarExtendFlag()
 
 		findVar := a.findGlobalVarDefineInfo(comParam, strName, "", gFlag)
-		return  strName, findVar
+		return strName, findVar
 	}
 
 	dirManager := common.GConfig.GetDirManager()
