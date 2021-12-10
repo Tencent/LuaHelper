@@ -85,7 +85,8 @@ func (a *AllProject) FindVarReferSymbol(luaInFile string, node ast.Exp, comParam
 
 		// 构造这个变量的table 构造的成员，都构造出来
 		newVar.MakeVarMemTable(node, luaInFile, exp.Loc)
-		symbol := common.GetDefaultSymbol(luaInFile, newVar)
+		symbol := a.createAnnotateSymbol(luaInFile, newVar)
+		//symbol := common.GetDefaultSymbol(luaInFile, newVar)
 		return symbol
 	case *ast.FuncCallExp:
 		return a.getFuncRelateSymbol(luaInFile, exp, comParam, findExpList, varIndex)
@@ -140,13 +141,13 @@ func (a *AllProject) findLocReferSymbol(fileResult *results.FileResult, posLine 
 		// 非底层的函数，需要查找全局的变量
 		findOk, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, "")
 		if findOk {
-			return a.createAnnotateSymbol( strName, oneVar)
+			return a.createAnnotateSymbol(strName, oneVar)
 		}
 
 		// 查找所有的
 		findOk, oneVar = comParam.thirdStruct.FindThirdGlobalGInfo(gFlag, strName, "")
 		if findOk {
-			return a.createAnnotateSymbol( strName, oneVar)
+			return a.createAnnotateSymbol(strName, oneVar)
 		}
 	}
 
@@ -185,11 +186,7 @@ func (a *AllProject) findStrReferSymbol(luaInFile string, strName string, loc le
 	loc.EndColumn = 0
 	referSymbol := a.findLocReferSymbol(fileResult, loc.StartLine-1, 0, luaInFile, strName,
 		loc, gFlag, comParam, findExpList)
-	if referSymbol != nil {
-		return referSymbol
-	}
-
-	return nil
+	return referSymbol
 }
 
 // 判断是否为简单类型类别的子成员
@@ -835,11 +832,36 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 
 		// 递归查找
 		tmpList := a.FindDeepSymbolList(funcSymbol.FileName, expReturn, comParam, findExpList, true, varIndex)
-		if len(tmpList) > 0 {
-			return tmpList[len(tmpList)-1]
+		if len(tmpList) == 1 {
+			return tmpList[0]
 		}
 
-		return nil
+		if len(tmpList) == 0 {
+			return nil
+		}
+
+		firstSmbol := tmpList[0]
+		lastSmbol := tmpList[len(tmpList)-1]
+		if firstSmbol.AnnotateType != nil && lastSmbol.AnnotateType == nil {
+			return firstSmbol
+		}
+		if firstSmbol.AnnotateType == nil && lastSmbol.AnnotateType != nil {
+			return lastSmbol
+		}
+
+		if firstSmbol.VarInfo == nil {
+			return lastSmbol
+		}
+
+		if lastSmbol.VarInfo == nil {
+			return firstSmbol
+		}
+
+		if len(lastSmbol.VarInfo.SubMaps) > len(firstSmbol.VarInfo.SubMaps) {
+			return lastSmbol
+		}
+
+		return firstSmbol
 	}
 
 	// 没有找到，那么这个变量，它关联的上一层变量呢
