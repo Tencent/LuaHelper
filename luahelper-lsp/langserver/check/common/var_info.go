@@ -66,7 +66,6 @@ type TableKeyStruct struct {
 // ExtraGlobal 当变量指向的是全局变量时候，扩展信息
 type ExtraGlobal struct {
 	Prev      *VarInfo // 当用map管理的时候，指向的前一个全局信息，因为全局信息扫描时候，可能先扫描的不是最初的定义
-	FileName  string   // 所定义该变量所在的lua文件名
 	StrProPre string   // 表示为协议的前缀 为c2s 或是s2s，项目中定制的
 	FuncLv    int      // 函数的层级，主函数层级为0，子函数+1
 	ScopeLv   int      // 所在的scop层数，相对于自己所处的func而言
@@ -83,6 +82,7 @@ type ForCycleInfo struct {
 
 // VarInfo 变量信息
 type VarInfo struct {
+	FileName        string              // 出现的lua文件
 	ReferExp        ast.Exp             // 当变量为引用类型的时候，指向引用的指针
 	ReferInfo       *ReferInfo          // 指向是否引用了其他的lua文件, nil表示没有指向
 	ReferFunc       *FuncInfo           // 如果变量是定义的函数类型，指向函数定义的func，nil表示没有指向
@@ -178,7 +178,7 @@ func (symList *VarInfoList) GetLastOneVar() *VarInfo {
 
 // CreateVarInfo 创建一个VarInfo 指针
 // varIndex 表示申明变量的index， 例如local a, b 其中a的index为1，b的index为2。默认为1
-func CreateVarInfo(varType LuaType, exp ast.Exp, loc lexer.Location, varIndex uint8) *VarInfo {
+func CreateVarInfo(fileName string, varType LuaType, exp ast.Exp, loc lexer.Location, varIndex uint8) *VarInfo {
 	// 这里尽量用uint8类型来存，降低内容占用
 	// 极端情况下，index可能会超过255个, 转换之后至少为1
 	if varIndex == 0 {
@@ -186,6 +186,7 @@ func CreateVarInfo(varType LuaType, exp ast.Exp, loc lexer.Location, varIndex ui
 	}
 
 	locVar := &VarInfo{
+		FileName: fileName,
 		ReferExp:   exp,
 		ReferInfo:  nil,
 		ReferFunc:  nil,
@@ -204,7 +205,7 @@ func CreateVarInfo(varType LuaType, exp ast.Exp, loc lexer.Location, varIndex ui
 
 // CreateOneVarInfo 用于之前的GlobalInfo
 // varIndex 表示申明变量的index， 例如local a, b 其中a的index为1，b的index为2。默认为1
-func CreateOneVarInfo(loc lexer.Location, referInfo *ReferInfo, referFunc *FuncInfo, varIndex uint8) *VarInfo {
+func CreateOneVarInfo(fileName string, loc lexer.Location, referInfo *ReferInfo, referFunc *FuncInfo, varIndex uint8) *VarInfo {
 	// 这里尽量用uint8类型来存，降低内容占用
 	// 极端情况下，index可能会超过255个, 转换之后至少为1
 	if varIndex == 0 {
@@ -212,6 +213,7 @@ func CreateOneVarInfo(loc lexer.Location, referInfo *ReferInfo, referFunc *FuncI
 	}
 
 	locVar := &VarInfo{
+		FileName: fileName,
 		ReferInfo:  referInfo,
 		ReferFunc:  referFunc,
 		SubMaps:    nil,
@@ -228,10 +230,11 @@ func CreateOneVarInfo(loc lexer.Location, referInfo *ReferInfo, referFunc *FuncI
 }
 
 // CreateOneGlobal 生成一个新的GlobalInfo
-func CreateOneGlobal(funcLv int, scopeLv int, loc lexer.Location, gFlag bool,
+func CreateOneGlobal(fileName string, funcLv int, scopeLv int, loc lexer.Location, gFlag bool,
 	referInfo *ReferInfo, referFunc *FuncInfo, luaFileStr string) *VarInfo {
 
 	locVar := &VarInfo{
+		FileName: fileName,
 		ReferInfo:  referInfo,
 		ReferFunc:  referFunc,
 		SubMaps:    nil,
@@ -246,7 +249,6 @@ func CreateOneGlobal(funcLv int, scopeLv int, loc lexer.Location, gFlag bool,
 
 	extraGlobal := &ExtraGlobal{
 		Prev:      nil,
-		FileName:  luaFileStr, // 所定义该变量所在的lua文件名
 		StrProPre: "",         // 表示是否为协议的前缀 为c2s 或是s2s
 		FuncLv:    funcLv,     // 函数的层级，主函数层级为0，子函数+1
 		ScopeLv:   scopeLv,    // 所在的scop层数，相对于自己所处的func而言
@@ -338,7 +340,7 @@ func (varInfo *VarInfo) IsGFlag() bool {
 // 定义了全局变量 a
 // 1)例如a = { bc = 1, cd = 2}
 // 2)例如a = a or { bc = 1, cd = 2}
-func (varInfo *VarInfo) MakeVarMemTable(valExp ast.Exp, loc lexer.Location) {
+func (varInfo *VarInfo) MakeVarMemTable(valExp ast.Exp, fileName string, loc lexer.Location) {
 	tableNode := GetMakeTableConstructorExp(valExp)
 	if tableNode == nil {
 		return
@@ -360,7 +362,7 @@ func (varInfo *VarInfo) MakeVarMemTable(valExp ast.Exp, loc lexer.Location) {
 		}
 
 		loc := GetExpLoc(keyExp)
-		newVar := CreateOneVarInfo(loc, nil, nil, 1)
+		newVar := CreateOneVarInfo(fileName, loc, nil, nil, 1)
 		newVar.VarType = GetExpType(valExp)
 		newVar.ReferExp = valExp
 		varInfo.InsertSubMember(varKeyStr, newVar)

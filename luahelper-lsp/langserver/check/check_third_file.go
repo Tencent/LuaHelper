@@ -358,7 +358,9 @@ func (a *AllProject) generateAllGlobalMaps(third *results.AnalysisThird) {
 			ok, gVar := third.FindThirdGlobalGInfo(false, strName, "")
 			if ok {
 				for subName, subVar := range oneVar.SubMaps {
-					gVar.InsertSubMember(subName, subVar)
+					if !gVar.IsExistMember(subName) {
+						gVar.InsertSubMember(subName, subVar)
+					}
 				}
 			}
 		}

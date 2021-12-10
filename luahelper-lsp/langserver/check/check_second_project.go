@@ -313,6 +313,45 @@ func (a *AllProject) checkOneProject(second *results.SingleProjectResult) {
 
 	analysis.HandleSecondProjectTraverseAST(fileResult, nil)
 
+	a.handleOtherFileInsertSub(second)
+
 	ftime := time.Since(time1).Milliseconds()
 	log.Debug("checkOneProject %s, filenum=%d, cost time=%d(ms)", second.EntryFile, len(second.AllFiles), ftime)
+}
+
+// 处理其他文件给全局变量增加的子成员
+func (a *AllProject) handleOtherFileInsertSub(second *results.SingleProjectResult) {
+	for strFile := range second.AllFiles {
+		fileStruct := a.fileStructMap[strFile]
+		if fileStruct == nil {
+			continue
+		}
+
+		// 文件加载失败的忽略
+		if fileStruct.HandleResult != results.FileHandleOk {
+			continue
+		}
+
+		fileResult := fileStruct.FileResult
+
+		if fileResult.NodefineMaps == nil {
+			continue
+		}
+
+		// 查找所有未定义信息
+		for strName, oneVar := range fileResult.NodefineMaps {
+			if oneVar.SubMaps == nil {
+				continue
+			}
+
+			ok, gVar := second.FindGlobalGInfo(strName, results.CheckTermFirst, "")
+			if ok {
+				for subName, subVar := range oneVar.SubMaps {
+					if !gVar.IsExistMember(subName) {
+						gVar.InsertSubMember(subName, subVar)
+					}
+				}
+			}
+		}
+	}
 }
