@@ -122,8 +122,10 @@ func (a *AllProject) convertClassInfoToHovers(oneClass *common.OneClassInfo, exi
 
 	if oneClass.RelateVar != nil {
 		for key, value := range oneClass.RelateVar.SubMaps {
-			if _, ok := existMap[key]; ok {
-				continue
+			if oldStr, ok := existMap[key]; ok {
+				if !needReplaceMapStr(oldStr) {
+					continue
+				}
 			}
 
 			strValueType := value.GetVarTypeDetail()
@@ -173,6 +175,23 @@ func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName s
 	return str
 }
 
+
+func needReplaceMapStr(oldStr string) bool {
+	if strings.Contains(oldStr, ": number") && !strings.Contains(oldStr, ": number = ") {
+		return true
+	}
+
+	if strings.Contains(oldStr, ": string") && !strings.Contains(oldStr, ": string = ") {
+		return true
+	}
+
+	if strings.Contains(oldStr, ": boolean") && !strings.Contains(oldStr, ": boolean = ") {
+		return true
+	}
+
+	return false
+}
+
 // hover 的时候是指向一个table，展开这个table的内容
 func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existMap map[string]string) {
 	// 为已经存在的map，防止重复
@@ -201,8 +220,10 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 
 	if symbol.VarInfo != nil {
 		for key, value := range symbol.VarInfo.SubMaps {
-			if _, ok := existMap[key]; ok {
-				continue
+			if oldStr, ok := existMap[key]; ok {
+				if !needReplaceMapStr(oldStr) {
+					continue
+				}
 			}
 
 			strValueType := value.GetVarTypeDetail()
@@ -219,6 +240,39 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 
 	str = str + "}"
 	return str, existMap
+}
+
+func (a *AllProject) mergeTwoExistMap(symbol *common.Symbol, fristStr string, fristMap map[string]string,
+	secondStr string, secondMap map[string]string) (mergeStr string) {
+	if len(fristMap) == 0 {
+		return secondStr
+	}
+
+	if len(secondMap) == 0 {
+		return fristStr
+	}
+
+	// 1) 先判断是否有注解类型
+	if symbol.AnnotateType != nil {
+		strType := annotateast.TypeConvertStr(symbol.AnnotateType)
+		mergeStr = strType + " = {\n"
+	} else {
+		mergeStr = "table = {\n"
+	}
+
+	for oneStr, oneValue := range fristMap {
+		_, ok := secondMap[oneStr]
+		if !ok {
+			secondMap[oneStr] = oneValue
+		}
+	}
+
+	traverseMapInStringOrder(secondMap, func(key string, value string) {
+		mergeStr = mergeStr + "\t" + value + "\n"
+	})
+
+	mergeStr = mergeStr + "}"
+	return mergeStr
 }
 
 func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.DefineVarStruct) (strType string,

@@ -754,38 +754,7 @@ func (a *AllProject) getCommFunc(strFile string, line, ch int) (comParam *Common
 	return comParam
 }
 
-func (a * AllProject) mergeTwoExistMap(symbol *common.Symbol, fristStr string, fristMap map[string]string, 
-	secondStr string, secondMap map[string]string) (mergeStr string) {
-		if len(fristMap) == 0 {
-			return secondStr
-		}
 
-		if len(secondMap) == 0 {
-			return fristStr
-		}
-
-			// 1) 先判断是否有注解类型
-	if symbol.AnnotateType != nil {
-		strType := annotateast.TypeConvertStr(symbol.AnnotateType)
-		mergeStr = strType + " = {\n"
-	} else {
-		mergeStr = "table = {\n"
-	}
-
-	for oneStr, oneValue := range fristMap {
-		_, ok := secondMap[oneStr]
-		if !ok {
-			secondMap[oneStr] = oneValue
-		}
-	}
-
-	traverseMapInStringOrder(secondMap, func(key string, value string) {
-		mergeStr = mergeStr + "\t" + value + "\n"
-	})
-
-	mergeStr = mergeStr + "}"
-	return mergeStr
-}
 
 // GetCompleteCacheIndexItem 获取单个缓存的结构
 func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneCompleteData, luaFileStr string, flag bool) {
@@ -840,7 +809,7 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 
 		item.Detail = varInfo.GetVarTypeDetail()
 		expandFlag := false
-		var firstExistMap map[string]string = map[string]string {}
+		var firstExistMap map[string]string = map[string]string{}
 		if item.Detail == "table" || len(varInfo.SubMaps) > 0 {
 			item.Detail, firstExistMap = a.expandTableHover(symbol)
 			expandFlag = true
@@ -865,7 +834,7 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 				} else if symbolTmp.VarInfo != nil {
 					strDetail := symbolTmp.VarInfo.GetVarTypeDetail()
 					if strDetail == "table" || len(symbolTmp.VarInfo.SubMaps) > 0 {
-						secondStr, sendExistMap := a.expandTableHover(symbolTmp)				
+						secondStr, sendExistMap := a.expandTableHover(symbolTmp)
 						//strDetail = a.expandTableHover(symbolTmp)
 						strDetail = a.mergeTwoExistMap(symbol, item.Detail, firstExistMap, secondStr, sendExistMap)
 					}
