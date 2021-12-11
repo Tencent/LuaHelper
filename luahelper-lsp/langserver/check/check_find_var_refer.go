@@ -86,10 +86,11 @@ func (a *AllProject) FindVarReferSymbol(luaInFile string, node ast.Exp, comParam
 		// 构造这个变量的table 构造的成员，都构造出来
 		newVar.MakeVarMemTable(node, luaInFile, exp.Loc)
 		symbol := a.createAnnotateSymbol(luaInFile, newVar)
-		//symbol := common.GetDefaultSymbol(luaInFile, newVar)
 		return symbol
 	case *ast.FuncCallExp:
 		return a.getFuncRelateSymbol(luaInFile, exp, comParam, findExpList, varIndex)
+	case *ast.FuncDefExp:
+		return a.getFuncDefSymbol(luaInFile, exp, comParam, findExpList, varIndex)
 	}
 
 	return
@@ -473,18 +474,15 @@ func (a *AllProject) varInfoHasSubKey(varInfo *common.VarInfo, strKey string,
 	return a.getReferReferInfoSymbol(referFile, referInfo, strKey, comParam, findExpList)
 }
 
-// 判断是否为原表简单函数的构造
-// 完整的表达式为 a = setmetatable({}, {__index = b})
-// 第二个表达式为 {__index = b}
-func (a *AllProject) getSimpleMetatable(luaInFile string, node *ast.FuncCallExp, comParam *CommonFuncParam,
-	findExpList *[]common.FindExpFile) (symbol *common.Symbol) {
-	twoExp := node.Args[1]
-	expTable, ok := twoExp.(*ast.TableConstructorExp)
+// 获取原表右侧的简单元素, 目前支持strKey为__index与__call
+func (a *AllProject) getSimpleMetatableRight(luaInFile string, rightExp ast.Exp, comParam *CommonFuncParam,
+	findExpList *[]common.FindExpFile, strKey string) (symbol *common.Symbol) {
+	expTable, ok := rightExp.(*ast.TableConstructorExp)
 	if !ok {
 		// 查询变量是否有关联到子成员 __index
-		rerferVarFile := a.FindVarReferSymbol(luaInFile, twoExp, comParam, findExpList, 1)
+		rerferVarFile := a.FindVarReferSymbol(luaInFile, rightExp, comParam, findExpList, 1)
 		if rerferVarFile != nil {
-			subSymbol := a.symbolHasSubKey(rerferVarFile, "__index", comParam, findExpList)
+			subSymbol := a.symbolHasSubKey(rerferVarFile, strKey, comParam, findExpList)
 			if subSymbol != nil && subSymbol.VarInfo != nil {
 				findVarFile := a.FindVarReferSymbol(subSymbol.FileName, subSymbol.VarInfo.ReferExp, comParam,
 					findExpList, 1)
@@ -503,7 +501,7 @@ func (a *AllProject) getSimpleMetatable(luaInFile string, node *ast.FuncCallExp,
 		}
 
 		oneKeyStr := common.GetExpName(keyExp)
-		if oneKeyStr != "__index" {
+		if oneKeyStr != strKey {
 			continue
 		}
 
@@ -512,6 +510,71 @@ func (a *AllProject) getSimpleMetatable(luaInFile string, node *ast.FuncCallExp,
 	}
 
 	return nil
+}
+
+// 判断是否为原表简单函数的构造
+// 完整的表达式为 a = setmetatable({}, {__index = b})
+// 第二个表达式为 {__index = b}
+func (a *AllProject) getSimpleMetatable(luaInFile string, node *ast.FuncCallExp, comParam *CommonFuncParam,
+	findExpList *[]common.FindExpFile) (symbol *common.Symbol) {
+	// 先获取左侧的元素
+	leftSymbol := a.FindVarReferSymbol(luaInFile, node.Args[0], comParam, findExpList, 1)
+
+	// 获取原表右侧的元素__call元素
+	callRightSymbol := a.getSimpleMetatableRight(luaInFile, node.Args[1], comParam, findExpList, "__call")
+	if callRightSymbol != nil {
+		return callRightSymbol
+	}
+
+	// 获取原表右侧的元素__index元素
+	rightSymbol := a.getSimpleMetatableRight(luaInFile, node.Args[1], comParam, findExpList, "__index")
+	if leftSymbol == nil {
+		return rightSymbol
+	}
+	if rightSymbol == nil {
+		return leftSymbol
+	}
+
+	// 优先级高与低的symbol
+	var highSymbol *common.Symbol
+	var lowSymbol *common.Symbol
+	// 1) 先判断两边是否有注解，左边有注解，右边没有，右边的往左边合并
+	if leftSymbol.AnnotateType != nil && rightSymbol.AnnotateType == nil {
+		highSymbol = leftSymbol
+		lowSymbol = rightSymbol
+	} else if leftSymbol.AnnotateType == nil && rightSymbol.AnnotateType != nil {
+		// 2) 左边没有注解，右边含义注解，左边向右边移动
+		highSymbol = rightSymbol
+		lowSymbol = leftSymbol
+	} else {
+		highSymbol = leftSymbol
+		lowSymbol = rightSymbol
+	}
+
+	// 优先级高的没有变量，低的含有
+	if highSymbol.VarInfo == nil && lowSymbol.VarInfo != nil {
+		highSymbol.VarInfo = lowSymbol.VarInfo
+		return highSymbol
+	}
+
+	// 优先级高的没有变量, 低的也没有
+	if highSymbol.VarInfo == nil && lowSymbol.VarInfo == nil {
+		return highSymbol
+	}
+
+	//  两边都含有变量，变量进行合并
+	if len(highSymbol.VarInfo.SubMaps) == 0 && len(lowSymbol.VarInfo.SubMaps) == 0 {
+		return highSymbol
+	}
+
+	if len(highSymbol.VarInfo.SubMaps) == 0 {
+		highSymbol.VarInfo.SubMaps = map[string]*common.VarInfo{}
+	}
+	for key, oneVar := range lowSymbol.VarInfo.SubMaps {
+		highSymbol.VarInfo.SubMaps[key] = oneVar
+	}
+
+	return highSymbol
 }
 
 // 判断是否绑定了特定的注解推导类型
@@ -707,6 +770,36 @@ func (a *AllProject) getImportReferSymbol(luaInFile string, funcExp *ast.FuncCal
 	return symbol
 }
 
+// 获取函数定义，例如这样的 a = function()
+func (a *AllProject) getFuncDefSymbol(luaInFile string, node *ast.FuncDefExp, comParam *CommonFuncParam,
+	findExpList *[]common.FindExpFile, varIndex uint8) (symbol *common.Symbol) {
+	fileStruct := a.fileStructMap[luaInFile]
+	if fileStruct == nil {
+		log.Debug("fileStruct error, strFile=%s", luaInFile)
+		return
+	}
+
+	// 文件加载失败的忽略
+	if fileStruct.HandleResult != results.FileHandleOk {
+		return
+	}
+
+	// 如果函数返回的是table的构造，那么table的构造是一个匿名的变量，先构造下匿名变量
+	newVar := common.CreateVarInfo(luaInFile, common.LuaTypeRefer, nil, node.Loc, 1)
+	for _, oneFunc := range fileStruct.FileResult.FuncIDVec {
+		if oneFunc.Loc == node.Loc {
+			newVar.ReferFunc = oneFunc
+			break
+		}
+	}
+	if newVar.ReferFunc == nil {
+		return
+	}
+
+	symbol = common.GetDefaultSymbol(newVar.FileName, newVar)
+	return symbol
+}
+
 // 根据table的调用，获取到对应的变量
 func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp, comParam *CommonFuncParam,
 	findExpList *[]common.FindExpFile, varIndex uint8) (symbol *common.Symbol) {
@@ -888,7 +981,7 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 		}
 
 		// 递归查找
-		tmpList := a.FindDeepSymbolList(oneSymbol.FileName, expReturn, comParam, findExpList, false, varIndex)
+		tmpList := a.FindDeepSymbolList(oneSymbol.FileName, expReturn, comParam, findExpList, true, varIndex)
 		if len(tmpList) > 0 {
 			return tmpList[len(tmpList)-1]
 		}
