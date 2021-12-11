@@ -183,3 +183,8 @@ func (a *AllProject) RemoveFile(strFile string) {
 	a.RemoveCacheContent(strFile)
 	log.Debug("delete strFile=%s, beforeFlag=%t, endFlag=%t", strFile, beforeExitFlag, endExitFlag)
 }
+
+// GetCompleteCache get complete cache
+func (a *AllProject) GetCompleteCache() *common.CompleteCache {
+	return a.completeCache
+}
