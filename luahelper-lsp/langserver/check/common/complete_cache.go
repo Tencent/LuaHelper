@@ -44,19 +44,19 @@ type OneCompleteData struct {
 	CacheKind      CacheKind                       // 缓存的类型
 	FieldState     *annotateast.AnnotateFieldState // 提示为注解的class信息
 	FieldColonFlag annotateast.FieldColonType      // 当为FieldState时候，是否为：函数
-	//IncludeSelfParam bool	// 当为VarInfo时候，是否补充第一个参数为self
 	CreateTypeInfo *CreateTypeInfo
 }
 
 // CompleteCache 缓存所有的补全信息
 type CompleteCache struct {
-	index      int                 // 当前的index
-	maxNum     int                 // 上次提示的最大数量
-	excludeNum int                 // 上次提示时，排除的最大数量
-	dataList   []OneCompleteData   // 所有的缓存信息，用列表存储就ok
-	existMap   map[string]int      // 为已经存在的map，防止重复
-	excludeMap map[string]struct{} // 冒号语法需要排除的map
-	colonFlag  bool                // 代码补全最后是否为冒号语法
+	index         int                 // 当前的index
+	maxNum        int                 // 上次提示的最大数量
+	excludeNum    int                 // 上次提示时，排除的最大数量
+	dataList      []OneCompleteData   // 所有的缓存信息，用列表存储就ok
+	existMap      map[string]int      // 为已经存在的map，防止重复
+	excludeMap    map[string]struct{} // 冒号语法需要排除的map
+	colonFlag     bool                // 代码补全最后是否为冒号语法
+	beforeHashtag bool                //  补全的词前面是否包含#
 }
 
 // CreateCompleteCache 创建一个代码补全缓存
@@ -81,6 +81,17 @@ func (cache *CompleteCache) ResertData() {
 	cache.existMap = make(map[string]int, cache.maxNum)
 	cache.excludeMap = make(map[string]struct{}, cache.excludeNum)
 	cache.colonFlag = false
+	cache.beforeHashtag = false
+}
+
+// SetBeforeHashtag set before hash tag
+func (cache *CompleteCache) SetBeforeHashtag(flag bool) {
+	cache.beforeHashtag = flag
+}
+
+// GetBeforeHashtag set before hash tag
+func (cache *CompleteCache) GetBeforeHashtag() bool {
+	return cache.beforeHashtag
 }
 
 // GetDataList 获取所有的数据
