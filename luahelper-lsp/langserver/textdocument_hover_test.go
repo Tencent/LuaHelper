@@ -863,8 +863,8 @@ func TestHover10(t *testing.T) {
 	})
 
 	resultList = append(resultList, "test1")
-	resultList = append(resultList, "aa: number")
-	resultList = append(resultList, "bb: number")
+	resultList = append(resultList, "aa: number = 1")
+	resultList = append(resultList, "bb: number = 2")
 	resultList = append(resultList, "cc: number")
 
 	for index, onePoisiton := range positionList {
