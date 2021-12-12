@@ -57,8 +57,16 @@ type FuncType struct {
 	ParamNameList    []string         // 函数参数名称的列表
 	ParamNameLocList []lexer.Location // 整个参数列表的的位置信息
 	ParamTypeList    []Type           // 函数参数类型的列表
-	ParamOptionList []bool			  // 参数是否为可选的，如果为这样的 one? : string 表示参数one是可选的
+	ParamOptionList  []bool           // 参数是否为可选的，如果为这样的 one? : string 表示参数one是可选的
 	ReturnTypeList   []Type           // 函数返回值的列表
+}
+
+// ConstType 常量类型，例如 "aa" | "bb"
+type ConstType struct {
+	Loc        lexer.Location // 位置信息
+	Name       string         // 名称
+	QuotesFlag bool           // 是否为字符串双引号标记 String double quotes
+	Comment    string         // 额外注释说明
 }
 
 // NotValidType 不是有效的
