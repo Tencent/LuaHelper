@@ -243,7 +243,7 @@ func (a *AllProject) protocolCodeComplete(strProPre string, secondProject *resul
 				continue
 			}
 
-			a.completeCache.InsertCompleteVar(oneVar.ExtraGlobal.FileName, strName, oneVar)
+			a.completeCache.InsertCompleteVar(oneVar.FileName, strName, oneVar)
 		}
 	}
 }
@@ -298,7 +298,7 @@ func (a *AllProject) gValueComplete(comParam *CommonFuncParam, completeVar *comm
 			continue
 		}
 
-		fileName := oneVar.ExtraGlobal.FileName
+		fileName := oneVar.FileName
 		if fileName == ignoreFile {
 			continue
 		}
@@ -335,15 +335,14 @@ func (a *AllProject) gPreComplete(comParam *CommonFuncParam,
 		completeVar.IsFuncVec = completeVar.IsFuncVec[1:]
 	}
 	//  获取到全局的信息
-	findFile, findVar := a.findGlobalVarDefineInfo(comParam, strName, "", false)
+	findVar := a.findGlobalVarDefineInfo(comParam, strName, "", false)
 
 	// 没有找到
-	if findFile == "" || findVar == nil {
+	if findVar == nil {
 		return
 	}
 
-	oldSymbol := a.createAnnotateSymbol(findFile, strName, findVar)
-
+	oldSymbol := a.createAnnotateSymbol(strName, findVar)
 	varStruct := &common.DefineVarStruct{
 		StrVec:    completeVar.StrVec,
 		IsFuncVec: completeVar.IsFuncVec,
@@ -755,6 +754,8 @@ func (a *AllProject) getCommFunc(strFile string, line, ch int) (comParam *Common
 	return comParam
 }
 
+
+
 // GetCompleteCacheIndexItem 获取单个缓存的结构
 func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneCompleteData, luaFileStr string, flag bool) {
 	item, flag = a.completeCache.GetIndexData(index)
@@ -808,8 +809,9 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 
 		item.Detail = varInfo.GetVarTypeDetail()
 		expandFlag := false
+		var firstExistMap map[string]string = map[string]string{}
 		if item.Detail == "table" || len(varInfo.SubMaps) > 0 {
-			item.Detail = a.expandTableHover(symbol)
+			item.Detail, firstExistMap = a.expandTableHover(symbol)
 			expandFlag = true
 		}
 
@@ -826,13 +828,15 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 			for _, symbolTmp := range symList {
 				// 判断是否为注解类型
 				if symbolTmp.AnnotateType != nil {
-					//item.Detail = annotateast.TypeConvertStr(varFileTmp.AnnotateType)
-					item.Detail = item.Label + " : " + a.expandTableHover(symbolTmp)
+					secondStr, sendExistMap := a.expandTableHover(symbolTmp)
+					item.Detail = item.Label + " : " + a.mergeTwoExistMap(symbol, item.Detail, firstExistMap, secondStr, sendExistMap)
 					break
 				} else if symbolTmp.VarInfo != nil {
 					strDetail := symbolTmp.VarInfo.GetVarTypeDetail()
 					if strDetail == "table" || len(symbolTmp.VarInfo.SubMaps) > 0 {
-						strDetail = a.expandTableHover(symbolTmp)
+						secondStr, sendExistMap := a.expandTableHover(symbolTmp)
+						//strDetail = a.expandTableHover(symbolTmp)
+						strDetail = a.mergeTwoExistMap(symbol, item.Detail, firstExistMap, secondStr, sendExistMap)
 					}
 
 					if strDetail != "any" {

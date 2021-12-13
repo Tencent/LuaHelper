@@ -131,7 +131,7 @@ func (r *ReferenceFileResult) FindProjectGlobal(selfConvert SelfConvertInterface
 			continue
 		}
 
-		ok = r.MatchVarInfo(selfConvert, strName, oneVar.ExtraGlobal.FileName, oneVar, fi, strPreExp, nameExp, false)
+		ok = r.MatchVarInfo(selfConvert, strName, oneVar.FileName, oneVar, fi, strPreExp, nameExp, false)
 		if ok {
 			return true
 		}
@@ -144,7 +144,7 @@ func (r *ReferenceFileResult) FindProjectGlobal(selfConvert SelfConvertInterface
 			return false
 		}
 
-		ok = r.MatchVarInfo(selfConvert, strName, oneVar.ExtraGlobal.FileName, oneVar, fi, strPreExp, nameExp, false)
+		ok = r.MatchVarInfo(selfConvert, strName, oneVar.FileName, oneVar, fi, strPreExp, nameExp, false)
 		if ok {
 			log.Debug("find global Info, thirdStruct, strName=%s", strName)
 			return true

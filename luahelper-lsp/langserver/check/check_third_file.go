@@ -330,5 +330,39 @@ func (a *AllProject) generateAllGlobalMaps(third *results.AnalysisThird) {
 				oneVar = oneVar.ExtraGlobal.Prev
 			}
 		}
+
+	}
+
+	for strFile := range third.AllIncludeFile {
+		fileStruct := a.fileStructMap[strFile]
+		if fileStruct == nil {
+			continue
+		}
+
+		// 文件加载失败的忽略
+		if fileStruct.HandleResult != results.FileHandleOk {
+			continue
+		}
+
+		fileResult := fileStruct.FileResult
+
+		if fileResult.NodefineMaps == nil {
+			continue
+		}
+
+		// 查找所有未定义信息
+		for strName, oneVar := range fileResult.NodefineMaps {
+			if oneVar.SubMaps == nil {
+				continue
+			}
+			ok, gVar := third.FindThirdGlobalGInfo(false, strName, "")
+			if ok {
+				for subName, subVar := range oneVar.SubMaps {
+					if !gVar.IsExistMember(subName) {
+						gVar.InsertSubMember(subName, subVar)
+					}
+				}
+			}
+		}
 	}
 }
