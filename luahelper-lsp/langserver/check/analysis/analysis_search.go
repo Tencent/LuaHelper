@@ -1399,10 +1399,27 @@ func (a *Analysis) analysisNoDefineName(node *ast.NameExp) {
 	}
 
 	if _, ok := a.curResult.NodefineMaps[node.Name]; !ok {
-		newVar := common.CreateVarInfo(common.LuaTypeAll, nil, node.Loc, 1)
+		newVar := common.CreateVarInfo(a.curResult.Name, common.LuaTypeAll, nil, node.Loc, 1)
 		a.insertGlobalNoDefineMap(node.Name, newVar)
 	}
 }
+
+func (a *Analysis) analysisNoDefineStr(node *ast.StringExp) {
+	name, loc := node.Str, common.GetExpLoc(node)
+	if name == " " {
+		return
+	}
+
+	if !a.isNeedAnalysisNameExp(name, loc) {
+		return
+	}
+
+	if _, ok := a.curResult.NodefineMaps[name]; !ok {
+		newVar := common.CreateVarInfo(a.curResult.Name, common.LuaTypeAll, nil, node.Loc, 1)
+		a.insertGlobalNoDefineMap(name, newVar)
+	}
+}
+
 
 // 判断是否需要分析当前的nameExp
 func (a *Analysis) isNeedAnalysisNameExp(strName string, loc lexer.Location) bool {

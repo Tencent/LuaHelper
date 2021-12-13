@@ -69,7 +69,7 @@ func (third *AnalysisThird) InsertThirdGlobalGMaps(strName string, varInfo *comm
 	}
 }
 
-// 判断是否应该把新的global信息插入进来， 考虑到多个文件有定义相同的全局符号，主要比较定义全局的函数层数或行数
+// JudgeShouldInsertGlobalInfo 判断是否应该把新的global信息插入进来， 考虑到多个文件有定义相同的全局符号，主要比较定义全局的函数层数或行数
 func (third *AnalysisThird) JudgeShouldInsertGlobalInfo(strName string, varInfo *common.VarInfo) bool {
 	globalGmaps := third.GlobalVarMaps
 
@@ -82,26 +82,26 @@ func (third *AnalysisThird) JudgeShouldInsertGlobalInfo(strName string, varInfo 
 
 	// 之前已经存在了，比较这次插入的是否应该
 	for _, oneVar := range varInfoList.VarVec {
-		if oneVar.ExtraGlobal.FileName == varInfo.ExtraGlobal.FileName {
+		if oneVar.FileName == varInfo.FileName {
 			// 如果是在同一个文件忽略
 			continue
 		}
 
 		if oneVar.ExtraGlobal.FuncLv < varInfo.ExtraGlobal.FuncLv {
 			log.Debug("thirdStruct strName=%s, not insert, before file=%s, funcLv=%d,now file=%s, funcLv=%d",
-				strName, oneVar.ExtraGlobal.FileName, oneVar.ExtraGlobal.FuncLv, varInfo.ExtraGlobal.FileName, varInfo.ExtraGlobal.FuncLv)
+				strName, oneVar.FileName, oneVar.ExtraGlobal.FuncLv, varInfo.FileName, varInfo.ExtraGlobal.FuncLv)
 			return false
 		}
 
 		if oneVar.ExtraGlobal.ScopeLv < varInfo.ExtraGlobal.ScopeLv {
 			log.Debug("thirdStruct strName=%s, not insert, before file=%s, ScopeLv=%d,now file=%s, ScopeLv=%d",
-				strName, oneVar.ExtraGlobal.FileName, oneVar.ExtraGlobal.ScopeLv, varInfo.ExtraGlobal.FileName, varInfo.ExtraGlobal.ScopeLv)
+				strName, oneVar.FileName, oneVar.ExtraGlobal.ScopeLv, varInfo.FileName, varInfo.ExtraGlobal.ScopeLv)
 			return false
 		}
 
 		if oneVar.Loc.StartLine <= varInfo.Loc.StartLine {
 			// log.Debug("thirdStruct strName=%s, not insert, before file=%s, line=%d,now file=%s, line=%d",
-			// 	strName, oneVar.ExtraGlobal.FileName, oneVar.Loc.StartLine, varInfo.ExtraGlobal.FileName,
+			// 	strName, oneVar.FileName, oneVar.Loc.StartLine, varInfo.FileName,
 			// 	varInfo.Loc.StartLine)
 			return false
 		}

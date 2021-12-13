@@ -10,34 +10,14 @@ import (
 
 // GetLspHoverVarStr 提示信息hover
 func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineVarStruct) (lableStr, docStr, luaFileStr string) {
-	// 1) 判断是否为系统的函数提示
-	//strVecLen := len(varStruct.StrVec)
-
-	var lastSymbol *common.Symbol
-	var findList []*common.Symbol
-	for {
-		symbol, symList := a.FindVarDefine(strFile, varStruct)
-		// 原生的变量没有找到, 直接返回
-		if symbol == nil {
-			return
-		}
-
-		if len(symList) == 0 {
-			// 没有追踪到，切短下次，继续找
-			subLen := len(varStruct.StrVec) - 1
-			if subLen == 0 {
-				// 子项不能再切分了，退出
-				return
-			}
-			varStruct.StrVec = varStruct.StrVec[0:subLen]
-		} else {
-			lastSymbol = symList[len(symList)-1]
-			findList = symList
-			//lastSymbol = symList[0]
-			break
-		}
+	symbol, findList := a.FindVarDefine(strFile, varStruct)
+	// 原生的变量没有找到, 直接返回
+	if symbol == nil || len(findList) == 0 {
+		lableStr = varStruct.Str + " : any"
+		return
 	}
 
+	lastSymbol := findList[len(findList)-1]
 	if lastSymbol == nil {
 		return
 	}
@@ -142,8 +122,10 @@ func (a *AllProject) convertClassInfoToHovers(oneClass *common.OneClassInfo, exi
 
 	if oneClass.RelateVar != nil {
 		for key, value := range oneClass.RelateVar.SubMaps {
-			if _, ok := existMap[key]; ok {
-				continue
+			if oldStr, ok := existMap[key]; ok {
+				if !needReplaceMapStr(oldStr) {
+					continue
+				}
 			}
 
 			strValueType := value.GetVarTypeDetail()
@@ -193,10 +175,27 @@ func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName s
 	return str
 }
 
+
+func needReplaceMapStr(oldStr string) bool {
+	if strings.Contains(oldStr, ": number") && !strings.Contains(oldStr, ": number = ") {
+		return true
+	}
+
+	if strings.Contains(oldStr, ": string") && !strings.Contains(oldStr, ": string = ") {
+		return true
+	}
+
+	if strings.Contains(oldStr, ": boolean") && !strings.Contains(oldStr, ": boolean = ") {
+		return true
+	}
+
+	return false
+}
+
 // hover 的时候是指向一个table，展开这个table的内容
-func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string) {
+func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existMap map[string]string) {
 	// 为已经存在的map，防止重复
-	var existMap map[string]string = map[string]string{}
+	existMap = map[string]string{}
 
 	// 1) 先判断是否有注解类型
 	if symbol.AnnotateType != nil {
@@ -205,7 +204,7 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string) {
 		classList := a.getAllNormalAnnotateClass(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
 		if len(classList) == 0 || strType == "number" || strType == "any" || strType == "string" {
 			// 没有找到相应的class成员，直接返回
-			return strType
+			return strType, existMap
 		}
 
 		str = strType + " = {\n"
@@ -215,14 +214,16 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string) {
 	} else {
 		str = "table = {\n"
 		if symbol.VarInfo == nil || len(symbol.VarInfo.SubMaps) == 0 {
-			return "table = { }"
+			return "table = { }", existMap
 		}
 	}
 
 	if symbol.VarInfo != nil {
 		for key, value := range symbol.VarInfo.SubMaps {
-			if _, ok := existMap[key]; ok {
-				continue
+			if oldStr, ok := existMap[key]; ok {
+				if !needReplaceMapStr(oldStr) {
+					continue
+				}
 			}
 
 			strValueType := value.GetVarTypeDetail()
@@ -238,7 +239,40 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string) {
 	})
 
 	str = str + "}"
-	return str
+	return str, existMap
+}
+
+func (a *AllProject) mergeTwoExistMap(symbol *common.Symbol, fristStr string, fristMap map[string]string,
+	secondStr string, secondMap map[string]string) (mergeStr string) {
+	if len(fristMap) == 0 {
+		return secondStr
+	}
+
+	if len(secondMap) == 0 {
+		return fristStr
+	}
+
+	// 1) 先判断是否有注解类型
+	if symbol.AnnotateType != nil {
+		strType := annotateast.TypeConvertStr(symbol.AnnotateType)
+		mergeStr = strType + " = {\n"
+	} else {
+		mergeStr = "table = {\n"
+	}
+
+	for oneStr, oneValue := range fristMap {
+		_, ok := secondMap[oneStr]
+		if !ok {
+			secondMap[oneStr] = oneValue
+		}
+	}
+
+	traverseMapInStringOrder(secondMap, func(key string, value string) {
+		mergeStr = mergeStr + "\t" + value + "\n"
+	})
+
+	mergeStr = mergeStr + "}"
+	return mergeStr
 }
 
 func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.DefineVarStruct) (strType string,
@@ -246,7 +280,7 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 	// 1) 首先提取注解类型
 	if symbol.AnnotateType != nil {
 		// 注解类型尝试推导扩展class的field成员信息
-		str := a.expandTableHover(symbol)
+		str, _ := a.expandTableHover(symbol)
 		strLabel = varStruct.Str + " : " + str
 
 		if symbol.VarInfo != nil {
@@ -277,7 +311,7 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 		strType = symbol.VarInfo.GetVarTypeDetail()
 		// 判断是否指向的一个table，如果是展开table的具体内容
 		if strType == "table" || len(symbol.VarInfo.SubMaps) > 0 {
-			strType = a.expandTableHover(symbol)
+			strType, _ = a.expandTableHover(symbol)
 		}
 
 		referFunc := symbol.VarInfo.ReferFunc
@@ -313,7 +347,7 @@ func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.De
 	return
 }
 
-// 对注释进行一些处理, 提取出注解的特殊的markdown格式
+// GetStrComment 对注释进行一些处理, 提取出注解的特殊的markdown格式
 func GetStrComment(strComment string) (str string) {
 	if strComment == "" {
 		return strComment

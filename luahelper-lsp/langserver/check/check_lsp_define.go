@@ -13,35 +13,35 @@ import (
 
 // 查找全局的变量信息
 func (a *AllProject) findGlobalVarDefineInfo(comParam *CommonFuncParam, strName string,
-	strProPre string, gFlag bool) (string, *common.VarInfo) {
+	strProPre string, gFlag bool) *common.VarInfo {
 	if ok, findVar := comParam.fileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
-		return comParam.fileResult.Name, findVar
+		return findVar
 	}
 
 	// 3)向工程的globalMaps中查找变量
 	if comParam.secondProject != nil {
 		if ok, findVar := comParam.secondProject.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre); ok {
-			return findVar.ExtraGlobal.FileName, findVar
+			return findVar
 		}
 	}
 
 	if comParam.thirdStruct != nil {
 		// 向工程的第一阶段全局_G符号表中查找
 		if ok, findVar := comParam.thirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre); ok {
-			return findVar.ExtraGlobal.FileName, findVar
+			return findVar
 		}
 	}
 
-	return "", nil
+	return nil
 }
 
 // findFile 表示找到的定义在的lua文件
 // findLoc 为定义的地方
-func (a *AllProject) findVarDefineInfo(comParam *CommonFuncParam, strName string, strProPre string) (findFile string,
+func (a *AllProject) findVarDefineInfo(comParam *CommonFuncParam, strName string, strProPre string) (
 	findVar *common.VarInfo) {
 	// 1) 局部变量找到了该变量
 	if ok, locVarInfo := comParam.scope.FindLocVar(strName, comParam.loc); ok {
-		return comParam.fileResult.Name, locVarInfo
+		return locVarInfo
 	}
 
 	// 2) 局部变量没有找到，查找全局变量
@@ -149,11 +149,13 @@ func (a *AllProject) findMaxSecondProject(strFile string) (secondProject *result
 // 变量查找引用时候，跟踪到变量import或require引入的关系
 func (a *AllProject) findLspReferenceVarDefine(comParam *CommonFuncParam, varStruct *common.DefineVarStruct) (findInFile string,
 	findLocVar *common.VarInfo) {
-	findPreFile, _, findLocVar := a.findOldDefineInfo(comParam, varStruct)
-	if findPreFile == "" || findLocVar == nil {
+	_, findLocVar = a.findOldDefineInfo(comParam, varStruct)
+	if findLocVar == nil {
 		// 直接返回
-		return findPreFile, findLocVar
+		return "", findLocVar
 	}
+
+	findPreFile := findLocVar.FileName
 
 	var referInfo *common.ReferInfo
 	if findLocVar != nil {
@@ -178,7 +180,7 @@ func (a *AllProject) findLspReferenceVarDefine(comParam *CommonFuncParam, varStr
 	referSubType := a.GetReferFrameType(referInfo)
 	if referSubType == common.RtypeImport {
 		if ok, findVar := referFile.FindGlobalVarInfo(strModeMem, false, ""); ok {
-			return findVar.ExtraGlobal.FileName, findVar
+			return findVar.FileName, findVar
 		}
 
 		return findPreFile, nil
@@ -345,7 +347,7 @@ func (a *AllProject) getVarCommonFuncParam(strFile string, varStruct *common.Def
 
 // findOldDefineInfo 查找变量最初的定义地方
 // findStrName 为查找到的变量的名称
-func (a *AllProject) findOldDefineInfo(comParam *CommonFuncParam, varStruct *common.DefineVarStruct) (findInFile string,
+func (a *AllProject) findOldDefineInfo(comParam *CommonFuncParam, varStruct *common.DefineVarStruct) (
 	findStrName string, findLocVar *common.VarInfo) {
 	// 1) 判断是否为_G的前缀
 	if varStruct.StrVec[0] == "_G" {
@@ -355,14 +357,14 @@ func (a *AllProject) findOldDefineInfo(comParam *CommonFuncParam, varStruct *com
 		if len(varStruct.StrVec) <= 0 {
 			// 只有_G的，没有其他的内容, 直接返回
 			log.Debug("just only _G, return")
-			return "", "", nil
+			return "", nil
 		}
 
 		strName := varStruct.StrVec[0]
 		gFlag := !common.GConfig.GetGVarExtendFlag()
 
-		findFile, findVar := a.findGlobalVarDefineInfo(comParam, strName, "", gFlag)
-		return findFile, strName, findVar
+		findVar := a.findGlobalVarDefineInfo(comParam, strName, "", gFlag)
+		return strName, findVar
 	}
 
 	dirManager := common.GConfig.GetDirManager()
@@ -381,22 +383,21 @@ func (a *AllProject) findOldDefineInfo(comParam *CommonFuncParam, varStruct *com
 	if len(varStruct.StrVec) <= 0 {
 		// 内容不够，直接退出
 		log.Error("StrVec len error")
-		return "", "", nil
+		return "", nil
 	}
 
 	strName := varStruct.StrVec[0]
-	findPreFile, findLocVar := a.findVarDefineInfo(comParam, strName, strProPre)
+	findLocVar = a.findVarDefineInfo(comParam, strName, strProPre)
 
 	// 3) 判断是否查找的为后台协议的前缀内容
-	if len(varStruct.StrVec) == 1 && findPreFile == "" && dirManager.IsInDir(comParam.fileResult.Name) {
+	if len(varStruct.StrVec) == 1 && findLocVar == nil && dirManager.IsInDir(comParam.fileResult.Name) {
 		symbol := a.findProtocolDefine(strName, comParam.secondProject)
 		if symbol != nil {
-			findPreFile = symbol.FileName
 			findLocVar = symbol.VarInfo
 		}
 	}
 
-	return findPreFile, strName, findLocVar
+	return strName, findLocVar
 }
 
 // FindVarDefine 查找变量的定义, 包括变量之前关联的所有变量
@@ -417,12 +418,12 @@ func (a *AllProject) FindVarDefine(strFile string, varStruct *common.DefineVarSt
 		}
 	} else {
 		// 最初始的第一次查找，原始的
-		luaInFile, findStrName, findVar := a.findOldDefineInfo(comParam, varStruct)
-		if luaInFile == "" || findVar == nil || len(varStruct.StrVec) <= 0 {
+		findStrName, findVar := a.findOldDefineInfo(comParam, varStruct)
+		if findVar == nil || len(varStruct.StrVec) <= 0 {
 			return oldSymbol, symList
 		}
 
-		oldSymbol = a.createAnnotateSymbol(luaInFile, findStrName, findVar)
+		oldSymbol = a.createAnnotateSymbol(findStrName, findVar)
 	}
 	//调用链中没有函数，走这里
 	symList = a.getDeepVarList(oldSymbol, varStruct, comParam)

@@ -86,15 +86,7 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 
 	// 5.2) 输入的为#代码补全
 	if preCompStr == "#" {
-		compVar = common.CompleteVarStruct{
-			PosLine:       (int)(comResult.pos.Line),
-			PosCh:         (int)(comResult.pos.Character),
-			StrVec:        []string{"#"},
-			IsFuncVec:     []bool{false},
-			ColonFlag:     false,
-			LastEmptyFlag: false,
-			IgnoreKeyWord: true,
-		}
+		compVar = getDefaultHashtag(comResult)
 		preStr = "#"
 	} else {
 		// 5.2) 按照.进行分割字符串
@@ -110,6 +102,10 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 				preStr = "#"
 			}
 		}
+
+		// 扫描输入的地方，前面是否包含等于意思是，是否为等于右边的补全
+		beforeHasTag := isBeforeHasHashtag(comResult.contents, comResult.offset)
+		project.GetCompleteCache().SetBeforeHashtag(beforeHasTag)
 	}
 
 	project.CodeComplete(strFile, compVar)
@@ -119,6 +115,18 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 		IsIncomplete: false,
 		Items:        items,
 	}, nil
+}
+
+func getDefaultHashtag(comResult commFileRequest) common.CompleteVarStruct {
+	return common.CompleteVarStruct{
+		PosLine:       (int)(comResult.pos.Line),
+		PosCh:         (int)(comResult.pos.Character),
+		StrVec:        []string{"#"},
+		IsFuncVec:     []bool{false},
+		ColonFlag:     false,
+		LastEmptyFlag: false,
+		IgnoreKeyWord: true,
+	}
 }
 
 // 处理注解系统的代码补全，注解系统是以---@开头的
@@ -190,6 +198,39 @@ func idxOfSquareBracketAndQuote(strLine string) (squareBracketIdx int, lastQuote
 	}
 
 	return idxOfSquareBracketAndQuoteHelp(strLine, "'")
+}
+
+// 判断是否为等于右边的补全
+func isBeforeHasHashtag(contents []byte, offset int) (flag bool) {
+	// 前面是否包含过空格
+	spaceFlag := false
+	for i := offset - 1; i >= 0; i = i - 1 {
+		ch := contents[i]
+		if ch == '\n' || ch == '\r' {
+			break
+		}
+
+		if ch == ' ' {
+			spaceFlag = true
+			continue
+		}
+
+		if spaceFlag {
+			if ch == '=' {
+				flag = true
+			}
+			break
+		}
+
+		if ch == '_' || ch == '.' || IsDigit(ch) || IsLetter(ch) {
+			continue
+		}
+
+		break
+
+	}
+
+	return flag
 }
 
 // 获取补全前置的输入字符串
@@ -591,11 +632,18 @@ func (l *LspServer) TextDocumentCompleteResolve(ctx context.Context, vs lsp.Comp
 	strDoc := codingconv.ConvertStrToUtf8(item.Documentation)
 	strDetail := item.Detail
 
+	beforeHasTag := project.GetCompleteCache().GetBeforeHashtag()
+
 	// json snippet 里面不能包含. 不然任意地方输入 . 时候会激活响应的snippet
 	if snippetItem, ok := common.GConfig.CompSnippetMap[vs.Label]; ok {
 		compItem.InsertText = snippetItem.InsertText
 		compItem.InsertTextFormat = lsp.SnippetTextFormat
 		strDetail = snippetItem.Detail
+		// 当snippet为function时，若前面有#符号，进行特殊的替换
+		if vs.Label == "function" && beforeHasTag {
+			compItem.InsertText = "function(${1:})\n\t${0:}\nend"
+			strDetail = "function()\n\nend"
+		}
 	}
 
 	strMarkdown := fmt.Sprintf("```%s\n%s\n```", "lua", codingconv.ConvertStrToUtf8(strDetail))

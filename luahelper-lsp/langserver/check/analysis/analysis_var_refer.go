@@ -38,10 +38,10 @@ func (a *Analysis) getExpReferVarInfo(node ast.Exp) (locVar *common.VarInfo) {
 		return a.getTableAccessRelateVar(exp)
 	case *ast.TableConstructorExp:
 		// 如果函数返回的是table的构造，那么table的构造是一个匿名的变量，先构造下匿名变量
-		newVar := common.CreateVarInfo(common.LuaTypeTable, exp, exp.Loc, 1)
+		newVar := common.CreateVarInfo(a.curResult.Name, common.LuaTypeTable, exp, exp.Loc, 1)
 
 		// 构造这个变量的table 构造的成员，都构造出来
-		newVar.MakeVarMemTable(node, exp.Loc)
+		newVar.MakeVarMemTable(node, a.curResult.Name, exp.Loc)
 		return newVar
 	case *ast.FuncCallExp:
 		strName := ""
