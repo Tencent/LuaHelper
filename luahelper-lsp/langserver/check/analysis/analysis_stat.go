@@ -206,11 +206,21 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 		for i, _ := range node.Exps {
 			for j := i + 1; j < len(node.Exps); j++ {
 				if common.CompExp(node.Exps[i], node.Exps[j]) {
-					errStr := fmt.Sprintf("same if condition one")
-					a.curResult.InsertError(common.CheckErrorDuplicateIf, errStr, common.GetExpLoc(node.Exps[i]))
+					errStr := fmt.Sprintf("same if condition")
 
-					errStr = fmt.Sprintf("same if condition another")
-					a.curResult.InsertError(common.CheckErrorDuplicateIf, errStr, common.GetExpLoc(node.Exps[j]))
+					var relateVec []common.RelateCheckInfo
+					relateVec = append(relateVec, common.RelateCheckInfo{
+						LuaFile: a.curResult.Name,
+						ErrStr:  errStr,
+						Loc:     common.GetExpLoc(node.Exps[i]),
+					})
+					relateVec = append(relateVec, common.RelateCheckInfo{
+						LuaFile: a.curResult.Name,
+						ErrStr:  errStr,
+						Loc:     common.GetExpLoc(node.Exps[j]),
+					})
+
+					a.curResult.InsertRelateError(common.CheckErrorDuplicateIf, errStr, common.GetExpLoc(node.Exps[i]), relateVec)
 				}
 			}
 		}
