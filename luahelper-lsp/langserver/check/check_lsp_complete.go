@@ -567,6 +567,28 @@ func (a *AllProject) varInfoDeepComplete(symbol *common.Symbol, symList []*commo
 	}
 }
 
+// 查找所有的协议前缀
+func (a *AllProject) systemMoudleComplete(strModule string) (flag bool) {
+	flag = false
+	oneModule, ok := common.GConfig.SystemModuleTipsMap[strModule]
+	if !ok {
+		return
+	}
+
+	flag = true
+	// 提示该模块的所有函数
+	for strName, oneFunc := range oneModule.ModuleFuncMap {
+		a.completeCache.InsertCompleteSysModuleMem(strName, oneFunc.Detail,
+			oneFunc.Documentation, common.IKFunction)
+	}
+
+	for _, oneValue := range oneModule.ModuleVarVec {
+		a.completeCache.InsertCompleteSysModuleMem(oneValue.Label, oneValue.Detail,
+			oneValue.Documentation, common.IKVariable)
+	}
+	return
+}
+
 // 其他前缀代码补全
 func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
 	lenStrVec := len(completeVar.StrVec)
@@ -581,6 +603,10 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 
 	// 1) 判断是否为系统模块函数提示
 	if lenStrVec == 1 && completeVar.LastEmptyFlag {
+		moduleFlag := a.systemMoudleComplete(strFind)
+		if moduleFlag {
+			return
+		}
 
 		// 2) 是否为协议前缀
 		if common.GConfig.IsStrProtocol(strFind) {
@@ -673,7 +699,25 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 		a.completeCache.InsertCompleteNormal(strOne, detail, "", common.IKFunction)
 	}
 
-	// 3.6 把globalNodefineMaps中符合的变量也加入进来
+	// 3.6） 系统的全局函数放入进来
+	for strName, oneSysFunc := range common.GConfig.SystemTipsMap {
+		if !common.IsCompleteNeedShow(strName, completeVar) || a.completeCache.ExistStr(strName) {
+			continue
+		}
+
+		a.completeCache.InsertCompleteSystemFunc(strName, oneSysFunc.Detail, oneSysFunc.Documentation)
+	}
+
+	// 3.7） 把系统的模块也加入进来
+	for strName, oneMudule := range common.GConfig.SystemModuleTipsMap {
+		if !common.IsCompleteNeedShow(strName, completeVar) || a.completeCache.ExistStr(strName) {
+			continue
+		}
+
+		a.completeCache.InsertCompleteSystemModule(strName, oneMudule.Detail, oneMudule.Documentation)
+	}
+
+	// 3.68 把globalNodefineMaps中符合的变量也加入进来
 	for strName := range comParam.fileResult.NodefineMaps {
 		if !common.IsCompleteNeedShow(strName, completeVar) || a.completeCache.ExistStr(strName) {
 			continue

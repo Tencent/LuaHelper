@@ -227,6 +227,21 @@ func (cache *CompleteCache) InsertCompleteSnippet(label string) {
 	cache.existMap[label] = len(cache.dataList) - 1
 }
 
+// InsertCompleteSysModuleMem 插入系统模块的成员
+func (cache *CompleteCache) InsertCompleteSysModuleMem(label, detail, documentation string, kind ItemKind) {
+	cache.InsertCompleteNormal(label, detail, documentation, kind)
+}
+
+// InsertCompleteSystemFunc 插入关键字的代码补全
+func (cache *CompleteCache) InsertCompleteSystemFunc(label, detail, documentation string) {
+	cache.InsertCompleteNormal(label, detail, documentation, IKFunction)
+}
+
+// InsertCompleteSystemModule 插入系统模块的补全
+func (cache *CompleteCache) InsertCompleteSystemModule(label, detail, documentation string) {
+	cache.InsertCompleteNormal(label, detail, documentation, IKField)
+}
+
 // InsertCompleteNormal 插入普通的
 func (cache *CompleteCache) InsertCompleteNormal(label, detail, documentation string, kind ItemKind) {
 	oneComplete := OneCompleteData{

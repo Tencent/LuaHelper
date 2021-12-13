@@ -187,7 +187,19 @@ func (a *AllProject) findStrReferSymbol(luaInFile string, strName string, loc le
 	loc.EndColumn = 0
 	referSymbol := a.findLocReferSymbol(fileResult, loc.StartLine-1, 0, luaInFile, strName,
 		loc, gFlag, comParam, findExpList)
-	return referSymbol
+	if referSymbol != nil {
+		return referSymbol
+	}
+
+	// 4) 判断是否为系统的函数，或是是全局变量模块
+	sysVar := common.GConfig.GetSysVar(strName)
+	if sysVar == nil {
+		return nil
+	}
+
+	// 系统的变量，没有注解系统
+	symbol = common.GetDefaultSymbol("", sysVar)
+	return symbol
 }
 
 // 判断是否为简单类型类别的子成员

@@ -278,6 +278,10 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 
 	// 4) 根据不同的轮数查找全局表中是否有该变量
 	if a.isSecondTerm() {
+		if _, ok := common.GConfig.LuaInMap[strName]; ok {
+			return
+		}
+
 		if strProPre != "" && common.GConfig.IsIgnoreProtocolPreVar() {
 			// 如果协议前缀的告警，忽略告警，不进行查找
 			return
@@ -341,6 +345,10 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 			secondFileResult.InsertError(common.CheckErrorNoDefine, errStr, loc)
 		}
 	} else if a.isThirdTerm() {
+		if _, ok := common.GConfig.LuaInMap[strName]; ok {
+			return
+		}
+		
 		if strProPre != "" && common.GConfig.IsIgnoreProtocolPreVar() {
 			// 如果协议前缀的告警，忽略告警，不进行查找
 			return
