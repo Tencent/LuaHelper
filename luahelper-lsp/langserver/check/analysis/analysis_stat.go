@@ -214,13 +214,8 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 						ErrStr:  errStr,
 						Loc:     common.GetExpLoc(node.Exps[i]),
 					})
-					relateVec = append(relateVec, common.RelateCheckInfo{
-						LuaFile: a.curResult.Name,
-						ErrStr:  errStr,
-						Loc:     common.GetExpLoc(node.Exps[j]),
-					})
 
-					a.curResult.InsertRelateError(common.CheckErrorDuplicateIf, errStr, common.GetExpLoc(node.Exps[i]), relateVec)
+					a.curResult.InsertRelateError(common.CheckErrorDuplicateIf, errStr, common.GetExpLoc(node.Exps[j]), relateVec)
 				}
 			}
 		}
