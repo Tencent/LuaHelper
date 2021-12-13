@@ -472,7 +472,6 @@ func (p *Parser) parseAssignOrFuncCallStat() ast.Stat {
 // varlist ‘=’ explist |
 func (p *Parser) parseAssignStat(preLoc lexer.Location, var0 ast.Exp) ast.Stat {
 	l := p.l
-	beginLoc := l.GetNowTokenLoc()
 	symList := p.finishVarList(var0) // varlist
 
 	aheadKind := l.LookAheadKind()
@@ -486,7 +485,7 @@ func (p *Parser) parseAssignStat(preLoc lexer.Location, var0 ast.Exp) ast.Stat {
 	l.NextTokenKind(lexer.TkOpAssign) // =
 	expList := p.parseExpList()       // explist
 	endLoc := l.GetNowTokenLoc()
-	loc := lexer.GetRangeLoc(&beginLoc, &endLoc)
+	loc := lexer.GetRangeLoc(&preLoc, &endLoc)
 
 	return &ast.AssignStat{
 		VarList: symList,
