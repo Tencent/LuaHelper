@@ -601,14 +601,8 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 
 	strFind := completeVar.StrVec[0]
 
-	// 1) 判断是否为系统模块函数提示
+	// 1) 是否为协议前缀 
 	if lenStrVec == 1 && completeVar.LastEmptyFlag {
-		moduleFlag := a.systemMoudleComplete(strFind)
-		if moduleFlag {
-			return
-		}
-
-		// 2) 是否为协议前缀
 		if common.GConfig.IsStrProtocol(strFind) {
 			// 为协议前缀，返回所有的返回
 			a.protocolCodeComplete(strFind, comParam.secondProject, comParam.thirdStruct)
@@ -631,6 +625,12 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 		strName := completeVar.StrVec[0]
 		findVar, ok := comParam.fileResult.NodefineMaps[strName]
 		if !ok {
+			return
+		}
+
+		// 判断是否为系统模块函数提示
+		moduleFlag := a.systemMoudleComplete(strFind)
+		if moduleFlag {
 			return
 		}
 
