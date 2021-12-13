@@ -63,13 +63,21 @@ type TableKeyStruct struct {
 	StrDetail string         // 提取到的类型值
 }
 
+// ExtraSystem 支持其他插件，额外的扩展信息。当变量为系统库的函数例如ipairs 还有一些模块的时候，指向这个数据
+type ExtraSystem struct {
+	SysNoticeInfo *SystemNoticeInfo // 如果是指向系统的函数，指针指向对应的
+	SysModuleInfo *OneModuleInfo    // 如果是执行系统的模块，指针指向对应的
+	SysModuleVar  *SystemModuleVar  // 如果是指向系统的变量
+}
+
 // ExtraGlobal 当变量指向的是全局变量时候，扩展信息
 type ExtraGlobal struct {
-	Prev      *VarInfo // 当用map管理的时候，指向的前一个全局信息，因为全局信息扫描时候，可能先扫描的不是最初的定义
-	StrProPre string   // 表示为协议的前缀 为c2s 或是s2s，项目中定制的
-	FuncLv    int      // 函数的层级，主函数层级为0，子函数+1
-	ScopeLv   int      // 所在的scop层数，相对于自己所处的func而言
-	GFlag     bool     // 是否为_G 类型的变量
+	Prev        *VarInfo     // 当用map管理的时候，指向的前一个全局信息，因为全局信息扫描时候，可能先扫描的不是最初的定义
+	ExtraSystem *ExtraSystem // 其他插件，额外的扩展信息。如果这个全局变量为系统的，或是模块的，指向额外的扩展信息
+	StrProPre   string       // 表示为协议的前缀 为c2s 或是s2s，项目中定制的
+	FuncLv      int          // 函数的层级，主函数层级为0，子函数+1
+	ScopeLv     int          // 所在的scop层数，相对于自己所处的func而言
+	GFlag       bool         // 是否为_G 类型的变量
 }
 
 // ForCycleInfo 变量如果是由for函数引起的，关联的for表达式信息
@@ -186,7 +194,7 @@ func CreateVarInfo(fileName string, varType LuaType, exp ast.Exp, loc lexer.Loca
 	}
 
 	locVar := &VarInfo{
-		FileName: fileName,
+		FileName:   fileName,
 		ReferExp:   exp,
 		ReferInfo:  nil,
 		ReferFunc:  nil,
@@ -213,7 +221,7 @@ func CreateOneVarInfo(fileName string, loc lexer.Location, referInfo *ReferInfo,
 	}
 
 	locVar := &VarInfo{
-		FileName: fileName,
+		FileName:   fileName,
 		ReferInfo:  referInfo,
 		ReferFunc:  referFunc,
 		SubMaps:    nil,
@@ -234,7 +242,7 @@ func CreateOneGlobal(fileName string, funcLv int, scopeLv int, loc lexer.Locatio
 	referInfo *ReferInfo, referFunc *FuncInfo, luaFileStr string) *VarInfo {
 
 	locVar := &VarInfo{
-		FileName: fileName,
+		FileName:   fileName,
 		ReferInfo:  referInfo,
 		ReferFunc:  referFunc,
 		SubMaps:    nil,
@@ -249,9 +257,9 @@ func CreateOneGlobal(fileName string, funcLv int, scopeLv int, loc lexer.Locatio
 
 	extraGlobal := &ExtraGlobal{
 		Prev:      nil,
-		StrProPre: "",         // 表示是否为协议的前缀 为c2s 或是s2s
-		FuncLv:    funcLv,     // 函数的层级，主函数层级为0，子函数+1
-		ScopeLv:   scopeLv,    // 所在的scop层数，相对于自己所处的func而言
+		StrProPre: "",      // 表示是否为协议的前缀 为c2s 或是s2s
+		FuncLv:    funcLv,  // 函数的层级，主函数层级为0，子函数+1
+		ScopeLv:   scopeLv, // 所在的scop层数，相对于自己所处的func而言
 		GFlag:     gFlag,
 	}
 

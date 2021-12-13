@@ -11,6 +11,27 @@ import (
 // GetLspHoverVarStr 提示信息hover
 func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineVarStruct) (lableStr, docStr, luaFileStr string) {
 	symbol, findList := a.FindVarDefine(strFile, varStruct)
+
+	if symbol == nil && len(varStruct.StrVec) == 1 {
+		// 1) 判断是否为系统的函数提示
+		if flag, str1, str2 := judgetSystemModuleOrFuncHover(varStruct.StrVec[0]); flag {
+			lableStr = str1
+			docStr = str2
+			docStr = strings.ReplaceAll(docStr, "\n", "  \n")
+			return
+		}
+	}
+
+	if symbol == nil && len(varStruct.StrVec) == 2 {
+		// 2) 判断是否为系统的模块函数提示
+		if flag, str1, str2 := judgetSystemModuleMemHover(varStruct.StrVec[0], varStruct.StrVec[1]); flag {
+			lableStr = str1
+			docStr = str2
+			docStr = strings.ReplaceAll(docStr, "\n", "  \n")
+			return
+		}
+	}
+
 	// 原生的变量没有找到, 直接返回
 	if symbol == nil || len(findList) == 0 {
 		lableStr = varStruct.Str + " : any"
@@ -174,7 +195,6 @@ func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName s
 	str = str + "}"
 	return str
 }
-
 
 func needReplaceMapStr(oldStr string) bool {
 	if strings.Contains(oldStr, ": number") && !strings.Contains(oldStr, ": number = ") {
@@ -400,4 +420,37 @@ func GetStrComment(strComment string) (str string) {
 	// str = str + "\n\r" + oneStr
 
 	return str
+}
+
+// 判断变量是否直接为系统模块或函数的hover
+func judgetSystemModuleOrFuncHover(strName string) (flag bool, labStr, docStr string) {
+	if oneSystemTip, ok := common.GConfig.SystemTipsMap[strName]; ok {
+		flag = true
+		labStr = oneSystemTip.Detail
+		docStr = oneSystemTip.Documentation
+		return
+	}
+
+	if oneMouleInfo, ok := common.GConfig.SystemModuleTipsMap[strName]; ok {
+		flag = true
+		labStr = oneMouleInfo.Detail
+		docStr = oneMouleInfo.Documentation
+		return
+	}
+
+	return
+}
+
+// 判断是否为系统的模块中的成员hover
+func judgetSystemModuleMemHover(strName string, strKey string) (flag bool, lableStr, docStr string) {
+	if oneMouleInfo, ok := common.GConfig.SystemModuleTipsMap[strName]; ok {
+		flag = true
+		if oneSystemTip, ok1 := oneMouleInfo.ModuleFuncMap[strKey]; ok1 {
+			lableStr = oneSystemTip.Detail
+			docStr = oneSystemTip.Documentation
+		}
+		return
+	}
+
+	return
 }
