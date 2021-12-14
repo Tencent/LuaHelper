@@ -7,6 +7,7 @@ import (
 	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/check/results"
 	"luahelper-lsp/langserver/log"
+	"strings"
 	"time"
 )
 
@@ -1600,4 +1601,51 @@ func (a *AllProject) getAnnotateStrTypeInfo(strName string, fileName string, las
 func (a *AllProject) judgeExistAnnoteTypeStr(strName string) bool {
 	_, ok := a.createTypeMap[strName]
 	return ok
+}
+
+// 判断是否alias多个候选词
+// ---@alias exitcode2 '"exit"' | '"signal"'
+func (a *AllProject) getAliasMultiCandidate(className string, fileName string, line int) (str string) {
+	creatType := a.getAnnotateStrTypeInfo(className, fileName, line)
+	if creatType == nil || creatType.AliasInfo == nil {
+		return
+	}
+
+	aliasState := creatType.AliasInfo.AliasState
+	if aliasState == nil {
+		return
+	}
+
+	multiType, ok := aliasState.AliasType.(*annotateast.MultiType)
+	if !ok {
+		return
+	}
+
+	var multiArr []string
+	for _, one := range multiType.TypeList {
+		constType, ok := one.(*annotateast.ConstType)
+		if !ok {
+			continue
+		}
+
+		oneStr := "    | "
+		if constType.QuotesFlag {
+			oneStr = oneStr + "\"" + constType.Name + "\""
+		} else {
+			oneStr = oneStr + constType.Name
+		}
+
+		if constType.Comment != "" {
+			oneStr = oneStr + " -- " + constType.Comment
+		}
+
+		multiArr = append(multiArr, oneStr)
+	}
+
+	if len(multiArr) == 0 {
+		return
+	}
+
+	str = "\n" + strings.Join(multiArr, "\n")
+	return
 }
