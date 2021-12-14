@@ -30,7 +30,7 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 	dirManager := common.GConfig.GetDirManager()
 
 	for _, oneSymbol := range findList {
-		strType, strLabel1, strDoc1, strPre, flag := a.getVarHoverInfo(oneSymbol, varStruct)
+		strType, strLabel1, strDoc1, strPre, flag := a.getVarHoverInfo(strFile, oneSymbol, varStruct)
 		if !preFirstFlag {
 			strPreFirst = strPre
 			preFirstFlag = true
@@ -175,7 +175,6 @@ func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName s
 	return str
 }
 
-
 func needReplaceMapStr(oldStr string) bool {
 	if strings.Contains(oldStr, ": number") && !strings.Contains(oldStr, ": number = ") {
 		return true
@@ -204,6 +203,7 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 		classList := a.getAllNormalAnnotateClass(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
 		if len(classList) == 0 || strType == "number" || strType == "any" || strType == "string" {
 			// 没有找到相应的class成员，直接返回
+			strType = strType + a.getSymbolAliasMultiCandidate(symbol)
 			return strType, existMap
 		}
 
@@ -239,7 +239,36 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 	})
 
 	str = str + "}"
+
+	if symbol.AnnotateType != nil {
+		str = str + a.getSymbolAliasMultiCandidate(symbol)
+	}
 	return str, existMap
+}
+
+func (a *AllProject) getSymbolAliasMultiCandidate(symbol *common.Symbol) (str string) {
+	if symbol.AnnotateType == nil {
+		return
+	}
+
+	multiType, ok := symbol.AnnotateType.(*annotateast.MultiType)
+	if !ok {
+		return
+	}
+
+	for _, oneType := range multiType.TypeList {
+		simpleType, ok := oneType.(*annotateast.NormalType)
+		if !ok {
+			continue
+		}
+
+		str = a.getAliasMultiCandidate(simpleType.StrName, symbol.FileName, symbol.GetLine())
+		if str != "" {
+			return str
+		}
+	}
+
+	return str
 }
 
 func (a *AllProject) mergeTwoExistMap(symbol *common.Symbol, fristStr string, fristMap map[string]string,
@@ -275,12 +304,15 @@ func (a *AllProject) mergeTwoExistMap(symbol *common.Symbol, fristStr string, fr
 	return mergeStr
 }
 
-func (a *AllProject) getVarHoverInfo(symbol *common.Symbol, varStruct *common.DefineVarStruct) (strType string,
+func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varStruct *common.DefineVarStruct) (strType string,
 	strLabel, strDoc, strPre string, findFlag bool) {
 	// 1) 首先提取注解类型
 	if symbol.AnnotateType != nil {
 		// 注解类型尝试推导扩展class的field成员信息
 		str, _ := a.expandTableHover(symbol)
+		//strCandidate := a.getAliasMultiCandidate(varStruct.Str, strFile, 1)
+		//str = str + strCandidate
+
 		strLabel = varStruct.Str + " : " + str
 
 		if symbol.VarInfo != nil {
