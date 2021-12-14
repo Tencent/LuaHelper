@@ -15,6 +15,11 @@ type ParseError struct {
 	ReadFileErr bool     // 读取文件是否失败
 }
 
+// TooManyErr 当Parse太多语法错误的时候，终止
+type TooManyErr struct {
+	ErrNum int //  错误的数量
+}
+
 // CommentLine 当行的注释信息
 type CommentLine struct {
 	Str  string // 当行的注释内容
