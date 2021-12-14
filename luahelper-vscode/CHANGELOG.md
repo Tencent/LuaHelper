@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.2.10 (Dec 14, 2021)
++ 优化了多文件扩展全局table(感谢：ggshily的合入)
++ 增强了对原表的支持([issues:61](https://github.com/Tencent/LuaHelper/issues/61))
++ 优化了对function的snippet提示
++ 新增了几类告警
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+  
 ## 0.2.9 (Dec 3, 2021)
 + 修复require中的路径跳转功能失效的bug
 + [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
