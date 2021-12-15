@@ -120,21 +120,7 @@ func (a *AllProject) convertClassInfoToHovers(oneClass *common.OneClassInfo, exi
 		existMap[strName] = strName + ": " + strFiled + ","
 	}
 
-	if oneClass.RelateVar != nil {
-		for key, value := range oneClass.RelateVar.SubMaps {
-			if oldStr, ok := existMap[key]; ok {
-				if !needReplaceMapStr(oldStr) {
-					continue
-				}
-			}
-
-			strValueType := value.GetVarTypeDetail()
-			if value.ReferFunc != nil {
-				strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
-			}
-			existMap[key] = key + ": " + strValueType + ","
-		}
-	}
+	getVarInfoMapStr(oneClass.RelateVar, existMap)
 }
 
 func (a *AllProject) getClassFieldStr(classInfo *common.OneClassInfo) (str string) {
@@ -150,12 +136,26 @@ func (a *AllProject) getClassFieldStr(classInfo *common.OneClassInfo) (str strin
 	return str
 }
 
+func isDefaultType(str string) bool {
+	if str == "number" || str == "any" || str == "string" || str == "boolean" || str == "nil" || str == "thread" ||
+		str == "userdata" || str == "lightuserdata" || str == "integer" || str == "void" {
+		return true
+	}
+
+	return false
+}
+
 // 代码补全时，有注解类型的字段提示
 func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName string, line int) (str string) {
 	str = annotateast.TypeConvertStr(astType)
+	if isDefaultType(str) {
+		return str
+	}
+
 	classList := a.getAllNormalAnnotateClass(astType, fileName, line)
-	if len(classList) == 0 || str == "number" || str == "any" || str == "string" || str == "boolean" {
+	if len(classList) == 0 {
 		// 没有找到相应的class成员，直接返回
+		str = str + a.getSymbolAliasMultiCandidate(astType, fileName, line)
 		return str
 	}
 
@@ -172,10 +172,15 @@ func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName s
 	})
 
 	str = str + "}"
+	str = str + a.getSymbolAliasMultiCandidate(astType, fileName, line)
 	return str
 }
 
-func needReplaceMapStr(oldStr string) bool {
+func needReplaceMapStr(oldStr string, strValueType string) bool {
+	if strValueType == "any" {
+		return false
+	}
+
 	if strings.Contains(oldStr, ": number") && !strings.Contains(oldStr, ": number = ") {
 		return true
 	}
@@ -191,6 +196,27 @@ func needReplaceMapStr(oldStr string) bool {
 	return false
 }
 
+func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
+	if varInfo == nil {
+		return
+	}
+
+	for key, value := range varInfo.SubMaps {
+		strValueType := value.GetVarTypeDetail()
+		if value.ReferFunc != nil {
+			strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
+		}
+		newStr := key + ": " + strValueType + ","
+		if oldStr, ok := existMap[key]; ok {
+			if needReplaceMapStr(oldStr, strValueType) {
+				existMap[key] = newStr
+			}
+		} else {
+			existMap[key] = newStr
+		}
+	}
+}
+
 // hover 的时候是指向一个table，展开这个table的内容
 func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existMap map[string]string) {
 	// 为已经存在的map，防止重复
@@ -199,11 +225,14 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 	// 1) 先判断是否有注解类型
 	if symbol.AnnotateType != nil {
 		strType := annotateast.TypeConvertStr(symbol.AnnotateType)
+		if isDefaultType(strType) {
+			return strType, existMap
+		}
 
 		classList := a.getAllNormalAnnotateClass(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
-		if len(classList) == 0 || strType == "number" || strType == "any" || strType == "string" {
+		if len(classList) == 0 {
 			// 没有找到相应的class成员，直接返回
-			strType = strType + a.getSymbolAliasMultiCandidate(symbol)
+			strType = strType + a.getSymbolAliasMultiCandidate(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
 			return strType, existMap
 		}
 
@@ -218,22 +247,7 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 		}
 	}
 
-	if symbol.VarInfo != nil {
-		for key, value := range symbol.VarInfo.SubMaps {
-			if oldStr, ok := existMap[key]; ok {
-				if !needReplaceMapStr(oldStr) {
-					continue
-				}
-			}
-
-			strValueType := value.GetVarTypeDetail()
-			if value.ReferFunc != nil {
-				strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
-			}
-			existMap[key] = key + ": " + strValueType + ","
-		}
-	}
-
+	getVarInfoMapStr(symbol.VarInfo, existMap)
 	traverseMapInStringOrder(existMap, func(key string, value string) {
 		str = str + "\t" + value + "\n"
 	})
@@ -241,17 +255,17 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 	str = str + "}"
 
 	if symbol.AnnotateType != nil {
-		str = str + a.getSymbolAliasMultiCandidate(symbol)
+		str = str + a.getSymbolAliasMultiCandidate(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
 	}
 	return str, existMap
 }
 
-func (a *AllProject) getSymbolAliasMultiCandidate(symbol *common.Symbol) (str string) {
-	if symbol.AnnotateType == nil {
+func (a *AllProject) getSymbolAliasMultiCandidate(annotateType annotateast.Type, fileName string, line int) (str string) {
+	if annotateType == nil {
 		return
 	}
 
-	multiType, ok := symbol.AnnotateType.(*annotateast.MultiType)
+	multiType, ok := annotateType.(*annotateast.MultiType)
 	if !ok {
 		return
 	}
@@ -262,7 +276,7 @@ func (a *AllProject) getSymbolAliasMultiCandidate(symbol *common.Symbol) (str st
 			continue
 		}
 
-		str = a.getAliasMultiCandidate(simpleType.StrName, symbol.FileName, symbol.GetLine())
+		str = a.getAliasMultiCandidate(simpleType.StrName, fileName, line)
 		if str != "" {
 			return str
 		}
@@ -310,9 +324,6 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 	if symbol.AnnotateType != nil {
 		// 注解类型尝试推导扩展class的field成员信息
 		str, _ := a.expandTableHover(symbol)
-		//strCandidate := a.getAliasMultiCandidate(varStruct.Str, strFile, 1)
-		//str = str + strCandidate
-
 		strLabel = varStruct.Str + " : " + str
 
 		if symbol.VarInfo != nil {
@@ -352,10 +363,11 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 				strPre = "local "
 			}
 
+			strFunc := referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
 			if symbol.VarInfo.ExtraGlobal != nil && symbol.VarInfo.ExtraGlobal.GFlag {
-				strType = "function _G." + referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
+				strType = "function _G." + strFunc
 			} else {
-				strType = "function " + referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
+				strType = "function " + strFunc
 			}
 		}
 	}
@@ -428,8 +440,6 @@ func GetStrComment(strComment string) (str string) {
 			}
 		}
 	}
-
-	// str = str + "\n\r" + oneStr
 
 	return str
 }

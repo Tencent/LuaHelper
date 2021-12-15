@@ -754,7 +754,107 @@ func (a *AllProject) getCommFunc(strFile string, line, ch int) (comParam *Common
 	return comParam
 }
 
+func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.OneCompleteData) (luaFileStr string) {
+	// 是否为特殊的冒号补全
+	colonFlag := a.completeCache.GetColonFlag()
+	dirManager := common.GConfig.GetDirManager()
 
+	// 判断这个变量是否关联到了注解类型，如果有提取注解信息
+	symbol := common.GetDefaultSymbol(item.LuaFile, varInfo)
+	astType, strComment, strPreComment := a.getInfoFileAnnotateType(item.Label, symbol)
+	if astType != nil {
+		str := a.completeAnnotatTypeStr(astType, item.LuaFile, symbol.GetLine())
+		if strPreComment != "" {
+			if strPreComment == "type" {
+				item.Detail = item.Label + " : " + str
+			} else {
+				item.Detail = strPreComment + "  " + str
+			}
+		} else {
+			item.Detail = str
+		}
+
+		// 判断是否关联成number，如果是number类型尝试获取具体的值
+		strType := varInfo.GetVarTypeDetail()
+		if strings.HasPrefix(strType, "number: ") {
+			item.Detail = item.Detail + ": " + strings.TrimPrefix(strType, "number: ")
+		}
+
+		if strComment != "" {
+			item.Documentation = strComment
+		}
+
+		luaFileStr = dirManager.RemovePathDirPre(item.LuaFile)
+		return
+	}
+
+	item.Detail = varInfo.GetVarTypeDetail()
+	expandFlag := false
+	var firstExistMap map[string]string = map[string]string{}
+	if item.Detail == "table" || len(varInfo.SubMaps) > 0 {
+		item.Detail, firstExistMap = a.expandTableHover(symbol)
+		expandFlag = true
+	}
+
+	if item.Detail == "any" || expandFlag {
+		comParam := a.getCommFunc(item.LuaFile, varInfo.Loc.StartLine, varInfo.Loc.StartColumn)
+		if comParam == nil {
+			return
+		}
+
+		// 进行追踪出具体的信息
+		findExpList := []common.FindExpFile{}
+		// 这里也需要做判断，函数返回的变量逐层跟踪，目前只跟踪了一层
+		symList := a.FindDeepSymbolList(item.LuaFile, item.VarInfo.ReferExp, comParam, &findExpList, true, 1)
+		for _, symbolTmp := range symList {
+			// 判断是否为注解类型
+			if symbolTmp.AnnotateType != nil {
+				secondStr, sendExistMap := a.expandTableHover(symbolTmp)
+				item.Detail = item.Label + " : " + a.mergeTwoExistMap(symbol, item.Detail, firstExistMap, secondStr, sendExistMap)
+				break
+			}
+
+			if symbolTmp.VarInfo != nil {
+				strDetail := symbolTmp.VarInfo.GetVarTypeDetail()
+				if strDetail == "table" || len(symbolTmp.VarInfo.SubMaps) > 0 {
+					secondStr, sendExistMap := a.expandTableHover(symbolTmp)
+					strDetail = a.mergeTwoExistMap(symbol, item.Detail, firstExistMap, secondStr, sendExistMap)
+				}
+
+				if strDetail != "any" {
+					item.Detail = strDetail
+				}
+
+				if symbolTmp.VarInfo.ReferFunc != nil {
+					item.Detail = "function " + symbolTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
+				}
+
+				// 如果为引用的模块
+				if symbolTmp.VarInfo.ReferInfo != nil {
+					item.Detail = symbolTmp.VarInfo.ReferInfo.GetReferComment()
+				}
+			}
+		}
+	}
+
+	if varInfo.ReferFunc != nil {
+		item.Detail = "function " + varInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
+	}
+
+	// 如果为引用的模块
+	if varInfo.ReferInfo != nil {
+		item.Detail = varInfo.ReferInfo.GetReferComment()
+	}
+
+	line := varInfo.Loc.EndLine
+
+	// 获取变量的注释
+	strComment = a.GetLineComment(item.LuaFile, line)
+	strComment = GetStrComment(strComment)
+	item.Documentation = strComment
+	luaFileStr = dirManager.RemovePathDirPre(item.LuaFile)
+	return luaFileStr
+}
 
 // GetCompleteCacheIndexItem 获取单个缓存的结构
 func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneCompleteData, luaFileStr string, flag bool) {
@@ -775,103 +875,7 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 
 	// 2) 配置的为变量
 	if item.CacheKind == common.CKindVar {
-		varInfo := item.VarInfo
-
-		// 判断这个变量是否关联到了注解类型，如果有提取注解信息
-		symbol := common.GetDefaultSymbol(item.LuaFile, varInfo)
-		astType, strComment, strPreComment := a.getInfoFileAnnotateType(item.Label, symbol)
-		if astType != nil {
-			//str := annotateast.TypeConvertStr(astType)
-			str := a.completeAnnotatTypeStr(astType, item.LuaFile, symbol.GetLine())
-			if strPreComment != "" {
-				if strPreComment == "type" {
-					item.Detail = item.Label + " : " + str
-				} else {
-					item.Detail = strPreComment + "  " + str
-				}
-			} else {
-				item.Detail = str
-			}
-
-			// 判断是否关联成number，如果是number类型尝试获取具体的值
-			strType := varInfo.GetVarTypeDetail()
-			if strings.HasPrefix(strType, "number: ") {
-				item.Detail = item.Detail + ": " + strings.TrimPrefix(strType, "number: ")
-			}
-
-			if strComment != "" {
-				item.Documentation = strComment
-			}
-
-			luaFileStr = dirManager.RemovePathDirPre(item.LuaFile)
-			return
-		}
-
-		item.Detail = varInfo.GetVarTypeDetail()
-		expandFlag := false
-		var firstExistMap map[string]string = map[string]string{}
-		if item.Detail == "table" || len(varInfo.SubMaps) > 0 {
-			item.Detail, firstExistMap = a.expandTableHover(symbol)
-			expandFlag = true
-		}
-
-		if item.Detail == "any" || expandFlag {
-			comParam := a.getCommFunc(item.LuaFile, varInfo.Loc.StartLine, varInfo.Loc.StartColumn)
-			if comParam == nil {
-				return
-			}
-
-			// 进行追踪出具体的信息
-			findExpList := []common.FindExpFile{}
-			// 这里也需要做判断，函数返回的变量逐层跟踪，目前只跟踪了一层
-			symList := a.FindDeepSymbolList(item.LuaFile, item.VarInfo.ReferExp, comParam, &findExpList, true, 1)
-			for _, symbolTmp := range symList {
-				// 判断是否为注解类型
-				if symbolTmp.AnnotateType != nil {
-					secondStr, sendExistMap := a.expandTableHover(symbolTmp)
-					item.Detail = item.Label + " : " + a.mergeTwoExistMap(symbol, item.Detail, firstExistMap, secondStr, sendExistMap)
-					break
-				} else if symbolTmp.VarInfo != nil {
-					strDetail := symbolTmp.VarInfo.GetVarTypeDetail()
-					if strDetail == "table" || len(symbolTmp.VarInfo.SubMaps) > 0 {
-						secondStr, sendExistMap := a.expandTableHover(symbolTmp)
-						//strDetail = a.expandTableHover(symbolTmp)
-						strDetail = a.mergeTwoExistMap(symbol, item.Detail, firstExistMap, secondStr, sendExistMap)
-					}
-
-					if strDetail != "any" {
-						item.Detail = strDetail
-					}
-
-					if symbolTmp.VarInfo.ReferFunc != nil {
-						item.Detail = "function " + symbolTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
-					}
-
-					// 如果为引用的模块
-					if symbolTmp.VarInfo.ReferInfo != nil {
-						item.Detail = symbolTmp.VarInfo.ReferInfo.GetReferComment()
-					}
-				}
-			}
-		}
-
-		if varInfo.ReferFunc != nil {
-			item.Detail = "function " + varInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
-		}
-
-		// 如果为引用的模块
-		if varInfo.ReferInfo != nil {
-			item.Detail = varInfo.ReferInfo.GetReferComment()
-		}
-
-		line := varInfo.Loc.EndLine
-
-		// 获取变量的注释
-		strComment = a.GetLineComment(item.LuaFile, line)
-		strComment = GetStrComment(strComment)
-		item.Documentation = strComment
-		luaFileStr = dirManager.RemovePathDirPre(item.LuaFile)
-
+		luaFileStr = a.getVarCompleteData(item.VarInfo, &item)
 		return
 	}
 

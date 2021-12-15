@@ -329,6 +329,7 @@ func GetStateLocInfo(oneState AnnotateState, col int) (typeStr string, noticeStr
 		if colInLocation(state.NameLoc, col) {
 			typeStr = ""
 			noticeStr = "alias name"
+			commentStr = state.Comment
 			return
 		}
 

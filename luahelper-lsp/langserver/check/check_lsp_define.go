@@ -487,12 +487,17 @@ func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, c
 
 	// 2) 遍历位置信息
 	typeStr, noticeStr, commentStr := annotateast.GetStateLocInfo(annotateState, col)
+	
 	if typeStr == "" && noticeStr == "alias name" {
 		// 判断是否alias多个候选词
 		// ---@alias exitcode2 '"exit"' | '"signal"'
 		strCandidate := a.getAliasMultiCandidate(strWord, strFile, line)
 		noticeStr = noticeStr + strCandidate
+		strLabel = strWord + " : " + noticeStr
+		strHover = commentStr
+		return
 	}
+	
 	if typeStr == "" && noticeStr == "class name" {
 		typeStr = strWord
 	}
