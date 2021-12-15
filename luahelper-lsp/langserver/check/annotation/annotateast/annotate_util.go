@@ -31,12 +31,17 @@ func TypeConvertStr(astType Type) string {
 
 		// 有多种类型，是或者的关系, 当有多种可能的类型的，用 | 分割字符串
 		multiStr := ""
-		for index, oneType := range subAst.TypeList {
-			if index > 0 {
+		for _, oneType := range subAst.TypeList {
+			strOne := TypeConvertStr(oneType)
+			if strOne == "" {
+				continue
+			}
+
+			if multiStr != "" {
 				multiStr = multiStr + " | "
 			}
 
-			multiStr = multiStr + TypeConvertStr(oneType)
+			multiStr = multiStr + strOne
 		}
 
 		return multiStr

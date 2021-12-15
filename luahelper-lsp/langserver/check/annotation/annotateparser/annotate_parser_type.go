@@ -94,8 +94,9 @@ func parserOneType(l *annotatelexer.AnnotateLexer) annotateast.Type {
 			// 解析完了
 			break
 		}
+		l.NextTokenOfKind(annotatelexer.ATokenBor)
 
-		for {
+		/*for {
 			// 发现是 | 表示几种类型都可以，或者的关系
 			l.NextTokenOfKind(annotatelexer.ATokenBor)
 			normalType, ok := subType.(*annotateast.NormalType)
@@ -116,7 +117,7 @@ func parserOneType(l *annotatelexer.AnnotateLexer) annotateast.Type {
 			}
 
 			break
-		}
+		}*/
 
 		if strEnumFlag {
 			break

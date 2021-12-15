@@ -378,3 +378,27 @@ func TestAnnotateParserAlias4(t *testing.T) {
 		t.Fatalf("parser annotate type stats is not equal")
 	}
 }
+
+func TestAnnotateParserCandidate1(t *testing.T) {
+	commentInfo := &lexer.CommentInfo{
+		LineVec: []lexer.CommentLine{
+			{
+				Str:  "-@type string | '\"onfis\"'| '\"bbb\"'",
+				Line: 1,
+				Col:  0,
+			},
+			{
+				Str:  "-@type '\"onfis\"'| '\"bbb\"'",
+				Line: 2,
+				Col:  0,
+			},
+		},
+	}
+	fragent, errVec := ParseCommentFragment(commentInfo)
+	if len(errVec) != 0 {
+		t.Fatalf("parser annotate return fatal, errstr=%s", errVec[0].ShowStr)
+	}
+	if len(fragent.Stats) != 1 {
+		t.Fatalf("parser annotate type stats is not equal")
+	}
+}
