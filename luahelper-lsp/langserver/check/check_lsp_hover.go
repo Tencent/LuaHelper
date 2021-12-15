@@ -217,6 +217,16 @@ func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
 	}
 }
 
+func isAllClassDefault(classList []*common.OneClassInfo) bool {
+	for _, oneClass := range classList {
+		if oneClass.ClassState != nil && !isDefaultType(oneClass.ClassState.Name) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // hover 的时候是指向一个table，展开这个table的内容
 func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existMap map[string]string) {
 	// 为已经存在的map，防止重复
@@ -225,14 +235,28 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 	// 1) 先判断是否有注解类型
 	if symbol.AnnotateType != nil {
 		strType := annotateast.TypeConvertStr(symbol.AnnotateType)
-		if isDefaultType(strType) {
-			return strType, existMap
-		}
+		// if isDefaultType(strType) {
+		// 	return strType, existMap
+		// }
 
 		classList := a.getAllNormalAnnotateClass(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
-		if len(classList) == 0 {
+		if isAllClassDefault(classList) {
 			// 没有找到相应的class成员，直接返回
-			strType = strType + a.getSymbolAliasMultiCandidate(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
+			strCandidate := a.getSymbolAliasMultiCandidate(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
+			if strCandidate == "" {
+				return strType, existMap
+			}
+			if strType == "" {
+				strType = strCandidate
+				return strType, existMap
+			}
+
+			if strings.HasPrefix(strCandidate, "\n") {
+				strType = strType + strCandidate
+			} else {
+				strType = strType + " | " + strCandidate
+			}
+
 			return strType, existMap
 		}
 
@@ -271,12 +295,33 @@ func (a *AllProject) getSymbolAliasMultiCandidate(annotateType annotateast.Type,
 	}
 
 	for _, oneType := range multiType.TypeList {
+		// 判断是否在几个候选词中
+		if constType, ok := oneType.(*annotateast.ConstType); ok {
+			oneStr := ""
+			if constType.QuotesFlag {
+				oneStr = "\"" + constType.Name + "\""
+			} else {
+				oneStr = constType.Name
+			}
+
+			if str != "" {
+				str = str + " | " + oneStr
+			} else {
+				str = oneStr
+			}
+			continue
+		}
+
 		simpleType, ok := oneType.(*annotateast.NormalType)
 		if !ok {
 			continue
 		}
 
-		str = a.getAliasMultiCandidate(simpleType.StrName, fileName, line)
+		if isDefaultType(simpleType.StrName) {
+			continue
+		}
+
+		str = str + a.getAliasMultiCandidate(simpleType.StrName, fileName, line)
 		if str != "" {
 			return str
 		}

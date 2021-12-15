@@ -375,6 +375,7 @@ func (a *AllProject) getAllNormalAnnotateClass(astType annotateast.Type, fileNam
 
 	// 2) 因此判断某一个简单的字符串进行处理
 	strMap := map[string]bool{}
+	strMap["any"] = true
 	classList = a.getInLineAllNormalAnnotateClass(astType, fileName, lastLine, repeatTypeList, strMap)
 	return classList
 }
@@ -440,6 +441,10 @@ func (a *AllProject) getClassTypeInfoList(strName string, fileName string, lastL
 
 			// 所有父类型也处理下，再次递归获取
 			for _, strParent := range createBestType.ClassInfo.ClassState.ParentNameList {
+				if _, ok := strMap[strParent]; ok {
+					continue
+				}
+
 				if strName == strParent {
 					continue
 				}
@@ -482,6 +487,10 @@ func (a *AllProject) getClassTypeInfoList(strName string, fileName string, lastL
 
 			// 所有父类型也处理下，再次递归获取
 			for _, strParent := range classInfo.ClassState.ParentNameList {
+				if _, ok := strMap[strParent]; ok {
+					continue
+				}
+
 				if strName == strParent {
 					continue
 				}
