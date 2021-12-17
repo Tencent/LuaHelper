@@ -12,12 +12,26 @@ func (a *AllProject) SignaturehelpFunc(strFile string, varStruct *common.DefineV
 	sinatureInfo common.SignatureHelpInfo, paramInfo []common.SignatureHelpInfo) {
 	flag = false
 
-	// // 1) 判断是否为系统函数的参数提示
-	// strVecLen := len(varStruct.StrVec)
-
 	// 3) 判断是否为项目中定义的函数
 	oldSymbol, symList := a.FindVarDefine(strFile, varStruct)
 	if oldSymbol == nil || oldSymbol.VarInfo == nil || len(symList) == 0 {
+		// // 1) 判断是否为系统函数的参数提示
+		strVecLen := len(varStruct.StrVec)
+		if strVecLen == 1 {
+			flag, sinatureInfo, paramInfo = a.judgetSystemFuncSignature(varStruct.StrVec[0])
+			if flag {
+				return
+			}
+		}
+
+		// 2) 判断是否为系统的模块函数提示
+		if strVecLen == 2 {
+			flag, sinatureInfo, paramInfo = a.judgetSystemModuleFuncSigatrue(varStruct.StrVec[0], varStruct.StrVec[1])
+			if flag {
+				return
+			}
+		}
+
 		return
 	}
 
@@ -227,4 +241,49 @@ func getFuncParamShortDocument(strAllDocment string, strOneParam string) (strSho
 	}
 
 	return findShort
+}
+
+// 系统函数转换为对应的结构
+func (a *AllProject) systemFuncConver(oneSystemTips *common.SystemNoticeInfo) (sinatureInfo common.SignatureHelpInfo,
+	paramInfo []common.SignatureHelpInfo) {
+	sinatureInfo.Label = oneSystemTips.Detail
+	sinatureInfo.Documentation = oneSystemTips.Documentation
+
+	for _, oneParamInfo := range oneSystemTips.FuncParamVec {
+		oneSignatureParam := common.SignatureHelpInfo{
+			Label:         oneParamInfo.Label,
+			Documentation: oneParamInfo.Documentation,
+		}
+		paramInfo = append(paramInfo, oneSignatureParam)
+	}
+	return
+}
+
+// 判断是否为系统函数sigatrueHelp
+func (a *AllProject) judgetSystemFuncSignature(strName string) (flag bool,
+	sinatureInfo common.SignatureHelpInfo, paramInfo []common.SignatureHelpInfo) {
+	if oneSystemTips, ok := common.GConfig.SystemTipsMap[strName]; ok {
+		flag = true
+		sinatureInfo, paramInfo = a.systemFuncConver(&oneSystemTips)
+		return
+	}
+
+	return
+}
+
+// 判断是否为系统模块中的成员函数sigatrueHelp
+func (a *AllProject) judgetSystemModuleFuncSigatrue(strName string, strKey string) (flag bool,
+	sinatureInfo common.SignatureHelpInfo, paramInfo []common.SignatureHelpInfo) {
+	oneMouleInfo, ok := common.GConfig.SystemModuleTipsMap[strName]
+	if !ok {
+		return
+	}
+
+	oneSystemTips, ok1 := oneMouleInfo.ModuleFuncMap[strKey]
+	if ok1 {
+		flag = true
+		sinatureInfo, paramInfo = a.systemFuncConver(oneSystemTips)
+		return
+	}
+	return
 }
