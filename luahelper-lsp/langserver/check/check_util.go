@@ -272,6 +272,85 @@ func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, para
 	return paramDefaultNum
 }
 
+// 获取注解class decLoc定义位置 refLoc引用位置 只用传一个 优先用decLoc
+func (a *AllProject) GetAnnotateClass(strFile string, strName string, decLoc *lexer.Location, refLoc *lexer.Location, curScope *common.ScopeInfo) (isStrict bool, retMap map[string]bool) {
+	isStrict = true
+	retMap = map[string]bool{}
+	// 1) 获取文件对应的annotateFile
+	annotateFile := a.getAnnotateFile(strFile)
+	if annotateFile == nil {
+		log.Error("GetAnnotateClass annotateFile is nil, file=%s", strFile)
+		return isStrict, retMap
+	}
+
+	// 如果有传入定义位置 直接用 否则根据引用查找定义
+	decLine := 0
+	if decLoc != nil {
+		decLine = decLoc.StartLine - 1
+	} else {
+		findOk, locVarInfo := curScope.FindLocVar(strName, *refLoc)
+		if findOk {
+			decLine = locVarInfo.Loc.StartLine - 1
+			//这里嵌套过多 待重构
+
+			// 这里判断是否为函数参数的注解
+			// 函数参数的注解，会额外的用下面的注解类型
+			// ---@param one class
+			// todo 这里如果为函数参数的，函数的注释一定要在前面一行，如果函数的参数占用两行，整个会有问题
+			if locVarInfo != nil && (locVarInfo.IsParam || locVarInfo.IsForParam) {
+
+				fragmentInfo := annotateFile.GetLineFragementInfo(decLine)
+
+				if fragmentInfo != nil &&
+					fragmentInfo.ParamInfo != nil &&
+					len(fragmentInfo.ParamInfo.ParamList) > 0 {
+
+					for i := 0; i < len(fragmentInfo.ParamInfo.ParamList); i++ {
+						paramLine := fragmentInfo.ParamInfo.ParamList[i]
+
+						//找到对应的那行---@param one class 再获取class
+						if paramLine.Name == strName {
+							classInfoList := a.getAllNormalAnnotateClass(paramLine.ParamType, strFile, decLine)
+
+							//有多个class的情况？ 那么可能是注解不规范，只取第一个
+							if len(classInfoList) > 0 {
+								fieldMap := classInfoList[0].FieldMap
+								for k, _ := range fieldMap {
+									retMap[k] = true
+								}
+							}
+
+							return isStrict, retMap
+						}
+					}
+				}
+
+				return isStrict, retMap
+			}
+		}
+	}
+
+	fragmentInfo := annotateFile.GetLineFragementInfo(decLine)
+
+	if fragmentInfo != nil &&
+		fragmentInfo.TypeInfo != nil &&
+		len(fragmentInfo.TypeInfo.TypeList) > 0 &&
+		fragmentInfo.TypeInfo.TypeList[0] != nil {
+
+		//有多个TypeList的情况？有多个class的情况？ 那么可能是注解不规范，只取第一个
+		classInfoList := a.getAllNormalAnnotateClass(fragmentInfo.TypeInfo.TypeList[0], strFile, decLine)
+
+		if len(classInfoList) > 0 {
+			fieldMap := classInfoList[0].FieldMap
+			for k, _ := range fieldMap {
+				retMap[k] = true
+			}
+		}
+	}
+
+	return isStrict, retMap
+}
+
 // GetFirstFileStuct 获取第一阶段文件处理的结果
 func (a *AllProject) GetFirstFileStuct(strFile string) (*results.FileStruct, bool) {
 	if a.checkTerm == results.CheckTermFirst {

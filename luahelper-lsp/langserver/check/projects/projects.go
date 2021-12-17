@@ -2,6 +2,7 @@ package projects
 
 import (
 	"luahelper-lsp/langserver/check/common"
+	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/check/results"
 )
 
@@ -26,4 +27,6 @@ type Projects interface {
 
 	// GetFuncDefaultParamInfo 在函数注解中获取默认参数标记
 	GetFuncDefaultParamInfo(fileName string, lastLine int, paramNameList []string) (paramDefaultNum int)
+
+	GetAnnotateClass(strFile string, strName string, decLoc *lexer.Location, refLoc *lexer.Location, curScope *common.ScopeInfo) (isStrict bool, retMap map[string]bool)
 }

@@ -391,4 +391,5 @@ func (a *Analysis) cgTableAccessExp(node *ast.TableAccessExp, binParentExp *ast.
 	// 例如 one = import("one.lua")
 	//      one.test_one() 是否有定义
 	a.findTableDefine(node)
+	a.checkTableAccess(node)
 }
