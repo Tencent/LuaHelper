@@ -69,6 +69,9 @@ const (
 	// CheckErrorFloatEq 浮点数做等于或不等于判断
 	CheckErrorFloatEq = 21
 
+	// CheckErrorClassField 错误的成员变量
+	CheckErrorClassField = 22
+
 	// CheckErrorMax
-	CheckErrorMax = 22
+	CheckErrorMax = 23
 )

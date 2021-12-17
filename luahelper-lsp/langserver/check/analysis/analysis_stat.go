@@ -556,6 +556,21 @@ func (a *Analysis) cgLocalVarDeclStat(node *ast.LocalVarDeclStat) {
 			locVar.IsExpEmpty = true
 		}
 	}
+
+	//
+	//这里检查table成员合法性 多个vars时注解可能不准？
+	if nNames == 1 && nNames == nExps {
+		if taExp, ok := node.ExpList[0].(*ast.TableConstructorExp); ok {
+			strTableName := node.NameList[0]
+			for _, key := range taExp.KeyExps {
+
+				strKey := common.GetExpName(key)
+
+				//检测 local t={f1=1,f1=2,}
+				a.CheckClassField(strTableName, strKey, node.Loc)
+			}
+		}
+	}
 }
 
 // 解析赋值表达式，左侧的变量，判断是否要定义变量
@@ -1092,6 +1107,7 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 					fileResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
 				}
 			}
+
 		}
 	}
 
@@ -1102,4 +1118,5 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 			a.cgExp(expNode, nil, nil)
 		}
 	}
+
 }

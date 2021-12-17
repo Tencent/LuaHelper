@@ -3,6 +3,8 @@ package analysis
 import (
 	"fmt"
 	"luahelper-lsp/langserver/check/common"
+	"luahelper-lsp/langserver/check/compiler/ast"
+	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/check/projects"
 	"luahelper-lsp/langserver/check/results"
 	"luahelper-lsp/langserver/log"
@@ -423,4 +425,79 @@ func (a *Analysis) HandleTermTraverseAST(checkTerm results.CheckTerm, firstFile 
 
 func (a *Analysis) SetRealTimeFlag(flag bool) {
 	a.realTimeFlag = flag
+}
+
+// 根据注解判断table成员合法性 在local t={f1=1,f1=2,} 时使用，全局符号todo
+func (a *Analysis) CheckClassField(strTableName string, strFieldName string, nodeLoc lexer.Location) {
+	// 下面的判断只在第3轮，且是非实时检查时才触发
+	if !a.isThirdTerm() || a.realTimeFlag {
+		return
+	}
+
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
+		return
+	}
+
+	if strTableName == "" || strFieldName == "" {
+		return
+	}
+
+	if !common.JudgeSimpleStr(strFieldName) {
+		return
+	}
+
+	isStrict, fieldMap := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, &nodeLoc, nil, a.curScope)
+	if !isStrict || len(fieldMap) == 0 {
+		return
+	}
+
+	if fieldMap[strFieldName] {
+		log.Debug("CheckClassField currect, tableName=%s, keyName=%s", strTableName, strFieldName)
+	} else {
+		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strFieldName, strTableName)
+		//a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, nodeLoc)
+		a.curResult.InsertError(common.CheckErrorClassField, errStr, nodeLoc)
+	}
+
+	return
+}
+
+// 根据注解判断table成员合法性 包括 t.a t可以是local符号 或者函数参数 ，全局符号todo
+func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
+	// 下面的判断只在第3轮，且是非实时检查时才触发
+	if !a.isThirdTerm() || a.realTimeFlag {
+		return
+	}
+
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
+		return
+	}
+
+	strTable := common.GetExpName(node.PrefixExp)
+	strTableName := common.GetSimpleValue(strTable)
+	if strTableName == "" {
+		return
+	}
+
+	strKey := common.GetExpName(node.KeyExp)
+	// 如果不是简单字符，退出
+	if !common.JudgeSimpleStr(strKey) || strKey == "" {
+		return
+	}
+
+	isStrict, fieldMap := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, nil, &node.Loc, a.curScope)
+	if !isStrict || len(fieldMap) == 0 {
+		return
+	}
+
+	if fieldMap[strKey] {
+		log.Debug("checkTableAccess currect, tableName=%s, keyName=%s", strTableName, strKey)
+	} else {
+		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strKey, strTableName)
+		//a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
+		a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
+	}
+
+	return
+
 }
