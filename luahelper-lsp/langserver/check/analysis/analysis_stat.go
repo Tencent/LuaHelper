@@ -567,7 +567,7 @@ func (a *Analysis) cgLocalVarDeclStat(node *ast.LocalVarDeclStat) {
 				strKey := common.GetExpName(key)
 
 				//检测 local t={f1=1,f1=2,}
-				a.CheckClassField(strTableName, strKey, node.Loc)
+				a.CheckTableDec(strTableName, strKey, node.Loc)
 			}
 		}
 	}

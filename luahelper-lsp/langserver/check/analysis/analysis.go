@@ -428,7 +428,7 @@ func (a *Analysis) SetRealTimeFlag(flag bool) {
 }
 
 // 根据注解判断table成员合法性 在local t={f1=1,f1=2,} 时使用，全局符号todo
-func (a *Analysis) CheckClassField(strTableName string, strFieldName string, nodeLoc lexer.Location) {
+func (a *Analysis) CheckTableDec(strTableName string, strFieldName string, nodeLoc lexer.Location) {
 	// 下面的判断只在第3轮，且是非实时检查时才触发
 	if !a.isThirdTerm() || a.realTimeFlag {
 		return
@@ -452,7 +452,7 @@ func (a *Analysis) CheckClassField(strTableName string, strFieldName string, nod
 	}
 
 	if fieldMap[strFieldName] {
-		log.Debug("CheckClassField currect, tableName=%s, keyName=%s", strTableName, strFieldName)
+		log.Debug("CheckTableDec currect, tableName=%s, keyName=%s", strTableName, strFieldName)
 	} else {
 		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strFieldName, strTableName)
 		//a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, nodeLoc)
