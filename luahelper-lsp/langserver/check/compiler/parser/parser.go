@@ -26,6 +26,15 @@ func CreateParser(chunk []byte, chunkName string) *Parser {
 
 // BeginAnalyze 开始分析
 func (p *Parser) BeginAnalyze() (block *ast.Block, commentMap map[int]*lexer.CommentInfo, errList []lexer.ParseError) {
+	defer func() {
+		if err1 := recover(); err1 != nil {
+			block = &ast.Block{}
+			commentMap = p.l.GetCommentMap()
+			errList = p.parseErrs
+			return
+		}
+	}()
+
 	p.l.SkipFirstLineComment()
 
 	blockBeginLoc := p.l.GetHeardTokenLoc()
@@ -70,5 +79,13 @@ func (p *Parser) insertParserErr(loc lexer.Location, f string, a ...interface{})
 func (p *Parser) insertErr(oneErr lexer.ParseError) {
 	if len(p.parseErrs) < 30 {
 		p.parseErrs = append(p.parseErrs, oneErr)
+	} else {
+		oneErr.ErrStr = oneErr.ErrStr + "(too many err...)"
+		p.parseErrs = append(p.parseErrs, oneErr)
+		manyError := &lexer.TooManyErr{
+			ErrNum: 30,
+		}
+
+		panic(manyError)
 	}
 }

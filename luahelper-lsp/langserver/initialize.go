@@ -165,10 +165,10 @@ func (l *LspServer) initialCheckProject(ctx context.Context, checkFlagList []boo
 	if isLocal {
 		// 为本地运行，没有插件前端，插件前端无法传递额外的Lua文件夹，忽略系统的模块和变量
 		common.GConfig.InsertIngoreSystemModule()
-
-		// 为本地运行，没有插件前端，插件前端无法传递额外的Lua文件夹，忽略系统的注解类型
-		common.GConfig.InsertIngoreSystemAnnotateType()
 	}
+
+	//  忽略系统的注解类型
+	common.GConfig.InsertIngoreSystemAnnotateType()
 
 	dirManager.InitMainDir()
 	for _, oneFloder := range workspaceFolder {
@@ -193,6 +193,7 @@ func (l *LspServer) initialCheckProject(ctx context.Context, checkFlagList []boo
 
 	clientExpPathList := dirManager.GetPathFileList(dirManager.GetClientExtLuaPath())
 	checkList = append(checkList, clientExpPathList...)
+	//var clientExpPathList []string
 
 	// 补全所有的入口文件
 	var entryFileList []string

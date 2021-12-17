@@ -138,6 +138,15 @@ type GlobalConfig struct {
 
 	// 所有的目录管理
 	dirManager *DirManager
+
+	// 当为emacs或vim时增加系统库的代码补全提示
+	SystemTipsMap map[string]SystemNoticeInfo
+
+	// 标准模块库模块的提升
+	SystemModuleTipsMap map[string]OneModuleInfo
+
+	// 存放所有标准库和模块的全局变量，map管理；系统的函数和模块转换成想要的VarInfo，统一起来
+	SysVarMap map[string]*VarInfo
 }
 
 // GConfig *GlobalConfig 全局配置对象初始化
@@ -478,6 +487,9 @@ func (g *GlobalConfig) IntialGlobalVar() {
 	// 设置系统忽略定义未使用的变量
 	g.setSysNotUseMap()
 
+	// 设置系统库的代码补全提示
+	g.InitSystemTips()
+
 	// 忽略系统的require 模块
 	g.IgnoreRequireSystemModule = map[string]bool{
 		"table":       true,
@@ -725,6 +737,7 @@ func (g *GlobalConfig) SetRequirePathSeparator(pathSeparator string) {
 	GConfig.PathSeparator = pathSeparator
 }
 
+// SetPreviewFieldsNum set preview fields num
 func (g *GlobalConfig) SetPreviewFieldsNum(num int) {
 	if num > 0 {
 		GConfig.PreviewFieldsNum = num
