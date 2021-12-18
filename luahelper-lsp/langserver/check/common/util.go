@@ -716,6 +716,47 @@ func GetTableExpKeyStrLoc(node ast.Exp, strSubKey string) (flag bool, loc lexer.
 	return false, loc
 }
 
+// 获取table定义时候，所有的字符串key值
+func GetTableConstructorExpKeyStrVec(node ast.TableConstructorExp) (tableKeyVec []TableKeyStruct) {
+	tableExp := (node)
+
+	valLen := len(tableExp.ValExps)
+	for i, keyExp := range tableExp.KeyExps {
+		if keyExp == nil {
+			continue
+		}
+
+		strDetail := ""
+		if valLen > i {
+			strDetail = GetExpTypeString(tableExp.ValExps[i])
+		}
+
+		switch keyStrValue := keyExp.(type) {
+		case *ast.StringExp:
+			tableKeyVec = append(tableKeyVec, TableKeyStruct{
+				StrKey:    keyStrValue.Str,
+				Loc:       keyStrValue.Loc,
+				StrDetail: strDetail,
+			})
+		}
+	}
+
+	return tableKeyVec
+}
+
+// 获取table定义时候，获取指定子key的位置信息
+// 为table的子key
+func GetTableConstructorExpKeyStrLoc(node ast.TableConstructorExp, strSubKey string) (flag bool, loc lexer.Location) {
+	tableVec := GetTableConstructorExpKeyStrVec(node)
+	for _, oneKey := range tableVec {
+		if oneKey.StrKey == strSubKey {
+			return true, oneKey.Loc
+		}
+	}
+
+	return false, loc
+}
+
 // GetExpSubKey 判断传人的字符串是否符合！开头的，或是!G开头的
 func GetExpSubKey(str string) string {
 	if strings.Contains(str, "#") {

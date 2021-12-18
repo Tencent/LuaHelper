@@ -16,7 +16,7 @@ const (
 	ATokenLt                             // <
 	ATokenGt                             // >
 	ATokenAt                             // @
-	ATokenOption						 // ?
+	ATokenOption                         // ?
 	ATokenString                         // 定义的其他字符串
 	ATokenKwFun                          // fun
 	ATokenKwTable                        // table
@@ -33,6 +33,7 @@ const (
 	ATokenKwPrivate                      // private
 	ATokenKwVararg                       // vararg
 	ATokenKwIdentifier                   // identifier
+	ATokenKwStrict                       // strict
 	ATokenKwOther                        // other token， not valid
 )
 
@@ -51,4 +52,5 @@ var keywords = map[string]ATokenType{
 	"protected": ATokenKwProtected,
 	"private":   ATokenKwPrivate,
 	"vararg":    ATokenKwVararg,
+	"strict":    ATokenKwStrict,
 }

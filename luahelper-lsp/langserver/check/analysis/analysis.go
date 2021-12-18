@@ -428,7 +428,7 @@ func (a *Analysis) SetRealTimeFlag(flag bool) {
 }
 
 // 根据注解判断table成员合法性 在local t={f1=1,f1=2,} 时使用，全局符号todo
-func (a *Analysis) CheckTableDec(strTableName string, strFieldName string, nodeLoc lexer.Location) {
+func (a *Analysis) CheckTableDec(strTableName string, strFieldNamelist []string, nodeLoc *lexer.Location, node *ast.TableConstructorExp) {
 	// 下面的判断只在第3轮，且是非实时检查时才触发
 	if !a.isThirdTerm() || a.realTimeFlag {
 		return
@@ -438,27 +438,32 @@ func (a *Analysis) CheckTableDec(strTableName string, strFieldName string, nodeL
 	// 	return
 	// }
 
-	if strTableName == "" || strFieldName == "" {
+	if strTableName == "" || len(strFieldNamelist) == 0 || nodeLoc == nil || node == nil {
 		return
 	}
 
-	if !common.JudgeSimpleStr(strFieldName) {
-		return
-	}
-
-	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, &nodeLoc, nil, a.curScope)
+	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, nodeLoc, nil, a.curScope)
 	if !isStrict || len(fieldMap) == 0 {
 		return
 	}
 
-	if fieldMap[strFieldName] {
-		log.Debug("CheckTableDec currect, tableName=%s, keyName=%s", strTableName, strFieldName)
-	} else {
-		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strFieldName, className)
-		a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, nodeLoc)
-		//a.curResult.InsertError(common.CheckErrorClassField, errStr, nodeLoc)
-	}
+	for _, strFieldName := range strFieldNamelist {
+		if !common.JudgeSimpleStr(strFieldName) {
+			continue
+		}
 
+		if fieldMap[strFieldName] {
+			log.Debug("CheckTableDec currect, tableName=%s, keyName=%s", strTableName, strFieldName)
+		} else {
+			ok, keyLoc := common.GetTableConstructorExpKeyStrLoc(*node, strFieldName)
+
+			if ok {
+				errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strFieldName, className)
+				a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, keyLoc)
+				//a.curResult.InsertError(common.CheckErrorClassField, errStr, nodeLoc)
+			}
+		}
+	}
 	return
 }
 

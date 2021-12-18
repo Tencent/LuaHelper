@@ -562,13 +562,15 @@ func (a *Analysis) cgLocalVarDeclStat(node *ast.LocalVarDeclStat) {
 	if nNames == 1 && nNames == nExps {
 		if taExp, ok := node.ExpList[0].(*ast.TableConstructorExp); ok {
 			strTableName := node.NameList[0]
+			strKeyList := []string{}
 			for _, key := range taExp.KeyExps {
 
 				strKey := common.GetExpName(key)
-
+				strKeyList = append(strKeyList, strKey)
 				//检测 local t={f1=1,f1=2,}
-				a.CheckTableDec(strTableName, strKey, node.Loc)
 			}
+
+			a.CheckTableDec(strTableName, strKeyList, &taExp.Loc, taExp)
 		}
 	}
 }

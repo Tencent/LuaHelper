@@ -278,7 +278,7 @@ func (a *AllProject) GetAnnotateClass(strFile string,
 	decLoc *lexer.Location,
 	refLoc *lexer.Location,
 	curScope *common.ScopeInfo) (isStrict bool, retMap map[string]bool, className string) {
-	isStrict = true
+	isStrict = false
 	retMap = map[string]bool{}
 	className = ""
 	// 1) 获取文件对应的annotateFile
@@ -319,8 +319,8 @@ func (a *AllProject) GetAnnotateClass(strFile string,
 
 							//有多个class的情况？ 那么可能是注解不规范，只取第一个
 							if len(classInfoList) > 0 {
-								fieldMap := classInfoList[0].FieldMap
-								for k, _ := range fieldMap {
+								isStrict = classInfoList[0].ClassState.IsStrict
+								for k, _ := range classInfoList[0].FieldMap {
 									retMap[k] = true
 								}
 								className = classInfoList[0].ClassState.Name
@@ -347,8 +347,8 @@ func (a *AllProject) GetAnnotateClass(strFile string,
 		classInfoList := a.getAllNormalAnnotateClass(fragmentInfo.TypeInfo.TypeList[0], strFile, decLine)
 
 		if len(classInfoList) > 0 {
-			fieldMap := classInfoList[0].FieldMap
-			for k, _ := range fieldMap {
+			isStrict = classInfoList[0].ClassState.IsStrict
+			for k, _ := range classInfoList[0].FieldMap {
 				retMap[k] = true
 			}
 			className = classInfoList[0].ClassState.Name
