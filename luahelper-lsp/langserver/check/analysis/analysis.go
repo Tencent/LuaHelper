@@ -434,9 +434,9 @@ func (a *Analysis) CheckTableDec(strTableName string, strFieldName string, nodeL
 		return
 	}
 
-	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
-		return
-	}
+	// if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
+	// 	return
+	// }
 
 	if strTableName == "" || strFieldName == "" {
 		return
@@ -446,7 +446,7 @@ func (a *Analysis) CheckTableDec(strTableName string, strFieldName string, nodeL
 		return
 	}
 
-	isStrict, fieldMap := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, &nodeLoc, nil, a.curScope)
+	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, &nodeLoc, nil, a.curScope)
 	if !isStrict || len(fieldMap) == 0 {
 		return
 	}
@@ -454,9 +454,9 @@ func (a *Analysis) CheckTableDec(strTableName string, strFieldName string, nodeL
 	if fieldMap[strFieldName] {
 		log.Debug("CheckTableDec currect, tableName=%s, keyName=%s", strTableName, strFieldName)
 	} else {
-		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strFieldName, strTableName)
-		//a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, nodeLoc)
-		a.curResult.InsertError(common.CheckErrorClassField, errStr, nodeLoc)
+		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strFieldName, className)
+		a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, nodeLoc)
+		//a.curResult.InsertError(common.CheckErrorClassField, errStr, nodeLoc)
 	}
 
 	return
@@ -469,9 +469,9 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
-		return
-	}
+	// if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
+	// 	return
+	// }
 
 	strTable := common.GetExpName(node.PrefixExp)
 	strTableName := common.GetSimpleValue(strTable)
@@ -485,7 +485,7 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	isStrict, fieldMap := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, nil, &node.Loc, a.curScope)
+	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, nil, &node.Loc, a.curScope)
 	if !isStrict || len(fieldMap) == 0 {
 		return
 	}
@@ -493,9 +493,9 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 	if fieldMap[strKey] {
 		log.Debug("checkTableAccess currect, tableName=%s, keyName=%s", strTableName, strKey)
 	} else {
-		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strKey, strTableName)
-		//a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
-		a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
+		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strKey, className)
+		a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
+		//a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
 	}
 
 	return

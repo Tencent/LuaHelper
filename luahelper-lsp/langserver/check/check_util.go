@@ -273,14 +273,19 @@ func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, para
 }
 
 // 获取注解class decLoc定义位置 refLoc引用位置 只用传一个 优先用decLoc
-func (a *AllProject) GetAnnotateClass(strFile string, strName string, decLoc *lexer.Location, refLoc *lexer.Location, curScope *common.ScopeInfo) (isStrict bool, retMap map[string]bool) {
+func (a *AllProject) GetAnnotateClass(strFile string,
+	strName string,
+	decLoc *lexer.Location,
+	refLoc *lexer.Location,
+	curScope *common.ScopeInfo) (isStrict bool, retMap map[string]bool, className string) {
 	isStrict = true
 	retMap = map[string]bool{}
+	className = ""
 	// 1) 获取文件对应的annotateFile
 	annotateFile := a.getAnnotateFile(strFile)
 	if annotateFile == nil {
 		log.Error("GetAnnotateClass annotateFile is nil, file=%s", strFile)
-		return isStrict, retMap
+		return isStrict, retMap, className
 	}
 
 	// 如果有传入定义位置 直接用 否则根据引用查找定义
@@ -318,14 +323,15 @@ func (a *AllProject) GetAnnotateClass(strFile string, strName string, decLoc *le
 								for k, _ := range fieldMap {
 									retMap[k] = true
 								}
+								className = classInfoList[0].ClassState.Name
 							}
 
-							return isStrict, retMap
+							return isStrict, retMap, className
 						}
 					}
 				}
 
-				return isStrict, retMap
+				return isStrict, retMap, className
 			}
 		}
 	}
@@ -345,10 +351,11 @@ func (a *AllProject) GetAnnotateClass(strFile string, strName string, decLoc *le
 			for k, _ := range fieldMap {
 				retMap[k] = true
 			}
+			className = classInfoList[0].ClassState.Name
 		}
 	}
 
-	return isStrict, retMap
+	return isStrict, retMap, className
 }
 
 // GetFirstFileStuct 获取第一阶段文件处理的结果
