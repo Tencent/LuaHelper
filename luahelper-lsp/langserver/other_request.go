@@ -265,6 +265,7 @@ func getWarnCheckList(warnParam *WarnParams) (checkFlagList []bool) {
 		warnParam.CheckDuplicateIf,
 		warnParam.CheckSelfAssign,
 		warnParam.CheckFloatEq,
+		warnParam.CheckClassField,
 	}
 
 	return checkFlagList
