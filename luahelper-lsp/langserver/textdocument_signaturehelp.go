@@ -2,6 +2,7 @@ package langserver
 
 import (
 	"context"
+	"fmt"
 
 	"luahelper-lsp/langserver/check"
 	"luahelper-lsp/langserver/codingconv"
@@ -32,20 +33,26 @@ func (l *LspServer) TextDocumentSignatureHelp(ctx context.Context, vs lsp.TextDo
 		return
 	}
 
+	str := codingconv.ConvertStrToUtf8(check.GetStrComment(sinature.Documentation))
 	info := lsp.SignatureInformation{
 		Label: codingconv.ConvertStrToUtf8(sinature.Label),
 		Documentation: lsp.MarkupContent{
 			Kind:  lsp.Markdown,
-			Value: codingconv.ConvertStrToUtf8(check.GetStrComment(sinature.Documentation)),
+			Value: str,
 		},
 	}
 
 	for _, oneParamInfo := range paramInfo {
+		str := codingconv.ConvertStrToUtf8(check.GetStrComment(oneParamInfo.Documentation))
+		if oneParamInfo.AnnotateFlag {
+			str = fmt.Sprintf("```%s\n%s\n```", "lua", codingconv.ConvertStrToUtf8(oneParamInfo.Documentation))
+		}
+
 		oneParam := lsp.ParameterInformation{
 			Label: codingconv.ConvertStrToUtf8(oneParamInfo.Label),
 			Documentation: lsp.MarkupContent{
 				Kind:  lsp.Markdown,
-				Value: codingconv.ConvertStrToUtf8(check.GetStrComment(oneParamInfo.Documentation)),
+				Value: str,
 			},
 		}
 		info.Parameters = append(info.Parameters, oneParam)

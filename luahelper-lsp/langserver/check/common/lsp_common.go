@@ -52,6 +52,7 @@ type CompletionItemStruct struct {
 type SignatureHelpInfo struct {
 	Label         string
 	Documentation string
+	AnnotateFlag  bool
 }
 
 // DefineVarStruct 查找变量定义的结构
