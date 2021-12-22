@@ -398,7 +398,7 @@ func TestAnnotateParserCandidate1(t *testing.T) {
 	if len(errVec) != 0 {
 		t.Fatalf("parser annotate return fatal, errstr=%s", errVec[0].ShowStr)
 	}
-	if len(fragent.Stats) != 1 {
+	if len(fragent.Stats) != 2 {
 		t.Fatalf("parser annotate type stats is not equal")
 	}
 }

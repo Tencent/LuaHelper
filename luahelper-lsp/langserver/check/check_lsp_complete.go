@@ -619,6 +619,17 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 
 // 没有前缀的代码补全
 func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
+	// 先判断是否为函数参数的候选词代码补全
+	if completeVar.ParamCandidateType != nil {
+		strMap := a.getSymbolAliasMultiCandidateMap(completeVar.ParamCandidateType, comParam.fi.FileName, comParam.loc.StartLine)
+		if len(strMap) > 0 {
+			for strKey, strComment := range strMap {
+				a.completeCache.InsertCompleteNormal(strKey, strComment, "", common.IKVariable)
+			}
+			return
+		}
+	}
+
 	// 3) 单纯的文件范围内代码补全
 	// 3.1) 先把文件的局部范围变量放进来
 	fileName := comParam.fileResult.Name

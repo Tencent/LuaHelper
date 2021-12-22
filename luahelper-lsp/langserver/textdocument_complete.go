@@ -108,6 +108,8 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 		project.GetCompleteCache().SetBeforeHashtag(beforeHasTag)
 	}
 
+	compVar.ParamCandidateType = l.getFuncParamCandidateType(ctx, vs.TextDocument.URI, vs.Position)
+
 	project.CodeComplete(strFile, compVar)
 	items := l.convertToCompItems(preStr)
 	log.Debug("TextDocumentComplete str=%s, veclen=%d", preCompStr, len(items))

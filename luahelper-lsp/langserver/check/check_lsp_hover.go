@@ -330,6 +330,47 @@ func (a *AllProject) getSymbolAliasMultiCandidate(annotateType annotateast.Type,
 	return str
 }
 
+func (a *AllProject) getSymbolAliasMultiCandidateMap(annotateType annotateast.Type, fileName string, line int) (strMap map[string]string) {
+	strMap = map[string]string{}
+
+	if annotateType == nil {
+		return
+	}
+
+	multiType, ok := annotateType.(*annotateast.MultiType)
+	if !ok {
+		return
+	}
+
+	for _, oneType := range multiType.TypeList {
+		// 判断是否在几个候选词中
+		if constType, ok := oneType.(*annotateast.ConstType); ok {
+			oneStr := ""
+			if constType.QuotesFlag {
+				oneStr = "\"" + constType.Name + "\""
+			} else {
+				oneStr = constType.Name
+			}
+
+			strMap[oneStr] = ""
+			continue
+		}
+
+		simpleType, ok := oneType.(*annotateast.NormalType)
+		if !ok {
+			continue
+		}
+
+		if isDefaultType(simpleType.StrName) {
+			continue
+		}
+
+		a.getAliasMultiCandidateMap(simpleType.StrName, fileName, line, strMap)
+	}
+
+	return strMap
+}
+
 func (a *AllProject) mergeTwoExistMap(symbol *common.Symbol, fristStr string, fristMap map[string]string,
 	secondStr string, secondMap map[string]string) (mergeStr string) {
 	if len(fristMap) == 0 {
