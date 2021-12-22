@@ -1658,3 +1658,38 @@ func (a *AllProject) getAliasMultiCandidate(className string, fileName string, l
 	str = "\n" + strings.Join(multiArr, "\n")
 	return
 }
+
+// 判断是否alias多个候选词
+// ---@alias exitcode2 '"exit"' | '"signal"'
+func (a *AllProject) getAliasMultiCandidateMap(className string, fileName string, line int, strMap map[string]string) {
+	creatType := a.getAnnotateStrTypeInfo(className, fileName, line)
+	if creatType == nil || creatType.AliasInfo == nil {
+		return
+	}
+
+	aliasState := creatType.AliasInfo.AliasState
+	if aliasState == nil {
+		return
+	}
+
+	multiType, ok := aliasState.AliasType.(*annotateast.MultiType)
+	if !ok {
+		return
+	}
+	for _, one := range multiType.TypeList {
+		constType, ok := one.(*annotateast.ConstType)
+		if !ok {
+			continue
+		}
+
+		oneStr := ""
+		if constType.QuotesFlag {
+			oneStr = oneStr + "\"" + constType.Name + "\""
+		} else {
+			oneStr = oneStr + constType.Name
+		}
+
+		strMap[oneStr] = constType.Comment
+	}
+	return
+}

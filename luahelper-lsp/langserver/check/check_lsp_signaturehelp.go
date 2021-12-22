@@ -51,7 +51,7 @@ func (a *AllProject) SignaturehelpFunc(strFile string, varStruct *common.DefineV
 		}
 
 		annotateFlag := false
-		paramShortStr := a.getAnnotateFuncParamDocument(strOneParam, annotateParamInfo, inLuaFile, lastLine-1)
+		paramShortStr, annType := a.getAnnotateFuncParamDocument(strOneParam, annotateParamInfo, inLuaFile, lastLine-1)
 		if paramShortStr != "" {
 			annotateFlag = true
 		} else {
@@ -69,6 +69,7 @@ func (a *AllProject) SignaturehelpFunc(strFile string, varStruct *common.DefineV
 			Label:         strOneParam,
 			Documentation: paramShortStr,
 			AnnotateFlag:  annotateFlag,
+			AnnType:       annType,
 		}
 
 		paramInfo = append(paramInfo, oneSignatureParam)
@@ -141,10 +142,10 @@ func (a *AllProject) getAnnotateFuncSignature(symbol *common.Symbol, colonFlag b
 
 // 获取函数参数的注解信息
 func (a *AllProject) getAnnotateFuncParamDocument(strOneParam string, paramInfo *common.FragementParamInfo,
-	fileName string, line int) (strShort string) {
+	fileName string, line int) (strShort string, annType annotateast.Type) {
 	// 先判断是否有注解信息
 	if paramInfo == nil {
-		return ""
+		return "", annType
 	}
 
 	for _, oneParam := range paramInfo.ParamList {
@@ -156,6 +157,7 @@ func (a *AllProject) getAnnotateFuncParamDocument(strOneParam string, paramInfo 
 		if strShort == "" {
 			strShort = annotateast.TypeConvertStr(oneParam.ParamType)
 		}
+		annType = oneParam.ParamType
 
 		if oneParam.Comment != "" {
 			strShort = strShort + " -- " + oneParam.Comment
@@ -164,7 +166,7 @@ func (a *AllProject) getAnnotateFuncParamDocument(strOneParam string, paramInfo 
 		break
 	}
 
-	return strShort
+	return strShort, annType
 }
 
 // 获取函数中每一个参数的简短提示
