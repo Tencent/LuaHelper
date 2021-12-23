@@ -272,15 +272,36 @@ func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, para
 	return paramDefaultNum
 }
 
-// 获取注解class decLoc定义位置 refLoc引用位置 只用传一个 优先用decLoc
-func (a *AllProject) GetAnnotateClass(strFile string,
-	strName string,
-	decLoc *lexer.Location,
-	refLoc *lexer.Location,
-	curScope *common.ScopeInfo) (isStrict bool, retMap map[string]bool, className string) {
+//
+func (a *AllProject) GetAnnotateClassAllFieldOfStrict(astType annotateast.Type, fileName string,
+	lastLine int) (isStrict bool, retMap map[string]bool, className string) {
+
 	isStrict = false
 	retMap = map[string]bool{}
 	className = ""
+
+	classInfoList := a.getAllNormalAnnotateClass(astType, fileName, lastLine)
+
+	//暂不处理多个class情况
+	if len(classInfoList) == 1 {
+		isStrict = classInfoList[0].ClassState.IsStrict
+		for k, _ := range classInfoList[0].FieldMap {
+			retMap[k] = true
+		}
+		className = classInfoList[0].ClassState.Name
+		return isStrict, retMap, className
+	}
+
+	return isStrict, retMap, className
+
+}
+
+// 获取注解class decLoc定义位置 refLoc引用位置 只用传一个 优先用decLoc
+func (a *AllProject) GetAnnotateClass(strFile string, strName string, varInfo *common.VarInfo, lineForGetAnnotate int, curScope *common.ScopeInfo) (isStrict bool, retMap map[string]bool, className string) {
+	isStrict = false
+	retMap = map[string]bool{}
+	className = ""
+
 	// 1) 获取文件对应的annotateFile
 	annotateFile := a.getAnnotateFile(strFile)
 	if annotateFile == nil {
@@ -288,73 +309,55 @@ func (a *AllProject) GetAnnotateClass(strFile string,
 		return isStrict, retMap, className
 	}
 
-	// 如果有传入定义位置 直接用 否则根据引用查找定义
-	decLine := 0
-	if decLoc != nil {
-		decLine = decLoc.StartLine - 1
-	} else {
-		findOk, locVarInfo := curScope.FindLocVar(strName, *refLoc)
-		if findOk {
-			decLine = locVarInfo.Loc.StartLine - 1
-			//这里嵌套过多 待重构
+	//没有符号 直接用lineForGetAnnotate
+	if varInfo == nil {
+		fragmentInfo := annotateFile.GetLineFragementInfo(lineForGetAnnotate)
 
-			// 这里判断是否为函数参数的注解
-			// 函数参数的注解，会额外的用下面的注解类型
-			// ---@param one class
-			// todo 这里如果为函数参数的，函数的注释一定要在前面一行，如果函数的参数占用两行，整个会有问题
-			if locVarInfo != nil && (locVarInfo.IsParam || locVarInfo.IsForParam) {
+		if fragmentInfo != nil &&
+			fragmentInfo.TypeInfo != nil &&
+			len(fragmentInfo.TypeInfo.TypeList) > 0 &&
+			fragmentInfo.TypeInfo.TypeList[0] != nil {
+			return a.GetAnnotateClassAllFieldOfStrict(fragmentInfo.TypeInfo.TypeList[0], strFile, lineForGetAnnotate)
+		}
 
-				fragmentInfo := annotateFile.GetLineFragementInfo(decLine)
+		return isStrict, retMap, className
+	}
 
-				if fragmentInfo != nil &&
-					fragmentInfo.ParamInfo != nil &&
-					len(fragmentInfo.ParamInfo.ParamList) > 0 {
+	decLine := varInfo.Loc.StartLine - 1
 
-					for i := 0; i < len(fragmentInfo.ParamInfo.ParamList); i++ {
-						paramLine := fragmentInfo.ParamInfo.ParamList[i]
+	// 这里判断是否为函数参数的注解
+	// 函数参数的注解，会额外的用下面的注解类型
+	// ---@param one class
+	// todo 这里如果为函数参数的，函数的注释一定要在前面一行，如果函数的参数占用两行，整个会有问题
+	if varInfo.IsParam || varInfo.IsForParam {
 
-						//找到对应的那行---@param one class 再获取class
-						if paramLine.Name == strName {
-							classInfoList := a.getAllNormalAnnotateClass(paramLine.ParamType, strFile, decLine)
+		fragmentInfo := annotateFile.GetLineFragementInfo(decLine)
 
-							//有多个class的情况？ 那么可能是注解不规范，只取第一个
-							if len(classInfoList) > 0 {
-								isStrict = classInfoList[0].ClassState.IsStrict
-								for k, _ := range classInfoList[0].FieldMap {
-									retMap[k] = true
-								}
-								className = classInfoList[0].ClassState.Name
-							}
+		if fragmentInfo != nil &&
+			fragmentInfo.ParamInfo != nil &&
+			len(fragmentInfo.ParamInfo.ParamList) > 0 {
 
-							return isStrict, retMap, className
-						}
-					}
+			for i := 0; i < len(fragmentInfo.ParamInfo.ParamList); i++ {
+				paramLine := fragmentInfo.ParamInfo.ParamList[i]
+
+				//找到对应的那行---@param one class 再获取class
+				if paramLine.Name == strName {
+					return a.GetAnnotateClassAllFieldOfStrict(paramLine.ParamType, strFile, decLine)
 				}
-
-				return isStrict, retMap, className
 			}
+		}
+	} else {
+		fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
+
+		if fragmentInfo != nil &&
+			fragmentInfo.TypeInfo != nil &&
+			len(fragmentInfo.TypeInfo.TypeList) > 0 &&
+			fragmentInfo.TypeInfo.TypeList[0] != nil {
+			return a.GetAnnotateClassAllFieldOfStrict(fragmentInfo.TypeInfo.TypeList[0], strFile, varInfo.Loc.StartLine-1)
 		}
 	}
 
-	fragmentInfo := annotateFile.GetLineFragementInfo(decLine)
-
-	if fragmentInfo != nil &&
-		fragmentInfo.TypeInfo != nil &&
-		len(fragmentInfo.TypeInfo.TypeList) > 0 &&
-		fragmentInfo.TypeInfo.TypeList[0] != nil {
-
-		//有多个TypeList的情况？有多个class的情况？ 那么可能是注解不规范，只取第一个
-		classInfoList := a.getAllNormalAnnotateClass(fragmentInfo.TypeInfo.TypeList[0], strFile, decLine)
-
-		if len(classInfoList) > 0 {
-			isStrict = classInfoList[0].ClassState.IsStrict
-			for k, _ := range classInfoList[0].FieldMap {
-				retMap[k] = true
-			}
-			className = classInfoList[0].ClassState.Name
-		}
-	}
-
+	//没找到返回空的
 	return isStrict, retMap, className
 }
 
