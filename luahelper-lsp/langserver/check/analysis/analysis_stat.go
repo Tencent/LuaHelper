@@ -1121,8 +1121,10 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 		}
 	}
 
-	//table成员合法性检查 暂且只检查 tableA = {} 这种情况
+	//table成员合法性检查
 	if nVars == 1 && nVars == nExps && a.isNeedCheck() && !a.realTimeFlag {
+
+		//检查 tableA = {a = 1} 这种情况
 		if taExp, ok := node.ExpList[0].(*ast.TableConstructorExp); ok {
 			if nameExp, ok := node.VarList[0].(*ast.NameExp); ok {
 				strTableName := nameExp.Name
@@ -1136,6 +1138,10 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 				a.CheckTableDecl(strTableName, strKeyList, &taExp.Loc, taExp)
 			}
 		}
-	}
 
+		//检查 tableA.a = 1 这种情况
+		if leftExp, ok := node.VarList[0].(*ast.TableAccessExp); ok {
+			a.checkTableAccess(leftExp)
+		}
+	}
 }
