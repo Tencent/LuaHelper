@@ -1122,7 +1122,7 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 	}
 
 	//table成员合法性检查 暂且只检查 tableA = {} 这种情况
-	if nVars == 1 && nVars == nExps && a.isThirdTerm() && !a.realTimeFlag {
+	if nVars == 1 && nVars == nExps && a.isNeedCheck() && !a.realTimeFlag {
 		if taExp, ok := node.ExpList[0].(*ast.TableConstructorExp); ok {
 			if nameExp, ok := node.VarList[0].(*ast.NameExp); ok {
 				strTableName := nameExp.Name
@@ -1131,7 +1131,6 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 
 					strKey := common.GetExpName(key)
 					strKeyList = append(strKeyList, strKey)
-					//检测 local t={f1=1,f1=2,}
 				}
 
 				a.CheckTableDecl(strTableName, strKeyList, &taExp.Loc, taExp)
