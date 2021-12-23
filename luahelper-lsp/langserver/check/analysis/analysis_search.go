@@ -348,7 +348,7 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 		if _, ok := common.GConfig.LuaInMap[strName]; ok {
 			return
 		}
-		
+
 		if strProPre != "" && common.GConfig.IsIgnoreProtocolPreVar() {
 			// 如果协议前缀的告警，忽略告警，不进行查找
 			return
@@ -1427,7 +1427,6 @@ func (a *Analysis) analysisNoDefineStr(node *ast.StringExp) {
 		a.insertGlobalNoDefineMap(name, newVar)
 	}
 }
-
 
 // 判断是否需要分析当前的nameExp
 func (a *Analysis) isNeedAnalysisNameExp(strName string, loc lexer.Location) bool {

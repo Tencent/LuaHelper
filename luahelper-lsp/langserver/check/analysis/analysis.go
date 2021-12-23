@@ -442,7 +442,7 @@ func (a *Analysis) CheckTableDec(strTableName string, strFieldNamelist []string,
 		return
 	}
 
-	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, nodeLoc, nil, a.curScope)
+	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, nil, nodeLoc.StartLine-1, a.curScope)
 	if !isStrict || len(fieldMap) == 0 {
 		return
 	}
@@ -490,7 +490,46 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, nil, &node.Loc, a.curScope)
+	find := false
+	//先尝试找local变量
+	ok, varInfo := a.curScope.FindLocVar(strTableName, node.Loc)
+	if ok {
+		//decLine = locVarInfo.Loc.StartLine - 1
+		find = true
+	} else {
+		fi := a.curFunc
+		firstFile := a.getFirstFileResult(a.AnalysisThird.FileResult.Name)
+
+		fileResult := a.curResult
+		thirdFileResult := fileResult
+		gFlag := false
+		strName := strTableName
+		strProPre := ""
+		if fi.FuncLv == 0 {
+			// 最顶层的函数，只在前面的定义中查找
+			if ok, varInfo = thirdFileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
+				find = true
+			}
+		} else {
+			// 非底层的函数，需要查找全局的变量
+			if ok, varInfo = firstFile.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
+				find = true
+			}
+		}
+
+		// 查找所有的
+		if !find {
+			if ok, varInfo = a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre); ok {
+				find = true
+			}
+		}
+	}
+
+	if !find {
+		return
+	}
+
+	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, varInfo, 0, a.curScope)
 	if !isStrict || len(fieldMap) == 0 {
 		return
 	}
