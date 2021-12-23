@@ -485,6 +485,10 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
+	// if strTableName == "tableA" {
+	// 	strTableName = "tableA"
+	// }
+
 	strKey := common.GetExpName(node.KeyExp)
 	// 如果不是简单字符，退出
 	if !common.JudgeSimpleStr(strKey) || strKey == "" {
