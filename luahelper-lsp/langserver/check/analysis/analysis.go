@@ -429,13 +429,15 @@ func (a *Analysis) SetRealTimeFlag(flag bool) {
 
 // 根据注解判断table成员合法性 在 t={f1=1,f1=2,} 时使用
 func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string, nodeLoc *lexer.Location, node *ast.TableConstructorExp) {
-	// 下面的判断只在第3轮，且是非实时检查时才触发
-	if !a.isThirdTerm() || a.realTimeFlag {
+	if !a.isNeedCheck() || a.realTimeFlag {
 		return
 	}
 
 	// if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
 	// 	return
+	// }
+	// if strTableName == "tableA" {
+	// 	strTableName = "tableA"
 	// }
 
 	if strTableName == "" || len(strFieldNamelist) == 0 || nodeLoc == nil || node == nil {
@@ -469,8 +471,7 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 
 // 根据注解判断table成员合法性 包括 t.a t可以是符号 或者函数参数
 func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
-	// 下面的判断只在第3轮，且是非实时检查时才触发
-	if !a.isThirdTerm() || a.realTimeFlag {
+	if !a.isNeedCheck() || a.realTimeFlag {
 		return
 	}
 
@@ -498,29 +499,61 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		find = true
 	} else {
 		fi := a.curFunc
-		firstFile := a.getFirstFileResult(a.AnalysisThird.FileResult.Name)
+		firstFile := a.getFirstFileResult(a.curResult.Name)
 
-		fileResult := a.curResult
-		thirdFileResult := fileResult
 		gFlag := false
 		strName := strTableName
 		strProPre := ""
-		if fi.FuncLv == 0 {
-			// 最顶层的函数，只在前面的定义中查找
-			if ok, varInfo = thirdFileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
-				find = true
-			}
-		} else {
-			// 非底层的函数，需要查找全局的变量
-			if ok, varInfo = firstFile.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
-				find = true
-			}
-		}
 
-		// 查找所有的
-		if !find {
-			if ok, varInfo = a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre); ok {
-				find = true
+		// 4) 第三步查找全局中是否有该变量
+		fileResult := a.curResult
+		if a.isSecondTerm() {
+			secondFileResult := fileResult
+			if fi.FuncLv == 0 {
+				// 最顶层的函数，只在前面的定义中查找
+				ok, varInfo = secondFileResult.FindGlobalVarInfo(strName, gFlag, strProPre)
+				if ok {
+					find = true
+				} else {
+					ok, varInfo = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre)
+					if ok {
+						find = true
+					}
+				}
+			} else {
+				// 非底层的函数，需要查找全局的变量
+				ok, varInfo = firstFile.FindGlobalVarInfo(strName, gFlag, strProPre)
+				if ok {
+					find = true
+				} else {
+					ok, varInfo = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre)
+					if ok {
+						find = true
+					}
+				}
+			}
+		} else if a.isThirdTerm() {
+			thirdFileResult := fileResult
+			if fi.FuncLv == 0 {
+				// 最顶层的函数，只在前面的定义中查找
+				ok, varInfo = thirdFileResult.FindGlobalVarInfo(strName, gFlag, strProPre)
+				if ok {
+					find = true
+				}
+			} else {
+				// 非底层的函数，需要查找全局的变量
+				ok, varInfo = firstFile.FindGlobalVarInfo(strName, gFlag, strProPre)
+				if ok {
+					find = true
+				}
+			}
+
+			// 查找所有的
+			if !find {
+				ok, varInfo = a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre)
+				if ok {
+					find = true
+				}
 			}
 		}
 	}
