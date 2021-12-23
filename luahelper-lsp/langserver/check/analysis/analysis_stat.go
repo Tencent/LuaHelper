@@ -558,7 +558,7 @@ func (a *Analysis) cgLocalVarDeclStat(node *ast.LocalVarDeclStat) {
 	}
 
 	//
-	//这里检查table成员合法性 多个vars时注解可能不准？
+	//这里检查table成员合法性 暂时只判断一个table的情况
 	if nNames == 1 && nNames == nExps {
 		if taExp, ok := node.ExpList[0].(*ast.TableConstructorExp); ok {
 			strTableName := node.NameList[0]
@@ -570,7 +570,7 @@ func (a *Analysis) cgLocalVarDeclStat(node *ast.LocalVarDeclStat) {
 				//检测 local t={f1=1,f1=2,}
 			}
 
-			a.CheckTableDec(strTableName, strKeyList, &taExp.Loc, taExp)
+			a.CheckTableDecl(strTableName, strKeyList, &taExp.Loc, taExp)
 		}
 	}
 }
@@ -1118,6 +1118,24 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 			expNode := node.ExpList[i]
 			// 递归调用表达式的值
 			a.cgExp(expNode, nil, nil)
+		}
+	}
+
+	//table成员合法性检查 暂且只检查 tableA = {} 这种情况
+	if nVars == 1 && nVars == nExps && a.isThirdTerm() && !a.realTimeFlag {
+		if taExp, ok := node.ExpList[0].(*ast.TableConstructorExp); ok {
+			if nameExp, ok := node.VarList[0].(*ast.NameExp); ok {
+				strTableName := nameExp.Name
+				strKeyList := []string{}
+				for _, key := range taExp.KeyExps {
+
+					strKey := common.GetExpName(key)
+					strKeyList = append(strKeyList, strKey)
+					//检测 local t={f1=1,f1=2,}
+				}
+
+				a.CheckTableDecl(strTableName, strKeyList, &taExp.Loc, taExp)
+			}
 		}
 	}
 

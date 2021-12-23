@@ -427,8 +427,8 @@ func (a *Analysis) SetRealTimeFlag(flag bool) {
 	a.realTimeFlag = flag
 }
 
-// 根据注解判断table成员合法性 在local t={f1=1,f1=2,} 时使用，全局符号todo
-func (a *Analysis) CheckTableDec(strTableName string, strFieldNamelist []string, nodeLoc *lexer.Location, node *ast.TableConstructorExp) {
+// 根据注解判断table成员合法性 在 t={f1=1,f1=2,} 时使用
+func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string, nodeLoc *lexer.Location, node *ast.TableConstructorExp) {
 	// 下面的判断只在第3轮，且是非实时检查时才触发
 	if !a.isThirdTerm() || a.realTimeFlag {
 		return
@@ -467,7 +467,7 @@ func (a *Analysis) CheckTableDec(strTableName string, strFieldNamelist []string,
 	return
 }
 
-// 根据注解判断table成员合法性 包括 t.a t可以是local符号 或者函数参数 ，全局符号todo
+// 根据注解判断table成员合法性 包括 t.a t可以是符号 或者函数参数
 func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 	// 下面的判断只在第3轮，且是非实时检查时才触发
 	if !a.isThirdTerm() || a.realTimeFlag {
