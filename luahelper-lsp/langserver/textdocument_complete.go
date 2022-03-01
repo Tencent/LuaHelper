@@ -49,6 +49,7 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 		comList, _ := l.handleGenerateComment(strFile, comResult.contents, comResult.offset, (int)(comResult.pos.Line))
 		return comList, err
 	}
+
 	if vs.Context.TriggerCharacter == "-" {
 		// 处理快捷生成注解, 以及提升注解系统
 		comList, _ := l.handleGenerateComment(strFile, comResult.contents, comResult.offset, (int)(comResult.pos.Line))
@@ -75,7 +76,7 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 	}
 
 	// 5.1) 获取这个代码补全的前缀字符串
-	preCompStr := getCompeletePreStr(comResult.contents, comResult.offset)
+	preCompStr, splitByte := getCompeletePreStr(comResult.contents, comResult.offset)
 	if preCompStr == "" {
 		return
 	}
@@ -84,29 +85,42 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 	// #字代码补全特殊处理，前面拼接#
 	preStr := ""
 
+	paramCandidateType := l.getFuncParamCandidateType(ctx, vs.TextDocument.URI, vs.Position)
 	// 5.2) 输入的为#代码补全
 	if preCompStr == "#" {
 		compVar = getDefaultHashtag(comResult)
 		preStr = "#"
 	} else {
-		// 5.2) 按照.进行分割字符串
-		compVar, flag = getComplelteStruct(preCompStr, (int)(comResult.pos.Line), (int)(comResult.pos.Character))
-		if !flag {
-			return
-		}
-
-		if len(compVar.StrVec) == 1 && !compVar.LastEmptyFlag {
-			beforeIndex := comResult.offset - len(preCompStr) - 1
-			if beforeIndex >= 0 && comResult.contents[beforeIndex] == '#' {
-				compVar.IgnoreKeyWord = true
-				preStr = "#"
+		if (preCompStr == "\"" || preCompStr == "'") && paramCandidateType != nil {
+			if preCompStr == "\"" {
+				splitByte = '"'
+			} else {
+				splitByte = '\''
 			}
-		}
+			compVar.StrVec = append(compVar.StrVec, preCompStr)
+			compVar.OnelyParamQuotesFlag = true
+		} else {
+			// 5.2) 按照.进行分割字符串
+			compVar, flag = getComplelteStruct(preCompStr, (int)(comResult.pos.Line), (int)(comResult.pos.Character))
+			if !flag {
+				return
+			}
 
-		// 扫描输入的地方，前面是否包含等于意思是，是否为等于右边的补全
-		beforeHasTag := isBeforeHasHashtag(comResult.contents, comResult.offset)
-		project.GetCompleteCache().SetBeforeHashtag(beforeHasTag)
+			if len(compVar.StrVec) == 1 && !compVar.LastEmptyFlag {
+				beforeIndex := comResult.offset - len(preCompStr) - 1
+				if beforeIndex >= 0 && comResult.contents[beforeIndex] == '#' {
+					compVar.IgnoreKeyWord = true
+					preStr = "#"
+				}
+			}
+
+			// 扫描输入的地方，前面是否包含等于意思是，是否为等于右边的补全
+			beforeHasTag := isBeforeHasHashtag(comResult.contents, comResult.offset)
+			project.GetCompleteCache().SetBeforeHashtag(beforeHasTag)
+		}
 	}
+	compVar.SplitByte = splitByte
+	compVar.ParamCandidateType = paramCandidateType
 
 	project.CodeComplete(strFile, compVar)
 	items := l.convertToCompItems(preStr)
@@ -234,8 +248,14 @@ func isBeforeHasHashtag(contents []byte, offset int) (flag bool) {
 }
 
 // 获取补全前置的输入字符串
-func getCompeletePreStr(contents []byte, offset int) (preStr string) {
+// preStr 返回的为补全前面的字符串
+// splitByte 为补全前面字符串的分割字符
+func getCompeletePreStr(contents []byte, offset int) (preStr string, splitByte byte) {
 	beforeIndex := GetBeforeIndex(contents, offset-1)
+	if beforeIndex-1 >= 0 {
+		splitByte = contents[beforeIndex-1]
+	}
+
 	rangeConents := contents[beforeIndex:offset]
 	str := string(rangeConents)
 
@@ -590,7 +610,7 @@ func (l *LspServer) convertToCompItems(preStr string) (items []CompletionItemTmp
 			item.Label = preStr + oneComplete.Label
 		}
 
-		item.Kind = lsp.VariableCompletion
+		item.Kind = lsp.CompletionItemKind(oneComplete.Kind)
 		if oneComplete.Kind == common.IKFunction {
 			item.Kind = lsp.FunctionCompletion
 		} else if oneComplete.Kind == common.IKKeyword {
@@ -644,6 +664,13 @@ func (l *LspServer) TextDocumentCompleteResolve(ctx context.Context, vs lsp.Comp
 			compItem.InsertText = "function(${1:})\n\t${0:}\nend"
 			strDetail = "function()\n\nend"
 		}
+	}
+
+	if project.GetCompleteCache().GetClearParamQuotes() {
+		compItem.InsertTextFormat = lsp.SnippetTextFormat
+		strTemp := strings.ReplaceAll(compItem.Label, "\"", "")
+		strTemp = strings.ReplaceAll(strTemp, "'", "")
+		compItem.InsertText = strTemp
 	}
 
 	strMarkdown := fmt.Sprintf("```%s\n%s\n```", "lua", codingconv.ConvertStrToUtf8(strDetail))

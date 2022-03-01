@@ -53,7 +53,18 @@ func CreateAnnotateLexer(chunk *string, line, col int) *AnnotateLexer {
 	}
 }
 
-// CheckHeardValid 校验头部是否有效，头部只能以-@开头
+// CheckAliasHeadValid 检验是否为换行的alias头部，以-|开头
+func (l *AnnotateLexer) CheckAliasHeadValid() bool {
+	// 判断这行内容是否以-|开头
+	if l.test("-|") {
+		l.next(2)
+		return true
+	}
+
+	return false
+}
+
+// CheckHeardValid 校验头部是否有效，正常头部只能以-@开头
 func (l *AnnotateLexer) CheckHeardValid() bool {
 	// 判断这行内容是否以-@开头
 	if l.test("-@") {
@@ -347,6 +358,11 @@ func (l *AnnotateLexer) GetRemainComment() (str string, loc lexer.Location) {
 
 	str = strings.TrimPrefix(str, "@")
 	return str, loc
+}
+
+// GetHeardStr get heard token str
+func (l *AnnotateLexer) GetHeardTokenStr() string {
+	return l.aheadToken.tokenStr
 }
 
 // ErrorPrint 错误打印，词法分析报异常，终止后面的分析

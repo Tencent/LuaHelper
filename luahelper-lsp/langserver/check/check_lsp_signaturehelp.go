@@ -54,7 +54,7 @@ func (a *AllProject) SignaturehelpFunc(strFile string, varStruct *common.DefineV
 
 	// 变化包含在的lua文件
 	inLuaFile := lastSymbol.FileName
-	lastLine := lastSymbol.VarInfo.Loc.EndLine
+	lastLine := referFunc.Loc.StartLine
 
 	strName := varStruct.StrVec[len(varStruct.StrVec)-1]
 	funAllStr := referFunc.GetFuncCompleteStr(strName, true, varStruct.ColonFlag)
@@ -70,10 +70,14 @@ func (a *AllProject) SignaturehelpFunc(strFile string, varStruct *common.DefineV
 			continue
 		}
 
-		paramShortStr := getAnnotateFuncParamDocument(strOneParam, annotateParamInfo)
-		if paramShortStr == "" {
+		annotateFlag := false
+		paramShortStr, annType := a.getAnnotateFuncParamDocument(strOneParam, annotateParamInfo, inLuaFile, lastLine-1)
+		if paramShortStr != "" {
+			annotateFlag = true
+		} else {
 			paramShortStr = getFuncParamShortDocument(strDocumentation, strOneParam)
 		}
+
 		if paramShortStr == "" {
 			// 如果没有找到匹配的参数，获取所有的
 			paramShortStr = strDocumentation
@@ -84,6 +88,8 @@ func (a *AllProject) SignaturehelpFunc(strFile string, varStruct *common.DefineV
 		oneSignatureParam := common.SignatureHelpInfo{
 			Label:         strOneParam,
 			Documentation: paramShortStr,
+			AnnotateFlag:  annotateFlag,
+			AnnType:       annType,
 		}
 
 		paramInfo = append(paramInfo, oneSignatureParam)
@@ -155,10 +161,11 @@ func (a *AllProject) getAnnotateFuncSignature(symbol *common.Symbol, colonFlag b
 }
 
 // 获取函数参数的注解信息
-func getAnnotateFuncParamDocument(strOneParam string, paramInfo *common.FragementParamInfo) (strShort string) {
+func (a *AllProject) getAnnotateFuncParamDocument(strOneParam string, paramInfo *common.FragementParamInfo,
+	fileName string, line int) (strShort string, annType annotateast.Type) {
 	// 先判断是否有注解信息
 	if paramInfo == nil {
-		return ""
+		return "", annType
 	}
 
 	for _, oneParam := range paramInfo.ParamList {
@@ -166,15 +173,20 @@ func getAnnotateFuncParamDocument(strOneParam string, paramInfo *common.Fragemen
 			continue
 		}
 
-		strShort = annotateast.TypeConvertStr(oneParam.ParamType)
+		strShort = a.getSymbolAliasMultiCandidate(oneParam.ParamType, fileName, line)
+		if strShort == "" {
+			strShort = annotateast.TypeConvertStr(oneParam.ParamType)
+		}
+		annType = oneParam.ParamType
+
 		if oneParam.Comment != "" {
-			strShort = strShort + "\n" + oneParam.Comment
+			strShort = strShort + " -- " + oneParam.Comment
 		}
 
 		break
 	}
 
-	return strShort
+	return strShort, annType
 }
 
 // 获取函数中每一个参数的简短提示

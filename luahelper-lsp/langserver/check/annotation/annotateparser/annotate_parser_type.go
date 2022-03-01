@@ -4,6 +4,7 @@ import (
 	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/annotation/annotatelexer"
 	"luahelper-lsp/langserver/check/compiler/lexer"
+	"strings"
 )
 
 // 继续单个的类型，不包含|
@@ -46,6 +47,16 @@ func parserSingleType(l *annotatelexer.AnnotateLexer) annotateast.Type {
 		}
 
 		l.SetLastNormalTypeLoc(l.GetNowLoc())
+	} else if lookHeardKind == annotatelexer.ATokenString {
+		tokenStr := l.GetHeardTokenStr()
+		splitStr, quetesFlag := splitStrQuotes(tokenStr)
+		l.NextToken()
+		subType = &annotateast.ConstType{
+			Name:       splitStr,
+			Loc:        l.GetNowLoc(),
+			QuotesFlag: quetesFlag,
+			Comment:    "",
+		}
 	} else {
 		// 无效的
 		l.ErrorPrint(annotatelexer.AErrorType, annotatelexer.ATokenEOF, "not find annotate type")
@@ -79,33 +90,34 @@ func parserOneType(l *annotatelexer.AnnotateLexer) annotateast.Type {
 		multiType.TypeList = append(multiType.TypeList, subType)
 
 		strEnumFlag := false
-		if l.LookAheadKind() == annotatelexer.ATokenBor {
-			for {
-				// 发现是 | 表示几种类型都可以，或者的关系
-				l.NextTokenOfKind(annotatelexer.ATokenBor)
-				normalType, ok := subType.(*annotateast.NormalType)
-				if !ok || normalType.StrName != "string" {
-					break
-				}
-
-				// 这里为字符串枚举
-				// ---@type  string | '"r"' | '"w"' | '"a"' | '"r+"' | '"w+"' | '"a+"' | '"rb"' | '"wb"' | '"ab"' | '"rb+"' | '"wb+"' | '"ab+"'
-				if l.LookAheadKind() != annotatelexer.ATokenString {
-					break
-				}
-
-				strEnumFlag = true
-				l.NextTokenOfKind(annotatelexer.ATokenString)
-				if l.LookAheadKind() == annotatelexer.ATokenBor {
-					continue
-				} else {
-					break
-				}
-			}
-		} else {
+		if l.LookAheadKind() != annotatelexer.ATokenBor {
 			// 解析完了
 			break
 		}
+		l.NextTokenOfKind(annotatelexer.ATokenBor)
+
+		/*for {
+			// 发现是 | 表示几种类型都可以，或者的关系
+			l.NextTokenOfKind(annotatelexer.ATokenBor)
+			normalType, ok := subType.(*annotateast.NormalType)
+			if !ok || normalType.StrName != "string" {
+				break
+			}
+
+			// 这里为字符串枚举
+			// ---@type  string | '"r"' | '"w"' | '"a"' | '"r+"' | '"w+"' | '"a+"' | '"rb"' | '"wb"' | '"ab"' | '"rb+"' | '"wb+"' | '"ab+"'
+			if l.LookAheadKind() != annotatelexer.ATokenString {
+				break
+			}
+
+			strEnumFlag = true
+			l.NextTokenOfKind(annotatelexer.ATokenString)
+			if l.LookAheadKind() == annotatelexer.ATokenBor {
+				continue
+			}
+
+			break
+		}*/
 
 		if strEnumFlag {
 			break
@@ -264,4 +276,30 @@ func parserTableType(l *annotatelexer.AnnotateLexer) annotateast.Type {
 	tableType.Loc = lexer.GetRangeLoc(&beginLoc, &endLoc)
 
 	return tableType
+}
+
+// ParserAliasLine 额外解析alias换行的，例如这样的：---| '"w"' # Write data to this program by `file`.
+func parserExtraAliasLine(l *annotatelexer.AnnotateLexer) (constType *annotateast.ConstType) {
+	aheadKind := l.LookAheadKind()
+	if aheadKind != annotatelexer.ATokenString {
+		return
+	}
+
+	tokenStr := l.GetHeardTokenStr()
+	splitStr, quetesFlag := splitStrQuotes(tokenStr)
+	l.NextToken()
+
+	loc := l.GetNowLoc()
+	strComment, _ := l.GetRemainComment()
+	strComment = strings.TrimLeft(strComment, " ")
+	strComment = strings.TrimPrefix(strComment, "#")
+	strComment = strings.TrimPrefix(strComment, " ")
+
+	constType = &annotateast.ConstType{
+		Name:       splitStr,
+		Loc:        loc,
+		QuotesFlag: quetesFlag,
+		Comment:    strComment,
+	}
+	return constType
 }
