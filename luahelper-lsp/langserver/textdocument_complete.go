@@ -86,6 +86,10 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 	preStr := ""
 
 	paramCandidateType := l.getFuncParamCandidateType(ctx, vs.TextDocument.URI, vs.Position)
+	if preCompStr == " " && paramCandidateType == nil {
+		return
+	}
+
 	// 5.2) 输入的为#代码补全
 	if preCompStr == "#" {
 		compVar = getDefaultHashtag(comResult)
