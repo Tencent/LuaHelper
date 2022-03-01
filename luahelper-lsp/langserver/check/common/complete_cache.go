@@ -49,26 +49,28 @@ type OneCompleteData struct {
 
 // CompleteCache 缓存所有的补全信息
 type CompleteCache struct {
-	index         int                 // 当前的index
-	maxNum        int                 // 上次提示的最大数量
-	excludeNum    int                 // 上次提示时，排除的最大数量
-	dataList      []OneCompleteData   // 所有的缓存信息，用列表存储就ok
-	existMap      map[string]int      // 为已经存在的map，防止重复
-	excludeMap    map[string]struct{} // 冒号语法需要排除的map
-	colonFlag     bool                // 代码补全最后是否为冒号语法
-	beforeHashtag bool                //  补全的词前面是否包含#
+	index            int                 // 当前的index
+	maxNum           int                 // 上次提示的最大数量
+	excludeNum       int                 // 上次提示时，排除的最大数量
+	dataList         []OneCompleteData   // 所有的缓存信息，用列表存储就ok
+	existMap         map[string]int      // 为已经存在的map，防止重复
+	excludeMap       map[string]struct{} // 冒号语法需要排除的map
+	colonFlag        bool                // 代码补全最后是否为冒号语法
+	beforeHashtag    bool                //  补全的词前面是否包含#
+	clearParamQuotes bool                // 补全时候，是否要清除候选词的引号
 }
 
 // CreateCompleteCache 创建一个代码补全缓存
 func CreateCompleteCache() *CompleteCache {
 	cache := &CompleteCache{
-		index:      0,
-		maxNum:     1,
-		excludeNum: 1,
-		dataList:   []OneCompleteData{},
-		existMap:   map[string]int{},
-		excludeMap: map[string]struct{}{},
-		colonFlag:  false,
+		index:            0,
+		maxNum:           1,
+		excludeNum:       1,
+		dataList:         []OneCompleteData{},
+		existMap:         map[string]int{},
+		excludeMap:       map[string]struct{}{},
+		colonFlag:        false,
+		clearParamQuotes: false,
 	}
 
 	return cache
@@ -82,6 +84,17 @@ func (cache *CompleteCache) ResertData() {
 	cache.excludeMap = make(map[string]struct{}, cache.excludeNum)
 	cache.colonFlag = false
 	cache.beforeHashtag = false
+	cache.clearParamQuotes = false
+}
+
+// SetClearParamQuotes set clearParamQuotes
+func (cache *CompleteCache) SetClearParamQuotes(flag bool) {
+	cache.clearParamQuotes = flag
+}
+
+// GetClearParamQuotes set clearParamQuotes
+func (cache *CompleteCache) GetClearParamQuotes() bool {
+	return cache.clearParamQuotes
 }
 
 // SetBeforeHashtag set before hash tag

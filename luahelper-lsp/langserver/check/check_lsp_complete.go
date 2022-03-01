@@ -623,9 +623,32 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 	if completeVar.ParamCandidateType != nil {
 		strMap := a.getSymbolAliasMultiCandidateMap(completeVar.ParamCandidateType, comParam.fi.FileName, comParam.loc.StartLine)
 		if len(strMap) > 0 {
-			for strKey, strComment := range strMap {
-				a.completeCache.InsertCompleteNormal(strKey, strComment, "", common.IKVariable)
+			if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
+				a.completeCache.SetClearParamQuotes(true)
 			}
+
+			for strKey, strComment := range strMap {
+				if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
+					// 如果分割的是为单引号或是双引号，strKey需要为引号的字符串
+					if !strings.HasPrefix(strKey, "\"") {
+						continue
+					}
+
+					if completeVar.SplitByte == '\'' {
+						strKey = strings.ReplaceAll(strKey, "\"", "'")
+					}
+				} else {
+					if strings.HasPrefix(strKey, "\"") {
+						continue
+					}
+				}
+
+				a.completeCache.InsertCompleteNormal(strKey, strComment, "", common.IKConstant)
+			}
+			return
+		}
+
+		if completeVar.OnelyParamQuotesFlag {
 			return
 		}
 	}
