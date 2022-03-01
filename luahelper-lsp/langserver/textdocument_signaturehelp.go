@@ -2,8 +2,10 @@ package langserver
 
 import (
 	"context"
+	"fmt"
 
 	"luahelper-lsp/langserver/check"
+	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/codingconv"
 	"luahelper-lsp/langserver/log"
 	lsp "luahelper-lsp/langserver/protocol"
@@ -11,7 +13,10 @@ import (
 
 // TextDocumentSignatureHelp 补全函数的参数
 func (l *LspServer) TextDocumentSignatureHelp(ctx context.Context, vs lsp.TextDocumentPositionParams) (signatureHelp lsp.SignatureHelp, err error) {
-	comResult, activeParameter := l.doSignatureHelp(ctx, vs)
+	l.requestMutex.Lock()
+	defer l.requestMutex.Unlock()
+
+	comResult, activeParameter := l.doSignatureHelp(ctx, vs.TextDocument.URI, vs.Position)
 	if !comResult.result {
 		log.Debug("SignatureHelp return")
 		return
@@ -32,20 +37,26 @@ func (l *LspServer) TextDocumentSignatureHelp(ctx context.Context, vs lsp.TextDo
 		return
 	}
 
+	str := codingconv.ConvertStrToUtf8(check.GetStrComment(sinature.Documentation))
 	info := lsp.SignatureInformation{
 		Label: codingconv.ConvertStrToUtf8(sinature.Label),
 		Documentation: lsp.MarkupContent{
 			Kind:  lsp.Markdown,
-			Value: codingconv.ConvertStrToUtf8(check.GetStrComment(sinature.Documentation)),
+			Value: str,
 		},
 	}
 
 	for _, oneParamInfo := range paramInfo {
+		str := codingconv.ConvertStrToUtf8(check.GetStrComment(oneParamInfo.Documentation))
+		if oneParamInfo.AnnotateFlag {
+			str = fmt.Sprintf("```%s\n%s\n```", "lua", codingconv.ConvertStrToUtf8(oneParamInfo.Documentation))
+		}
+
 		oneParam := lsp.ParameterInformation{
 			Label: codingconv.ConvertStrToUtf8(oneParamInfo.Label),
 			Documentation: lsp.MarkupContent{
 				Kind:  lsp.Markdown,
-				Value: codingconv.ConvertStrToUtf8(check.GetStrComment(oneParamInfo.Documentation)),
+				Value: str,
 			},
 		}
 		info.Parameters = append(info.Parameters, oneParam)
@@ -58,13 +69,10 @@ func (l *LspServer) TextDocumentSignatureHelp(ctx context.Context, vs lsp.TextDo
 }
 
 // doSignatureHelp 该文件为函数输入参数的时候，提示参数补全
-func (l *LspServer) doSignatureHelp(ctx context.Context, vs lsp.TextDocumentPositionParams) (comResult commFileRequest,
+func (l *LspServer) doSignatureHelp(ctx context.Context, url lsp.DocumentURI, pos lsp.Position) (comResult commFileRequest,
 	activeParameter int) {
-	l.requestMutex.Lock()
-	defer l.requestMutex.Unlock()
-
 	// 判断打开的文件，是否是需要分析的文件
-	comResult = l.beginFileRequest(vs.TextDocument.URI, vs.Position)
+	comResult = l.beginFileRequest(url, pos)
 	if !comResult.result {
 		return
 	}
@@ -79,7 +87,7 @@ func (l *LspServer) doSignatureHelp(ctx context.Context, vs lsp.TextDocumentPosi
 
 	// If vscode auto-inserts closing ')' we will begin on ')' token in foo()
 	// which will make the below algorithm think it's a nested call.
-	if offset > 0 && offset < len(contents) && contents[offset] == ')' {
+	if offset > 0 && offset < len(contents) && (contents[offset] == ')' || contents[offset] == ',') {
 		offset--
 	}
 
@@ -114,4 +122,33 @@ func (l *LspServer) doSignatureHelp(ctx context.Context, vs lsp.TextDocumentPosi
 	comResult.offset = offset
 	comResult.result = true
 	return comResult, activeParameter
+}
+
+func (l *LspServer) getFuncParamCandidateType(ctx context.Context, url lsp.DocumentURI, pos lsp.Position) (annType annotateast.Type) {
+	comResult, activeParameter := l.doSignatureHelp(ctx, url, pos)
+	if !comResult.result {
+		log.Debug("SignatureHelp return")
+		return
+	}
+
+	varStruct := getVarStruct(comResult.contents, comResult.offset, pos.Line, pos.Character)
+	if !varStruct.ValidFlag {
+		return
+	}
+
+	strFile := comResult.strFile
+	project := l.getAllProject()
+	flag, _, paramInfo := project.SignaturehelpFunc(strFile, &varStruct)
+
+	if !flag {
+		log.Debug("SignatureHelp not func info.")
+		return
+	}
+
+	if activeParameter >= len(paramInfo) {
+		return
+	}
+
+	annType = paramInfo[activeParameter].AnnType
+	return
 }

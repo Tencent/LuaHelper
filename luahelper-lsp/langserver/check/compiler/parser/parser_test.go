@@ -26,6 +26,24 @@ func TestParseConst(t *testing.T) {
 	}
 }
 
+func TestParseFunc(t *testing.T) {
+	parser := CreateParser([]byte("aaa(11, a)"), "test")
+	block, _, errList := parser.BeginAnalyze()
+	if len(errList) > 0 {
+		t.Fatalf("parser const fatal, errstr=%s", "err.Error()")
+	}
+
+	if block == nil {
+		t.Logf("is nil")
+	}
+
+	parser1 := CreateParser([]byte("local a<consts> = 1"), "test")
+	_, _, errList1 := parser1.BeginAnalyze()
+	if len(errList1) == 0 {
+		t.Fatalf("parser cosnt fatal")
+	}
+}
+
 func TestParseJitNumber(t *testing.T) {
 	contentStr := "local a=555ULL; local a=555LL; local b = 2ll; local c = 34ull; local d = 42Ull;local e=333ULl; local f = 3Ll"
 	parser := CreateParser([]byte(contentStr), "test")

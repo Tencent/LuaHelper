@@ -5,7 +5,6 @@ import (
 	"luahelper-lsp/langserver/check/annotation/annotatelexer"
 	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/log"
-	//"strings"
 )
 
 // ParseCommentFragment 解析代码注释片段
@@ -15,6 +14,29 @@ func ParseCommentFragment(commentInfo *lexer.CommentInfo) (fragment annotateast.
 	// 多行内容整体是一个字符串，拆分成多行数据
 	for _, commentLine := range commentInfo.LineVec {
 		l := annotatelexer.CreateAnnotateLexer(&commentLine.Str, commentLine.Line, commentLine.Col)
+
+		// 判断是否为特殊的alias换行的内容，例如为：
+		// ---@alias one
+		// ---| '"r"' # Read data from this program by `file`.
+		// ---| '"w"' # Write data to this program by `file`.
+		if l.CheckAliasHeadValid() {
+			constType := parserExtraAliasLine(l)
+			if constType == nil {
+				continue
+			}
+
+			// 如果存在有效的换行alias内容，尝试补充到上一个alias state中
+			if len(fragment.Stats) == 0 {
+				continue
+			}
+			lastStat := fragment.Stats[len(fragment.Stats)-1]
+			aliasState, ok := lastStat.(*annotateast.AnnotateAliasState)
+			if !ok {
+				continue
+			}
+			appendAliasState(aliasState, constType)
+			continue
+		}
 
 		// 判断这行内容是否以-@开头，是否合法
 		if !l.CheckHeardValid() {
@@ -28,8 +50,7 @@ func ParseCommentFragment(commentInfo *lexer.CommentInfo) (fragment annotateast.
 			continue
 		}
 
-		_, flag := annotateState.(*annotateast.AnnotateNotValidState)
-		if flag {
+		if _, flag := annotateState.(*annotateast.AnnotateNotValidState); flag {
 			continue
 		}
 
@@ -37,83 +58,47 @@ func ParseCommentFragment(commentInfo *lexer.CommentInfo) (fragment annotateast.
 		fragment.Stats = append(fragment.Stats, annotateState)
 	}
 
+	// 判断是否有空的AliasState，如果有清除掉
+	clearEmpytAlias(&fragment)
+
 	return fragment, parseErrVec
 }
 
-// TestComment 注解功能的测试代码
-func TestComment() {
-	/*strTest1 := "-@type string"
-	comment1 := ParseCommentFragment(&strTest1)
-	print(len(comment1.Stats))
+// constType常量补偿到aliasState中
+func appendAliasState(aliasState *annotateast.AnnotateAliasState, constType *annotateast.ConstType) {
+	if aliasState.AliasType == nil {
+		// 如果之前没有alias其他的类型
+		multiType := &annotateast.MultiType{}
+		multiType.Loc = constType.Loc
+		multiType.TypeList = append(multiType.TypeList, constType)
+		aliasState.AliasType = multiType
+		return
+	}
 
-	strTest2 := "-@type string, number"
-	comment2 := ParseCommentFragment(&strTest2)
-	print(len(comment2.Stats))
+	multiType, ok := aliasState.AliasType.(*annotateast.MultiType)
+	if !ok {
+		return
+	}
 
-	strTest3 := "-@type string, number, number"
-	comment3 := ParseCommentFragment(&strTest3)
-	print(len(comment3.Stats))
-
-	strTest4 := "-@type string[]"
-	comment4 := ParseCommentFragment(&strTest4)
-	print(len(comment4.Stats))
-
-	strTest5 := "-@type string[], number"
-	comment5 := ParseCommentFragment(&strTest5)
-	print(len(comment5.Stats))
-
-	strTest6 := "-@type table < number , number>"
-	comment6 := ParseCommentFragment(&strTest6)
-	print(len(comment6.Stats))
-
-	strTest7 := "-@type    fun ( one:string, two: number):one, two"
-	comment7 := ParseCommentFragment(&strTest7)
-	print(len(comment7.Stats))
-
-	strTest8 := "-@type string | number[]"
-	comment8 := ParseCommentFragment(&strTest8)
-	print(len(comment8.Stats))
-
-	strTest9 := "-@type (string | number)[dd]"
-	comment9 := ParseCommentFragment(&strTest9)
-	print(len(comment9.Stats))
-
-	strTest10 := "-@alias Handler fun(type: string | number, data: any):void"
-	comment10 := ParseCommentFragment(&strTest10)
-	print(len(comment10.Stats))
-
-	strTest11 := "-@class A:B, C @fjsofjsofjo"
-	comment11 := ParseCommentFragment(&strTest11)
-	print(len(comment11.Stats))
-
-	strTest12 := "-@overload fun(list:table, sep:string, i:number):string|number, bb[]"
-	comment12 := ParseCommentFragment(&strTest12)
-	print(len(comment12.Stats))
-
-	strTest13 := "-@field public ssss fun(list:table, sep:string, i:number):string|number, bb[] sfsdfsdf"
-	comment13 := ParseCommentFragment(&strTest13)
-	print(len(comment13.Stats))
-	// ---@field [public|protected|private] field_name FIELDLTYPE[|OTHER_TYPE] [@comment]
-
-	strTest14 := "-@param string | fun(list:table, sep:string, i:number):string|number, bb[] sfsdfsdf"
-	comment14 := ParseCommentFragment(&strTest14)
-	print(len(comment14.Stats))
-
-	strTest15 := "-@return (string | fun(list:table, sep:string, i:number):string|number, bb[]), string sfsdfsdf"
-	comment15 := ParseCommentFragment(&strTest15)
-	print(len(comment15.Stats))
-
-	strTest16 := "-@generic T : Transport, K sfsdfsdf asfdjosf"
-	comment16 := ParseCommentFragment(&strTest16)
-	print(len(comment16.Stats))
-
-	strTest17 := "-@vararg string"
-	comment17 := ParseCommentFragment(&strTest17)
-	print(len(comment17.Stats))
-	*/
+	multiType.TypeList = append(multiType.TypeList, constType)
 }
 
-// ParserLine 解析一行注释
+// 判断是否有空的AliasState，如果有清除掉
+func clearEmpytAlias(fragment *annotateast.AnnotateFragment) {
+	for i := 0; i < len(fragment.Stats); i++ {
+		aliasState, ok := fragment.Stats[i].(*annotateast.AnnotateAliasState)
+		if !ok {
+			continue
+		}
+
+		if aliasState.AliasType == nil {
+			fragment.Stats = append(fragment.Stats[:i], fragment.Stats[i+1:]...)
+			i--
+		}
+	}
+}
+
+// ParserLine 正常解析一行注释
 func ParserLine(l *annotatelexer.AnnotateLexer) (oneState annotateast.AnnotateState,
 	parseErr annotatelexer.ParseAnnotateErr) {
 	parseErr.ErrType = annotatelexer.AErrorOk

@@ -44,6 +44,22 @@ func parserAliasState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState 
 	aliasState.Name = l.NextIdentifier()
 	aliasState.NameLoc = l.GetNowLoc()
 
+	aheadKind := l.LookAheadKind()
+	if aheadKind == annotatelexer.ATokenEOF {
+		// alias 没有类型，为这样的 ---@alias oneName
+		// 下一行有可能有内容，整体类似这样的，需要分析下一行的内容
+		// ---@alias oneName
+		// ---| '"r"' # Read data from this program by `file`.
+		// ---| '"w"' # Write data to this program by `file`.
+		return aliasState
+	} else if aheadKind == annotatelexer.ATokenAt {
+		// alias 没有类型，为这样的 ---@alias oneName @comment
+		// 获取其注释的内容
+		aliasState.Comment, aliasState.CommentLoc = l.GetRemainComment()
+		return aliasState
+	}
+
+	// 下面的为这行alias有具体的类型
 	// 解析映射的具体type
 	aliasState.AliasType = parserOneType(l)
 

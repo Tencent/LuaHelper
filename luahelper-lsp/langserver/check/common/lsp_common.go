@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/compiler/ast"
 	"luahelper-lsp/langserver/check/compiler/lexer"
 )
@@ -23,8 +24,10 @@ const (
 	IKAnnotateClass ItemKind = 5
 	// IKAnnotateAlias 注解的alias类型
 	IKAnnotateAlias ItemKind = 6
-	// CIKSnippet 注释
+	// IKSnippet 注释
 	IKSnippet ItemKind = 15
+	// IKConstant 常量
+	IKConstant ItemKind = 21
 )
 
 // FileSymbolStruct 文件内的单个符号名
@@ -52,6 +55,8 @@ type CompletionItemStruct struct {
 type SignatureHelpInfo struct {
 	Label         string
 	Documentation string
+	AnnotateFlag  bool
+	AnnType       annotateast.Type
 }
 
 // DefineVarStruct 查找变量定义的结构
@@ -69,17 +74,20 @@ type DefineVarStruct struct {
 
 // CompleteVarStruct 代码补全的定义结构
 type CompleteVarStruct struct {
-	PosLine             int      // 坐标的行, 从0开始
-	PosCh               int      // 坐标的列, 从0开始
-	StrVec              []string // 切分的是否为字符串数组
-	IsFuncVec           []bool   // 切分出来的数据是否为函数, 与StrVec一一对应
-	ColonFlag           bool     // 是否包含 :
-	LastEmptyFlag       bool     // 最后一个字符是否为空白
-	IgnoreKeyWord       bool     // 是否忽略关键字
-	FilterCharacterFlag bool     // 查找的结果，是否过滤指定的字符
-	FilterOneChar       rune     // 过滤的第一个字符（忽略大小写）
-	FilterTwoChar       rune     // 过滤的第二个字符（忽略大小写）
-	Exp                 ast.Exp  // 表达式
+	PosLine              int              // 坐标的行, 从0开始
+	PosCh                int              // 坐标的列, 从0开始
+	StrVec               []string         // 切分的是否为字符串数组
+	IsFuncVec            []bool           // 切分出来的数据是否为函数, 与StrVec一一对应
+	ColonFlag            bool             // 是否包含 :
+	LastEmptyFlag        bool             // 最后一个字符是否为空白
+	IgnoreKeyWord        bool             // 是否忽略关键字
+	FilterCharacterFlag  bool             // 查找的结果，是否过滤指定的字符
+	FilterOneChar        rune             // 过滤的第一个字符（忽略大小写）
+	FilterTwoChar        rune             // 过滤的第二个字符（忽略大小写）
+	Exp                  ast.Exp          // 表达式
+	ParamCandidateType   annotateast.Type // 如果代码提示为函数的参数时，获取参数的候选词类型
+	SplitByte            byte             // 补全前面分割的字符
+	OnelyParamQuotesFlag bool             // 是否为特殊的"或’补充函数的参数
 }
 
 // RelateCheckInfo 相关联的告警信息
