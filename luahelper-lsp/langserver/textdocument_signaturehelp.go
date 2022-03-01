@@ -87,7 +87,7 @@ func (l *LspServer) doSignatureHelp(ctx context.Context, url lsp.DocumentURI, po
 
 	// If vscode auto-inserts closing ')' we will begin on ')' token in foo()
 	// which will make the below algorithm think it's a nested call.
-	if offset > 0 && offset < len(contents) && contents[offset] == ')' {
+	if offset > 0 && offset < len(contents) && (contents[offset] == ')' || contents[offset] == ',') {
 		offset--
 	}
 
