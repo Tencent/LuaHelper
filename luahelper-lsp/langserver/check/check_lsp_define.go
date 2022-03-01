@@ -426,8 +426,11 @@ func (a *AllProject) FindVarDefine(strFile string, varStruct *common.DefineVarSt
 		oldSymbol = a.createAnnotateSymbol(findStrName, findVar)
 	}
 	//调用链中没有函数，走这里
-	symList = a.getDeepVarList(oldSymbol, varStruct, comParam)
-	return oldSymbol, symList
+	if oldSymbol != nil {
+		symList = a.getDeepVarList(oldSymbol, varStruct, comParam)
+		return oldSymbol, symList
+	}
+	return nil, nil
 }
 
 // AnnotateTypeDefine 注解类型代码补全
