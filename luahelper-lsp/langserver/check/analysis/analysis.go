@@ -433,12 +433,9 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 		return
 	}
 
-	// if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
-	// 	return
-	// }
-	// if strTableName == "tableA" {
-	// 	strTableName = "tableA"
-	// }
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
+		return
+	}
 
 	if strTableName == "" || len(strFieldNamelist) == 0 || nodeLoc == nil || node == nil {
 		return
@@ -466,7 +463,6 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 			}
 		}
 	}
-	return
 }
 
 // 根据注解判断table成员合法性 包括 t.a t可以是符号 或者函数参数
@@ -475,19 +471,15 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	// if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
-	// 	return
-	// }
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
+		return
+	}
 
 	strTable := common.GetExpName(node.PrefixExp)
 	strTableName := common.GetSimpleValue(strTable)
 	if strTableName == "" {
 		return
 	}
-
-	// if strTableName == "tableA" {
-	// 	strTableName = "tableA"
-	// }
 
 	strKey := common.GetExpName(node.KeyExp)
 	// 如果不是简单字符，退出
