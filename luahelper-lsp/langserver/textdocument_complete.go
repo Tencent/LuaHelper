@@ -81,49 +81,49 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 		return
 	}
 
+	// 特殊的补全，开头为 " 或是 ' 或是 空格
+	paramCandidateType := l.getFuncParamCandidateType(ctx, vs.TextDocument.URI, vs.Position)
+	if (preCompStr == "\"" || preCompStr == "'" || preCompStr == " ") && paramCandidateType == nil {
+		return
+	}
+
 	var compVar common.CompleteVarStruct
 	// #字代码补全特殊处理，前面拼接#
 	preStr := ""
 
-	paramCandidateType := l.getFuncParamCandidateType(ctx, vs.TextDocument.URI, vs.Position)
-	if preCompStr == " " && paramCandidateType == nil {
-		return
-	}
-
-	// 5.2) 输入的为#代码补全
 	if preCompStr == "#" {
+		// 5.2）输入的为#代码补全
 		compVar = getDefaultHashtag(comResult)
 		preStr = "#"
-	} else {
-		if (preCompStr == "\"" || preCompStr == "'" || preCompStr == " ") && paramCandidateType != nil {
-			if preCompStr == "\"" {
-				splitByte = '"'
-			} else if preCompStr == "'" {
-				splitByte = '\''
-			} else {
-				splitByte = ' '
-			}
-			compVar.StrVec = append(compVar.StrVec, preCompStr)
-			compVar.OnelyParamQuotesFlag = true
+	} else if (preCompStr == "\"" || preCompStr == "'" || preCompStr == " ") && paramCandidateType != nil {
+		// 5.3）特殊的补全，开头为 " 或是 ' 或是 空格
+		if preCompStr == "\"" {
+			splitByte = '"'
+		} else if preCompStr == "'" {
+			splitByte = '\''
 		} else {
-			// 5.2) 按照.进行分割字符串
-			compVar, flag = getComplelteStruct(preCompStr, (int)(comResult.pos.Line), (int)(comResult.pos.Character))
-			if !flag {
-				return
-			}
-
-			if len(compVar.StrVec) == 1 && !compVar.LastEmptyFlag {
-				beforeIndex := comResult.offset - len(preCompStr) - 1
-				if beforeIndex >= 0 && comResult.contents[beforeIndex] == '#' {
-					compVar.IgnoreKeyWord = true
-					preStr = "#"
-				}
-			}
-
-			// 扫描输入的地方，前面是否包含等于意思是，是否为等于右边的补全
-			beforeHasTag := isBeforeHasHashtag(comResult.contents, comResult.offset)
-			project.GetCompleteCache().SetBeforeHashtag(beforeHasTag)
+			splitByte = ' '
 		}
+		compVar.StrVec = append(compVar.StrVec, preCompStr)
+		compVar.OnelyParamQuotesFlag = true
+	} else {
+		// 5.4) 按照.进行分割字符串
+		compVar, flag = getComplelteStruct(preCompStr, (int)(comResult.pos.Line), (int)(comResult.pos.Character))
+		if !flag {
+			return
+		}
+
+		if len(compVar.StrVec) == 1 && !compVar.LastEmptyFlag {
+			beforeIndex := comResult.offset - len(preCompStr) - 1
+			if beforeIndex >= 0 && comResult.contents[beforeIndex] == '#' {
+				compVar.IgnoreKeyWord = true
+				preStr = "#"
+			}
+		}
+
+		// 扫描输入的地方，前面是否包含等于意思是，是否为等于右边的补全
+		beforeHasTag := isBeforeHasHashtag(comResult.contents, comResult.offset)
+		project.GetCompleteCache().SetBeforeHashtag(beforeHasTag)
 	}
 	compVar.SplitByte = splitByte
 	compVar.ParamCandidateType = paramCandidateType
