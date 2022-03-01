@@ -10,12 +10,6 @@ import (
 	"luahelper-lsp/langserver/log"
 )
 
-// IgnoreAssignOR 忽略a = a or 0 其中a没有定义的告警
-type IgnoreAssignOR struct {
-	strName string // 变量定义的名字
-	line    int    // 行号
-}
-
 // IgnoreInfo 忽略的信息
 type IgnoreInfo struct {
 	strName    string // 变量定义的名字
@@ -244,11 +238,7 @@ func (a *Analysis) insertSecondProjectAnalysis(strFile string, secondAnalysisFil
 // 判断二阶段工程分析中，AnalysisFileResult是否已经存在了
 func (a *Analysis) isExistSecondProjectAnalysis(strFile string) bool {
 	fileResult := a.SingleProjectResult.AnalysisFileMap[strFile]
-	if fileResult == nil {
-		return false
-	}
-
-	return true
+	return fileResult != nil
 }
 
 // 第一轮遍历AST的处理
@@ -570,7 +560,4 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
 		//a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
 	}
-
-	return
-
 }

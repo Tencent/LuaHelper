@@ -115,7 +115,7 @@ func (a *Analysis) cgFuncDefExp(node *ast.FuncDefExp) *common.FuncInfo {
 		varIndex := uint8(index + 1)
 
 		locVar := subFi.MainScope.AddLocVar(fileResult.Name, param, common.LuaTypeAll, nil, node.ParLocList[index],
-			 varIndex)
+			varIndex)
 		locVar.IsParam = true
 		locVar.IsUse = true
 
@@ -266,7 +266,7 @@ func (a *Analysis) cgBinopExp(node *ast.BinopExp, parentVar *common.VarInfo) {
 				twoLoc := common.GetExpLoc(node.Exp2)
 				if !oneLoc.IsInitialLoc() && !twoLoc.IsInitialLoc() {
 					errLoc := lexer.GetRangeLoc(&oneLoc, &twoLoc)
-					errStr := fmt.Sprintf("or expression is always true")
+					errStr := "or expression is always true"
 					fileResult.InsertError(common.CheckErrorOrAlwaysTrue, errStr, errLoc)
 				}
 			}
@@ -281,7 +281,7 @@ func (a *Analysis) cgBinopExp(node *ast.BinopExp, parentVar *common.VarInfo) {
 				twoLoc := common.GetExpLoc(node.Exp2)
 				if !oneLoc.IsInitialLoc() && !twoLoc.IsInitialLoc() {
 					errLoc := lexer.GetRangeLoc(&oneLoc, &twoLoc)
-					errStr := fmt.Sprintf("and expression is always false")
+					errStr := "and expression is always false"
 					fileResult.InsertError(common.CheckErrorAndAlwaysFalse, errStr, errLoc)
 				}
 			}
@@ -295,7 +295,7 @@ func (a *Analysis) cgBinopExp(node *ast.BinopExp, parentVar *common.VarInfo) {
 			_, ok2 := node.Exp2.(*ast.FloatExp)
 
 			if ok1 || ok2 {
-				errStr := fmt.Sprintf("float compare error")
+				errStr := "float compare error"
 				fileResult.InsertError(common.CheckErrorFloatEq, errStr, node.Loc)
 			}
 		}
@@ -375,13 +375,11 @@ func (a *Analysis) cgTableAccessExp(node *ast.TableAccessExp, binParentExp *ast.
 	if a.isFirstTerm() {
 		if oneName, ok := node.PrefixExp.(*ast.NameExp); ok {
 			if oneName.Name == "_G" {
-				if strExp , ok1 := node.KeyExp.(*ast.StringExp); ok1 {
-					a.analysisNoDefineStr(strExp) 
+				if strExp, ok1 := node.KeyExp.(*ast.StringExp); ok1 {
+					a.analysisNoDefineStr(strExp)
 				}
 			}
 		}
-
-	
 
 		a.checkIfNotTableAccess(node, binParentExp)
 		return

@@ -203,10 +203,10 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 
 	// 检查重复条件
 	if a.isFirstTerm() && !a.realTimeFlag && !common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorDuplicateIf) {
-		for i, _ := range node.Exps {
+		for i := range node.Exps {
 			for j := i + 1; j < len(node.Exps); j++ {
 				if common.CompExp(node.Exps[i], node.Exps[j]) {
-					errStr := fmt.Sprintf("same if condition")
+					errStr := "same if condition"
 
 					var relateVec []common.RelateCheckInfo
 					relateVec = append(relateVec, common.RelateCheckInfo{
@@ -746,58 +746,6 @@ func (a *Analysis) handleIfNotValAssign(valExp ast.Exp) {
 		notValStruct.SetFlag = true
 		findNotScope.SetNotVarMapStruct(strName, notValStruct)
 	}
-
-	return
-}
-
-//  处理table成员变量的构造
-func (a *Analysis) handleTableMemConstruct(strMemName string, strMemValue string, oneFunc *common.FuncInfo,
-	newRefer *common.ReferInfo, loc lexer.Location, strProPre string, nExps int, i int, node *ast.AssignStat) {
-
-	scope := a.curScope
-	fi := a.curFunc
-
-	fileResult := a.curResult
-	// 1) 先在局部变量中查找
-	findOk, locVarInfo := scope.FindLocVar(strMemName, loc)
-	if findOk && !locVarInfo.IsExistMember(strMemValue) {
-		newVar := common.CreateOneVarInfo(fileResult.Name, loc, newRefer, oneFunc, 1)
-		if oneFunc != nil && oneFunc.IsColon {
-			//目前只有冒号函数才进行反向关联函数的变量
-			oneFunc.RelateVar = common.CreateFuncRelateVar(strMemName, locVarInfo)
-		}
-
-		if nExps >= (i + 1) {
-			expNode := node.ExpList[i]
-			newVar.VarType = common.GetExpType(expNode)
-			newVar.ReferExp = expNode
-		}
-
-		locVarInfo.InsertSubMember(strMemValue, newVar)
-		return
-	}
-
-	// 2)判断是否为当前文件的全局变量赋值, 例如a.b = 3, 其中strMemName赋值为a, strMemValue赋值为b
-	// 一定为全局变量，在全局变量中查找
-	findMemFlag, memVar := fileResult.FindGlobalVar(strMemName, fi.FuncLv, fi.ScopeLv, loc,
-		strProPre, false)
-
-	// 定义在本文件中的global 变量，尝试构建所有的成员信息
-	if findMemFlag && !memVar.IsExistMember(strMemValue) {
-		newVar := common.CreateOneVarInfo(fileResult.Name, loc, newRefer, oneFunc, 1)
-		if oneFunc != nil && oneFunc.IsColon {
-			//目前只有冒号函数才进行反向关联函数的变量
-			oneFunc.RelateVar = common.CreateFuncRelateVar(strMemName, memVar)
-		}
-
-		if nExps >= (i + 1) {
-			expNode := node.ExpList[i]
-			newVar.VarType = common.GetExpType(expNode)
-			newVar.ReferExp = expNode
-		}
-
-		memVar.InsertSubMember(strMemValue, newVar)
-	}
 }
 
 // 处理assign语句没有直接定义变量的时候
@@ -1105,7 +1053,7 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 				}
 
 				if isSame {
-					errStr := fmt.Sprintf("self assign error")
+					errStr := "self assign error"
 					fileResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
 				}
 			}

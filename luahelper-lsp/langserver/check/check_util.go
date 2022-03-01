@@ -285,7 +285,7 @@ func (a *AllProject) GetAnnotateClassAllFieldOfStrict(astType annotateast.Type, 
 	//暂不处理多个class情况
 	if len(classInfoList) == 1 {
 		isStrict = classInfoList[0].ClassState.IsStrict
-		for k, _ := range classInfoList[0].FieldMap {
+		for k := range classInfoList[0].FieldMap {
 			retMap[k] = true
 		}
 		className = classInfoList[0].ClassState.Name
