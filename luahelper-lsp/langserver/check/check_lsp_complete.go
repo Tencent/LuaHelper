@@ -601,7 +601,7 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 
 	strFind := completeVar.StrVec[0]
 
-	// 1) 是否为协议前缀 
+	// 1) 是否为协议前缀
 	if lenStrVec == 1 && completeVar.LastEmptyFlag {
 		if common.GConfig.IsStrProtocol(strFind) {
 			// 为协议前缀，返回所有的返回
@@ -664,7 +664,7 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 						strKey = strings.ReplaceAll(strKey, "\"", "'")
 					}
 				} else {
-					if strings.HasPrefix(strKey, "\"") {
+					if completeVar.SplitByte != ' ' && strings.HasPrefix(strKey, "\"") {
 						continue
 					}
 				}
