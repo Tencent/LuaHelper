@@ -171,7 +171,6 @@ func (a *Analysis) getTableAccessRelateVar(node *ast.TableAccessExp) (locVar *co
 		return
 	}
 
-	subGlobal, _ := subMaps[strKey]
-	locVar = subGlobal
+	locVar = subMaps[strKey]
 	return
 }

@@ -596,8 +596,6 @@ func (a *Analysis) findThreeLevelCall(node ast.Exp, nameExp ast.Exp) {
 			}
 		}
 	}
-
-	return
 }
 
 // 第五轮查找是否展开过 :函数的调用
@@ -1355,7 +1353,7 @@ func (a *Analysis) GetImportReferByCallExp(funcExp *ast.FuncCallExp) *common.Ref
 
 	fileResult := a.curResult
 	callExp, ok := funcExp.PrefixExp.(*ast.NameExp)
-	if ok != true {
+	if !ok {
 		return nil
 	}
 

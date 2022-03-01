@@ -1691,5 +1691,4 @@ func (a *AllProject) getAliasMultiCandidateMap(className string, fileName string
 
 		strMap[oneStr] = constType.Comment
 	}
-	return
 }
