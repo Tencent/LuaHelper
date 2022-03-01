@@ -91,11 +91,13 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 		compVar = getDefaultHashtag(comResult)
 		preStr = "#"
 	} else {
-		if (preCompStr == "\"" || preCompStr == "'") && paramCandidateType != nil {
+		if (preCompStr == "\"" || preCompStr == "'" || preCompStr == " ") && paramCandidateType != nil {
 			if preCompStr == "\"" {
 				splitByte = '"'
-			} else {
+			} else if preCompStr == "'" {
 				splitByte = '\''
+			} else {
+				splitByte = ' '
 			}
 			compVar.StrVec = append(compVar.StrVec, preCompStr)
 			compVar.OnelyParamQuotesFlag = true
