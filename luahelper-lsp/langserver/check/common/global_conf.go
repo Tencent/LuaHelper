@@ -661,6 +661,7 @@ func (g *GlobalConfig) ReadConfig(strDir, configFileName string, checkFlagList [
 	for _, errorType := range jsonConfig.IgnoreErrorTypes {
 		g.IgnoreErrorTypeMap[(CheckErrorType)(errorType)] = true
 	}
+	g.IgnoreErrorTypeMap[CheckErrorClassField] = true
 
 	// 忽略对某些文件或文件夹进行check分析， 包含go语言的正则
 	g.IgnoreHandleFolderVec = make([]string, 0, 2)
