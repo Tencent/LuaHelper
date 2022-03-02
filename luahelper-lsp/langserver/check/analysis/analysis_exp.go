@@ -382,6 +382,8 @@ func (a *Analysis) cgTableAccessExp(node *ast.TableAccessExp, binParentExp *ast.
 		}
 
 		a.checkIfNotTableAccess(node, binParentExp)
+
+		a.expandVarStrMap(node)
 		return
 	}
 

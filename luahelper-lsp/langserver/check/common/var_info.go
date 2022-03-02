@@ -95,6 +95,7 @@ type VarInfo struct {
 	ReferInfo       *ReferInfo          // 指向是否引用了其他的lua文件, nil表示没有指向
 	ReferFunc       *FuncInfo           // 如果变量是定义的函数类型，指向函数定义的func，nil表示没有指向
 	SubMaps         map[string]*VarInfo // 包含的所有成员信息,构造的，例如 local a = {} a.b = 1, 其中b就是a的成员信息，绑定起来
+	ExpandStrMap    map[string]struct{} // 字符串展开存储的字符串map。// local a = { }// print(a.b.c) // a变量的身上挂了一个字符串属性：b.c
 	ExtraGlobal     *ExtraGlobal        // 当变量指向全局变量时候，扩展的全局变量信息，如果为nil，表示局部变量。
 	Loc             lexer.Location      // 初始定义的位置信息
 	NoUseAssignLocs []lexer.Location    // 局部变量定义了，未直接使用，后面有对其赋值，记录下所有的位置

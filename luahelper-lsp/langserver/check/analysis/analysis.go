@@ -479,7 +479,7 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 
 	find := false
 	//先尝试找local变量
-	ok, varInfo := a.curScope.FindLocVar(strTableName, node.Loc)
+	varInfo, ok := a.curScope.FindLocVar(strTableName, node.Loc)
 	if ok {
 		//decLine = locVarInfo.Loc.StartLine - 1
 		find = true
