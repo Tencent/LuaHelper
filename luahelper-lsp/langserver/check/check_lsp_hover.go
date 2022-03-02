@@ -32,6 +32,13 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 		}
 	}
 
+	if symbol != nil && len(findList) == 0 {
+		lableStr = getVarInfoExpandStrHover(symbol.VarInfo, varStruct.Str)
+		if lableStr != "" {
+			return
+		}
+	}
+
 	// 原生的变量没有找到, 直接返回
 	if symbol == nil || len(findList) == 0 {
 		lableStr = varStruct.Str + " : any"
@@ -214,7 +221,72 @@ func needReplaceMapStr(oldStr string, strValueType string) bool {
 		return true
 	}
 
+	if strings.Contains(oldStr, ": any") {
+		return true
+	}
+
 	return false
+}
+
+// 只获取expandStrMap的hover
+func getVarInfoExpandStrHover(varInfo *common.VarInfo, strPre string) (str string) {
+	if varInfo == nil {
+		return
+	}
+
+	if varInfo.ExpandStrMap == nil {
+		return
+	}
+
+	vecPre := strings.Split(strPre, ".")
+	beforeStrPre := vecPre[0]
+
+	var existMap map[string]string = map[string]string{}
+	for str := range varInfo.ExpandStrMap {
+		str = beforeStrPre + "." + str
+		if !strings.HasPrefix(str, strPre+".") {
+			continue
+		}
+
+		if (len(strPre) + 1) >= len(str) {
+			continue
+		}
+
+		strRemain := str[len(strPre)+1:]
+		if strRemain == "" {
+			continue
+		}
+
+		strVec := strings.Split(strRemain, ".")
+		oneStr := strVec[0]
+		strType := "any"
+		if len(strVec) > 1 {
+			strType = "table"
+		}
+		newStr := oneStr + ": " + strType + ","
+		if oldStr, ok := existMap[oneStr]; ok {
+			if needReplaceMapStr(oldStr, strType) {
+				existMap[oneStr] = newStr
+			}
+		} else {
+			existMap[oneStr] = newStr
+		}
+
+		if _, ok := existMap[strVec[0]]; !ok {
+			existMap[strVec[0]] = newStr
+		}
+	}
+	if len(existMap) == 0 {
+		return
+	}
+
+	str = strPre + " : table = {\n"
+	traverseMapInStringOrder(existMap, func(key string, value string) {
+		str = str + "\t" + value + "\n"
+	})
+
+	str = str + "}"
+	return
 }
 
 func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
@@ -234,6 +306,36 @@ func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
 			}
 		} else {
 			existMap[key] = newStr
+		}
+	}
+
+	if varInfo.ExpandStrMap == nil {
+		return
+	}
+
+	for key := range varInfo.ExpandStrMap {
+		strVec := strings.Split(key, ".")
+		if len(strVec) == 0 {
+			continue
+		}
+
+		oneStr := strVec[0]
+		if !common.JudgeSimpleStr(oneStr) {
+			continue
+		}
+
+		strType := "any"
+		if len(strVec) > 1 {
+			strType = "table"
+		}
+
+		newStr := oneStr + ": " + strType + ","
+		if oldStr, ok := existMap[oneStr]; ok {
+			if needReplaceMapStr(oldStr, strType) {
+				existMap[oneStr] = newStr
+			}
+		} else {
+			existMap[oneStr] = newStr
 		}
 	}
 }
@@ -287,7 +389,7 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 		}
 	} else {
 		str = "table = {\n"
-		if symbol.VarInfo == nil || len(symbol.VarInfo.SubMaps) == 0 {
+		if symbol.VarInfo == nil || (len(symbol.VarInfo.SubMaps) == 0 && len(symbol.VarInfo.ExpandStrMap) == 0) {
 			return "table = { }", existMap
 		}
 	}

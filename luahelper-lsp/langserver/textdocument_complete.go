@@ -616,7 +616,11 @@ func (l *LspServer) convertToCompItems(preStr string) (items []CompletionItemTmp
 			item.Label = preStr + oneComplete.Label
 		}
 
-		item.Kind = lsp.CompletionItemKind(oneComplete.Kind)
+		item.Kind = lsp.VariableCompletion
+		if oneComplete.Kind == common.IKConstant {
+			item.Kind = lsp.ConstantCompletion
+		}
+
 		if oneComplete.Kind == common.IKFunction {
 			item.Kind = lsp.FunctionCompletion
 		} else if oneComplete.Kind == common.IKKeyword {
