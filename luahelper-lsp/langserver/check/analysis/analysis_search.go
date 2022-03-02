@@ -741,6 +741,61 @@ func (a *Analysis) findFiveTableAccessColon(prefixExp ast.Exp, keyExp ast.Exp, n
 	a.findFiveTableAccess(prefixExp, keyExp, nodeLoc)
 }
 
+// 对变量的调用进行展开，例如:
+// local a = {}
+// print(a.b.c)
+// a变量的身上挂了一个字符串属性：b.c
+func (a *Analysis) expandVarStrMap(node *ast.TableAccessExp) {
+	// 下面的判断只在第一轮，且是非实时检查时才触发
+	if !a.isFirstTerm() {
+		return
+	}
+
+	strKey := common.GetExpName(node.KeyExp)
+	if !common.JudgeSimpleStr(strKey) {
+		return
+	}
+
+	strPre := common.GetExpName(node.PrefixExp)
+	preVec := strings.Split(strPre, ".")
+	if len(preVec) == 0 {
+		return
+	}
+
+	for i := 1; i < len(preVec); i++ {
+		if !common.JudgeSimpleStr(preVec[i]) {
+			return
+		}
+	}
+
+	strOne := preVec[0]
+	strName := common.GetSimpleValue(strOne)
+	if strName == "" {
+		return
+	}
+	if strName == "self" {
+		strName = a.ChangeSelfToReferVar(strName, "")
+	}
+
+	scope := a.curScope
+
+	// 2.1) 查找局部变量的引用
+	loc := common.GetTablePrefixLoc(node)
+	flag, varInfo := scope.FindLocVar(strName, loc)
+	if !flag {
+		return
+	}
+
+	vecExpand := preVec[1:]
+	vecExpand = append(vecExpand, strKey)
+
+	strExpand := strings.Join(vecExpand, ".")
+	if varInfo.ExpandStrMap == nil {
+		varInfo.ExpandStrMap = map[string]struct{}{}
+	}
+	varInfo.ExpandStrMap[strExpand] = struct{}{}
+}
+
 // 第一轮， if not a then ，这样的赋值语句a.b = 1，检查
 // binParentExp 为二元表达式，父的BinopExp指针， 例如 a = b and c，当对c变量调用cgExp时候，binParentExp为b and c
 func (a *Analysis) checkIfNotTableAccess(node *ast.TableAccessExp, binParentExp *ast.BinopExp) {
