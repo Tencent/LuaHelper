@@ -72,21 +72,7 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 
 		if flag {
 			lableStr = strLabel1
-			if strPreFirst == "_G." && strings.HasPrefix(strLabel1, "function ") {
-				//  修复特殊的 _G.function a() 这样的显示
-				lableStr = "[_G] " + strLabel1
-			} else {
-				if strPreFirst == "local " && strings.HasPrefix(strLabel1, "function _G.") {
-					lableStr = strPreFirst + "function " + strings.TrimPrefix(strLabel1, "function _G.")
-				} else {
-					if strings.HasPrefix(strLabel1, "_G.") {
-						lableStr = strLabel1
-					} else {
-						lableStr = strPreFirst + strLabel1
-					}
-				}
-			}
-
+			lableStr = strPreFirst + strLabel1
 			docStr = strDoc1
 			luaFileStr = dirManager.RemovePathDirPre(oneSymbol.FileName)
 			return
@@ -104,21 +90,7 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 	}
 
 	lableStr = strLastBefore
-	if strPreFirst == "_G." && strings.HasPrefix(strLastBefore, "function ") {
-		//  修复特殊的 _G.function a() 这样的显示
-		lableStr = "[_G] " + strLastBefore
-	} else {
-		if strPreFirst == "local " && strings.HasPrefix(strLastBefore, "function _G.") {
-			lableStr = strPreFirst + "function " + strings.TrimPrefix(strLastBefore, "function _G.")
-		} else {
-			if strings.HasPrefix(strLastBefore, "_G.") {
-				lableStr = strLastBefore
-			} else {
-				lableStr = strPreFirst + strLastBefore
-			}
-		}
-	}
-
+	lableStr = strPreFirst + strLastBefore
 	docStr = strOneComment
 	return
 }
@@ -601,10 +573,6 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 			if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 				strPre = "local "
 			}
-
-			if symbol.VarInfo.ExtraGlobal != nil && symbol.VarInfo.ExtraGlobal.GFlag {
-				strPre = "_G."
-			}
 		}
 
 		strDoc = symbol.AnnotateComment
@@ -635,11 +603,7 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 			}
 
 			strFunc := referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
-			if symbol.VarInfo.ExtraGlobal != nil && symbol.VarInfo.ExtraGlobal.GFlag {
-				strType = "function _G." + strFunc
-			} else {
-				strType = "function " + strFunc
-			}
+			strType = "function " + strFunc
 		}
 	}
 
@@ -648,10 +612,6 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 		strLabel = strLabel + " : " + strType
 		if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 			strPre = "local "
-		}
-
-		if symbol.VarInfo.ExtraGlobal != nil && symbol.VarInfo.ExtraGlobal.GFlag {
-			strPre = "_G."
 		}
 	} else {
 		strLabel = strType
