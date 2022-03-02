@@ -777,12 +777,10 @@ func (a *Analysis) expandVarStrMap(node *ast.TableAccessExp) {
 		strName = a.ChangeSelfToReferVar(strName, "")
 	}
 
-	scope := a.curScope
-
 	// 2.1) 查找局部变量的引用
 	loc := common.GetTablePrefixLoc(node)
-	flag, varInfo := scope.FindLocVar(strName, loc)
-	if !flag {
+	varInfo := a.findFileVar(strName, loc)
+	if varInfo == nil {
 		return
 	}
 
@@ -794,6 +792,30 @@ func (a *Analysis) expandVarStrMap(node *ast.TableAccessExp) {
 		varInfo.ExpandStrMap = map[string]struct{}{}
 	}
 	varInfo.ExpandStrMap[strExpand] = struct{}{}
+}
+
+func (a *Analysis) findFileVar(strName string, loc lexer.Location) *common.VarInfo {
+	scope := a.curScope
+	// 首先查找当前局部变量下有没有当前表名
+	find, locVar := scope.FindLocVar(strName, loc)
+	if find {
+		return locVar
+	}
+
+	// 再次查找当前文件下全局变量有没有当前表名
+	globalMaps := a.curResult.GlobalMaps
+	if gVar, ok := globalMaps[strName]; ok {
+		return gVar
+	}
+
+	// 判断当前文件是否是第一次分析table
+	// 比如a.b.c.d 会先从 a.b.c.d 再从 a.b.c 最后 a.b 进入此函数
+	nodefineMaps := a.curResult.NodefineMaps
+	if noVar, ok := nodefineMaps[strName]; ok {
+		return noVar
+	}
+
+	return nil
 }
 
 // 第一轮， if not a then ，这样的赋值语句a.b = 1，检查

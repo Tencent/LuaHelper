@@ -1175,8 +1175,8 @@ func TestHover13(t *testing.T) {
 	}
 }
 
-// 扩展变量，出现了的变量
-func TestHoverExpand(t *testing.T) {
+// expand local 扩展变量，出现了的变量
+func TestHoverExpandLocal(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	paths, _ := filepath.Split(filename)
 
@@ -1187,7 +1187,173 @@ func TestHoverExpand(t *testing.T) {
 	lspServer := createLspTest(strRootPath, strRootURI)
 	context := context.Background()
 
-	fileName := strRootPath + "/" + "hover_expand.lua"
+	fileName := strRootPath + "/" + "hover_expand_local.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+	openParams := lsp.DidOpenTextDocumentParams{
+		TextDocument: lsp.TextDocumentItem{
+			URI:  lsp.DocumentURI(fileName),
+			Text: string(data),
+		},
+	}
+	err1 := lspServer.TextDocumentDidOpen(context, openParams)
+	if err1 != nil {
+		t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+	}
+
+	var resultList [][]string = [][]string{}
+	var positionList []lsp.Position = []lsp.Position{}
+	positionList = append(positionList, lsp.Position{
+		Line:      1,
+		Character: 2,
+	})
+	resultList = append(resultList, []string{"a: number = 1", "bbb: table"})
+
+	positionList = append(positionList, lsp.Position{
+		Line:      1,
+		Character: 6,
+	})
+	resultList = append(resultList, []string{"a : number = 1"})
+
+	positionList = append(positionList, lsp.Position{
+		Line:      4,
+		Character: 13,
+	})
+	resultList = append(resultList, []string{"q: table", "qqqqqq: table"})
+
+	positionList = append(positionList, lsp.Position{
+		Line:      4,
+		Character: 16,
+	})
+	resultList = append(resultList, []string{"b: any"})
+
+	positionList = append(positionList, lsp.Position{
+		Line:      5,
+		Character: 16,
+	})
+	resultList = append(resultList, []string{"d: table"})
+
+	for index, onePoisiton := range positionList {
+		hoverParams := lsp.TextDocumentPositionParams{
+			TextDocument: lsp.TextDocumentIdentifier{
+				URI: lsp.DocumentURI(fileName),
+			},
+			Position: onePoisiton,
+		}
+		hoverReturn1, err1 := lspServer.TextDocumentHover(context, hoverParams)
+		if err1 != nil {
+			t.Fatalf("TextDocumentHover file:%s err=%s", fileName, err1.Error())
+		}
+
+		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
+
+		for _, oneStr := range resultList[index] {
+			if !strings.Contains(hoverMarkUpReturn1.Contents.Value, oneStr) {
+				t.Fatalf("hover error, not find str=%s, index=%d", oneStr, index)
+			}
+		}
+	}
+}
+
+// expand G 扩展变量，出现了的变量
+func TestHoverExpandG(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/hover"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "hover_expand_g.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+	openParams := lsp.DidOpenTextDocumentParams{
+		TextDocument: lsp.TextDocumentItem{
+			URI:  lsp.DocumentURI(fileName),
+			Text: string(data),
+		},
+	}
+	err1 := lspServer.TextDocumentDidOpen(context, openParams)
+	if err1 != nil {
+		t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+	}
+
+	var resultList [][]string = [][]string{}
+	var positionList []lsp.Position = []lsp.Position{}
+	positionList = append(positionList, lsp.Position{
+		Line:      1,
+		Character: 2,
+	})
+	resultList = append(resultList, []string{"a: number = 1", "bbb: table"})
+
+	positionList = append(positionList, lsp.Position{
+		Line:      1,
+		Character: 6,
+	})
+	resultList = append(resultList, []string{"a : number = 1"})
+
+	positionList = append(positionList, lsp.Position{
+		Line:      4,
+		Character: 13,
+	})
+	resultList = append(resultList, []string{"q: table", "qqqqqq: table"})
+
+	positionList = append(positionList, lsp.Position{
+		Line:      4,
+		Character: 16,
+	})
+	resultList = append(resultList, []string{"b: any"})
+
+	positionList = append(positionList, lsp.Position{
+		Line:      5,
+		Character: 16,
+	})
+	resultList = append(resultList, []string{"d: table"})
+
+	for index, onePoisiton := range positionList {
+		hoverParams := lsp.TextDocumentPositionParams{
+			TextDocument: lsp.TextDocumentIdentifier{
+				URI: lsp.DocumentURI(fileName),
+			},
+			Position: onePoisiton,
+		}
+		hoverReturn1, err1 := lspServer.TextDocumentHover(context, hoverParams)
+		if err1 != nil {
+			t.Fatalf("TextDocumentHover file:%s err=%s", fileName, err1.Error())
+		}
+
+		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
+
+		for _, oneStr := range resultList[index] {
+			if !strings.Contains(hoverMarkUpReturn1.Contents.Value, oneStr) {
+				t.Fatalf("hover error, not find str=%s, index=%d", oneStr, index)
+			}
+		}
+	}
+}
+
+// expand No 扩展变量，出现了的变量
+func TestHoverExpandNo(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/hover"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "hover_expand_no.lua"
 	data, err := ioutil.ReadFile(fileName)
 
 	if err != nil {
