@@ -34,6 +34,7 @@ const (
 	ATokenKwVararg                       // vararg
 	ATokenKwIdentifier                   // identifier
 	ATokenKwStrict                       // strict
+	ATokenKwConst                        // const
 	ATokenKwOther                        // other token， not valid
 )
 
@@ -53,4 +54,5 @@ var keywords = map[string]ATokenType{
 	"private":   ATokenKwPrivate,
 	"vararg":    ATokenKwVararg,
 	"strict":    ATokenKwStrict,
+	"const":     ATokenKwConst,
 }

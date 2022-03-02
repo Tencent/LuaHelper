@@ -26,12 +26,13 @@ type AnnotateOverloadState struct {
 
 // AnnotateTypeState 定义的类型
 // 一行可能定义多个，例如下面的例子
-//---@type number, stirng
+//---@type [const] number, [const] stirng
 //local a, b
 type AnnotateTypeState struct {
 	ListType   []Type         // 多个类型，放在list里面
 	Comment    string         // 其他所有的注释内容
 	CommentLoc lexer.Location // 注释内容的位置信息
+	ListConst  []bool         // 是否const
 }
 
 // AnnotateClassState 定义的class
