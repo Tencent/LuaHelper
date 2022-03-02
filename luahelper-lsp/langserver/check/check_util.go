@@ -361,6 +361,29 @@ func (a *AllProject) GetAnnotateClass(strFile string, strName string, varInfo *c
 	return isStrict, retMap, className
 }
 
+// 获取注解 ---type
+func (a *AllProject) IsAnnotateTypeConst(varInfo *common.VarInfo) (isConst bool) {
+	isConst = false
+
+	// 1) 获取文件对应的annotateFile
+	annotateFile := a.getAnnotateFile(varInfo.FileName)
+	if annotateFile == nil {
+		log.Error("GetAnnotateType annotateFile is nil, file=%s", varInfo.FileName)
+		return isConst
+	}
+
+	fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
+
+	if fragmentInfo != nil &&
+		fragmentInfo.TypeInfo != nil &&
+		len(fragmentInfo.TypeInfo.ConstList) > 0 {
+		return fragmentInfo.TypeInfo.ConstList[0]
+	}
+
+	//没找到返回空的
+	return isConst
+}
+
 // GetFirstFileStuct 获取第一阶段文件处理的结果
 func (a *AllProject) GetFirstFileStuct(strFile string) (*results.FileStruct, bool) {
 	if a.checkTerm == results.CheckTermFirst {

@@ -566,26 +566,31 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		return
 	}
 
-	// if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
-	// 	return
-	// }
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorConstAssign) {
+		return
+	}
 
-	// name := ""
-	// loc := lexer.Location{}
-	// switch exp := node.(type) {
-	// case *ast.NameExp:
-	// 	name = exp.Name
-	// 	loc = exp.Loc
-	// 	//case *ast.ParensExp:
-	// 	//loc = exp
-	// 	// case *ast.TableConstructorExp:
-	// 	// 	name = exp.ValExps
-	// }
+	name := ""
+	loc := lexer.Location{}
+	switch exp := node.(type) {
+	case *ast.NameExp:
+		name = exp.Name
+		loc = exp.Loc
+		//case *ast.ParensExp:
+		//loc = exp
+		// case *ast.TableConstructorExp:
+		// 	name = exp.ValExps
+	}
 
-	// ok, varInfo := a.FindVarDefineForCheck(name, loc)
-	// if !ok {
-	// 	return
-	// }
+	ok, varInfo := a.FindVarDefineForCheck(name, loc)
+	if !ok {
+		return
+	}
 
-	// a.Projects.GetAnnotateClass(a.curResult.Name, name, varInfo, loc.StartLine-1, a.curScope)
+	if a.Projects.IsAnnotateTypeConst(varInfo) {
+		//标记了常量，却赋值
+		errStr := fmt.Sprintf("(%s) is const, can not assgin", name)
+		a.curResult.InsertError(common.CheckErrorConstAssign, errStr, loc)
+		//a.curResult.InsertError(common.CheckErrorConstAssign, errStr, loc)
+	}
 }
