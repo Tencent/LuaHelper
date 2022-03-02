@@ -534,7 +534,7 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 				}
 			}
 
-			// 查找所有的
+			// 查找所有的 todo
 			if !find {
 				ok, varInfo = a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre)
 				if ok {
