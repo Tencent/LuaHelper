@@ -426,15 +426,12 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
 		return
 	}
-	// if strTableName == "tableA" {
-	// 	strTableName = "tableA"
-	// }
 
 	if strTableName == "" || len(strFieldNamelist) == 0 || nodeLoc == nil || node == nil {
 		return
 	}
 
-	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, nil, nodeLoc.StartLine-1, a.curScope)
+	isStrict, fieldMap, className := a.Projects.GetAnnotateClassByLoc(a.curResult.Name, nodeLoc.StartLine-1)
 	if !isStrict || len(fieldMap) == 0 {
 		return
 	}
@@ -451,8 +448,9 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 
 			if ok {
 				errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strFieldName, className)
-				a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, keyLoc)
-				//a.curResult.InsertError(common.CheckErrorClassField, errStr, nodeLoc)
+				a.curResult.InsertError(common.CheckErrorClassField, errStr, keyLoc)
+				//a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, keyLoc)
+
 			}
 		}
 	}
@@ -543,7 +541,7 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	isStrict, fieldMap, className := a.Projects.GetAnnotateClass(a.curResult.Name, strTableName, varInfo, 0, a.curScope)
+	isStrict, fieldMap, className := a.Projects.GetAnnotateClassByVar(strTableName, varInfo)
 	if !isStrict || len(fieldMap) == 0 {
 		return
 	}
@@ -552,8 +550,8 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		log.Debug("checkTableAccess currect, tableName=%s, keyName=%s", strTableName, strKey)
 	} else {
 		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strKey, className)
-		a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
-		//a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
+		a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
+		//a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
 	}
 
 	return
