@@ -41,6 +41,7 @@ type OneCompleteData struct {
 	Documentation  string
 	LuaFile        string                          // 补全出现的文件名
 	VarInfo        *VarInfo                        // 补全的变量名称
+	ExpandVarInfo  *VarInfo                        // 扩展的变量名称
 	CacheKind      CacheKind                       // 缓存的类型
 	FieldState     *annotateast.AnnotateFieldState // 提示为注解的class信息
 	FieldColonFlag annotateast.FieldColonType      // 当为FieldState时候，是否为：函数
@@ -58,6 +59,7 @@ type CompleteCache struct {
 	colonFlag        bool                // 代码补全最后是否为冒号语法
 	beforeHashtag    bool                //  补全的词前面是否包含#
 	clearParamQuotes bool                // 补全时候，是否要清除候选词的引号
+	completeVar      *CompleteVarStruct  // 缓存的输入代码补全的结构
 }
 
 // CreateCompleteCache 创建一个代码补全缓存
@@ -71,6 +73,7 @@ func CreateCompleteCache() *CompleteCache {
 		excludeMap:       map[string]struct{}{},
 		colonFlag:        false,
 		clearParamQuotes: false,
+		completeVar:      nil,
 	}
 
 	return cache
@@ -85,6 +88,17 @@ func (cache *CompleteCache) ResertData() {
 	cache.colonFlag = false
 	cache.beforeHashtag = false
 	cache.clearParamQuotes = false
+	cache.completeVar = nil
+}
+
+// SetCompleteVar set completeVar
+func (cache *CompleteCache) SetCompleteVar(completeVar *CompleteVarStruct) {
+	cache.completeVar = completeVar
+}
+
+// GetCompleteVar get completeVar
+func (cache *CompleteCache) GetCompleteVar() *CompleteVarStruct {
+	return cache.completeVar
 }
 
 // SetClearParamQuotes set clearParamQuotes
@@ -263,6 +277,20 @@ func (cache *CompleteCache) InsertCompleteNormal(label, detail, documentation st
 		Documentation: documentation,
 		Kind:          kind,
 		CacheKind:     CKindNormal,
+	}
+	cache.dataList = append(cache.dataList, oneComplete)
+	cache.existMap[label] = len(cache.dataList) - 1
+}
+
+// InsertCompleteNormal 插入普通的
+func (cache *CompleteCache) InsertCompleteExpand(label, detail, documentation string, kind ItemKind, expandVar *VarInfo) {
+	oneComplete := OneCompleteData{
+		Label:         label,
+		Detail:        detail,
+		Documentation: documentation,
+		Kind:          kind,
+		CacheKind:     CKindNormal,
+		ExpandVarInfo: expandVar,
 	}
 	cache.dataList = append(cache.dataList, oneComplete)
 	cache.existMap[label] = len(cache.dataList) - 1
