@@ -40,7 +40,7 @@ func (a *AllProject) findGlobalVarDefineInfo(comParam *CommonFuncParam, strName 
 func (a *AllProject) findVarDefineInfo(comParam *CommonFuncParam, strName string, strProPre string) (
 	findVar *common.VarInfo) {
 	// 1) 局部变量找到了该变量
-	if ok, locVarInfo := comParam.scope.FindLocVar(strName, comParam.loc); ok {
+	if locVarInfo, ok := comParam.scope.FindLocVar(strName, comParam.loc); ok {
 		return locVarInfo
 	}
 
