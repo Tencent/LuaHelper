@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/common"
+	"luahelper-lsp/langserver/log"
 	"sort"
 	"strings"
 )
@@ -30,6 +31,11 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 			docStr = strings.ReplaceAll(docStr, "\n", "  \n")
 			return
 		}
+	}
+
+	if symbol == nil && len(findList) == 0 {
+		// 没有找到变量的定义，查找当前文件的：NodefineMaps
+		symbol = a.getNodefineMapVar(strFile, varStruct)
 	}
 
 	if symbol != nil && len(findList) == 0 {
@@ -135,6 +141,35 @@ func traverseMapInStringOrder(params map[string]string, handler mapEntryHandler)
 			handler(k, params[k])
 		}
 	}
+}
+
+func (a *AllProject) getNodefineMapVar(strFile string, varStruct *common.DefineVarStruct) (symbol *common.Symbol) {
+	// 1）先查找该文件是否存在
+	fileStruct := a.getVailidCacheFileStruct(strFile)
+	if fileStruct == nil {
+		log.Error("getNodefineMapVar error, not find file=%s", strFile)
+		return nil
+	}
+	fileResult := fileStruct.FileResult
+	if fileResult == nil {
+		log.Error("getNodefineMapVar error, not find file=%s", strFile)
+		return nil
+	}
+
+	splitArray := varStruct.StrVec
+
+	if splitArray[0] == "_G" {
+		splitArray = splitArray[1:]
+	}
+	if len(splitArray) == 0 {
+		return
+	}
+	strName := splitArray[0]
+
+	if findVar, ok := fileResult.NodefineMaps[strName]; ok {
+		symbol = common.GetDefaultSymbol(findVar.FileName, findVar)
+	}
+	return
 }
 
 func (a *AllProject) convertClassInfoToHovers(oneClass *common.OneClassInfo, existMap map[string]string) {
