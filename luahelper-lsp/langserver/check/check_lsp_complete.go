@@ -687,44 +687,53 @@ func (a *AllProject) expandNodefineMapComplete(luaInFile string, strFind string,
 		}
 
 		a.completeCache.InsertCompleteExpand(strOne, "", "", common.IKVariable, varInfo)
-		//a.completeCache.InsertCompleteNormal(strOne, "", "", common.IKVariable)
 	}
+}
+
+func (a *AllProject) paramCandidateComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) bool {
+	if completeVar.ParamCandidateType == nil {
+		return false
+	}
+
+	strMap := a.getSymbolAliasMultiCandidateMap(completeVar.ParamCandidateType, comParam.fi.FileName, comParam.loc.StartLine)
+	if len(strMap) > 0 {
+		if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
+			a.completeCache.SetClearParamQuotes(true)
+		}
+
+		for strKey, strComment := range strMap {
+			if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
+				// 如果分割的是为单引号或是双引号，strKey需要为引号的字符串
+				if !strings.HasPrefix(strKey, "\"") {
+					continue
+				}
+
+				if completeVar.SplitByte == '\'' {
+					strKey = strings.ReplaceAll(strKey, "\"", "'")
+				}
+			} else {
+				if completeVar.SplitByte != ' ' && strings.HasPrefix(strKey, "\"") {
+					continue
+				}
+			}
+
+			a.completeCache.InsertCompleteNormal(strKey, strComment, "", common.IKConstant)
+		}
+		return true
+	}
+
+	if completeVar.OnelyParamQuotesFlag {
+		return true
+	}
+
+	return false
 }
 
 // 没有前缀的代码补全
 func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
-	// 先判断是否为函数参数的候选词代码补全
-	if completeVar.ParamCandidateType != nil {
-		strMap := a.getSymbolAliasMultiCandidateMap(completeVar.ParamCandidateType, comParam.fi.FileName, comParam.loc.StartLine)
-		if len(strMap) > 0 {
-			if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
-				a.completeCache.SetClearParamQuotes(true)
-			}
-
-			for strKey, strComment := range strMap {
-				if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
-					// 如果分割的是为单引号或是双引号，strKey需要为引号的字符串
-					if !strings.HasPrefix(strKey, "\"") {
-						continue
-					}
-
-					if completeVar.SplitByte == '\'' {
-						strKey = strings.ReplaceAll(strKey, "\"", "'")
-					}
-				} else {
-					if completeVar.SplitByte != ' ' && strings.HasPrefix(strKey, "\"") {
-						continue
-					}
-				}
-
-				a.completeCache.InsertCompleteNormal(strKey, strComment, "", common.IKConstant)
-			}
-			return
-		}
-
-		if completeVar.OnelyParamQuotesFlag {
-			return
-		}
+	// 3.0) 先判断是否为函数参数的候选词代码补全
+	if a.paramCandidateComplete(comParam, completeVar) {
+		return
 	}
 
 	// 3) 单纯的文件范围内代码补全
