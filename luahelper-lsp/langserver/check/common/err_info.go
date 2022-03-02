@@ -72,6 +72,9 @@ const (
 	// CheckErrorClassField 错误的成员变量
 	CheckErrorClassField = 22
 
+	// CheckErrorConstAssign 给常量赋值
+	CheckErrorConstAssign = 23
+
 	// CheckErrorMax
-	CheckErrorMax = 23
+	CheckErrorMax = 24
 )

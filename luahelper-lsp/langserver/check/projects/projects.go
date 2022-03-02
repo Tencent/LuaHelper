@@ -28,4 +28,6 @@ type Projects interface {
 	GetFuncDefaultParamInfo(fileName string, lastLine int, paramNameList []string) (paramDefaultNum int)
 
 	GetAnnotateClass(strFile string, strName string, varInfo *common.VarInfo, lineForGetAnnotate int, curScope *common.ScopeInfo) (isStrict bool, retMap map[string]bool, className string)
+
+	IsAnnotateTypeConst(varInfo *common.VarInfo) (isConst bool)
 }
