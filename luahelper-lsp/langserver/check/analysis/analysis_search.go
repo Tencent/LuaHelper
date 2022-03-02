@@ -755,7 +755,7 @@ func (a *Analysis) expandVarStrMap(node *ast.TableAccessExp) {
 		return
 	}
 
-	strPre := common.GetExpName(node.PrefixExp)
+	strPre := common.GetExpName1(node.PrefixExp)
 	preVec := strings.Split(strPre, ".")
 	if len(preVec) == 0 {
 		return
@@ -787,6 +787,10 @@ func (a *Analysis) expandVarStrMap(node *ast.TableAccessExp) {
 	vecExpand = append(vecExpand, strKey)
 
 	strExpand := strings.Join(vecExpand, ".")
+	if strExpand == "" {
+		return
+	}
+
 	if varInfo.ExpandStrMap == nil {
 		varInfo.ExpandStrMap = map[string]struct{}{}
 	}

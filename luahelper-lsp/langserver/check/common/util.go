@@ -202,6 +202,55 @@ func GetExpName(node ast.Exp) string {
 	return "#other"
 }
 
+// GetTableAccessName 拼接table的名称
+func GetTableAccessName1(tabExp *ast.TableAccessExp) string {
+	strPre := GetExpName1(tabExp.PrefixExp)
+	strKey := GetExpName1(tabExp.KeyExp)
+	return strPre + "." + strKey
+}
+
+func GetExpName1(node ast.Exp) string {
+	switch exp := node.(type) {
+	case *ast.NilExp:
+		return "#nil"
+	case *ast.FalseExp:
+		return "#flase"
+	case *ast.TrueExp:
+		return "#true"
+	case *ast.IntegerExp:
+		return "#int"
+	case *ast.FloatExp:
+		return "#float"
+	case *ast.StringExp:
+		// 如果是字符串，直接返回，前面不增加任何前缀
+		return exp.Str
+	case *ast.ParensExp:
+		return GetExpName1(exp.Exp)
+	case *ast.VarargExp:
+		return "#vararg"
+	case *ast.NameExp:
+		return "!" + exp.Name
+	case *ast.FuncDefExp:
+		//log.Error("GetExpName ast.FuncDefExp error")
+		return "#errror"
+	case *ast.TableConstructorExp:
+		return "#table"
+	case *ast.UnopExp:
+		return "#astUnopExp"
+	case *ast.BinopExp:
+		return "#astBinopExp"
+	case *ast.TableAccessExp:
+		return GetTableAccessName1(exp)
+	case *ast.FuncCallExp:
+		if exp.NameExp != nil {
+			return GetExpName1(exp.PrefixExp) + "." + exp.NameExp.Str + "()"
+		}
+		return GetExpName1(exp.PrefixExp) + "()"
+		//return "#funcall"
+	}
+	return "#other"
+}
+
 // GetTablePreName 递归获取table
 func GetTablePreName(node ast.Exp) string {
 	switch exp := node.(type) {

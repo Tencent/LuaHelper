@@ -39,7 +39,7 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 	}
 
 	if symbol != nil && len(findList) == 0 {
-		lableStr = getVarInfoExpandStrHover(symbol.VarInfo, varStruct.Str)
+		lableStr = getVarInfoExpandStrHover(symbol.VarInfo, varStruct.Str, true)
 		if lableStr != "" {
 			return
 		}
@@ -264,7 +264,7 @@ func needReplaceMapStr(oldStr string, strValueType string) bool {
 }
 
 // 只获取expandStrMap的hover
-func getVarInfoExpandStrHover(varInfo *common.VarInfo, strPre string) (str string) {
+func getVarInfoExpandStrHover(varInfo *common.VarInfo, strPre string, showPre bool) (str string) {
 	if varInfo == nil {
 		return
 	}
@@ -315,7 +315,12 @@ func getVarInfoExpandStrHover(varInfo *common.VarInfo, strPre string) (str strin
 		return
 	}
 
-	str = strPre + " : table = {\n"
+	if showPre {
+		str = strPre + " : table = {\n"
+	} else {
+		str = " table = {\n"
+	}
+
 	traverseMapInStringOrder(existMap, func(key string, value string) {
 		str = str + "\t" + value + "\n"
 	})
@@ -373,6 +378,28 @@ func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
 			existMap[oneStr] = newStr
 		}
 	}
+}
+
+// 补全的为expand 的变量，获取展开的信息
+func (a *AllProject) getCompleteExpandInfo(item *common.OneCompleteData) (luaFileStr string) {
+	cache := a.completeCache
+	compStruct := cache.GetCompleteVar()
+	if len(compStruct.StrVec) <= 1 {
+		return
+	}
+
+	strPre := combineStrVec(compStruct.StrVec, compStruct.IsFuncVec)
+	if strPre == "" {
+		return
+	}
+
+	strPre = strPre + item.Label
+	str := getVarInfoExpandStrHover(item.ExpandVarInfo, strPre, false)
+	if str != "" {
+		item.Detail = str
+	}
+
+	return luaFileStr
 }
 
 func isAllClassDefault(classList []*common.OneClassInfo) bool {
