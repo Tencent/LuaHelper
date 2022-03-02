@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/common"
+	"luahelper-lsp/langserver/log"
 	"sort"
 	"strings"
 )
@@ -28,6 +29,18 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 			lableStr = str1
 			docStr = str2
 			docStr = strings.ReplaceAll(docStr, "\n", "  \n")
+			return
+		}
+	}
+
+	if symbol == nil && len(findList) == 0 {
+		// 没有找到变量的定义，查找当前文件的：NodefineMaps
+		symbol = a.getNodefineMapVar(strFile, varStruct)
+	}
+
+	if symbol != nil && len(findList) == 0 {
+		lableStr = getVarInfoExpandStrHover(symbol.VarInfo, varStruct.Str, true)
+		if lableStr != "" {
 			return
 		}
 	}
@@ -130,6 +143,35 @@ func traverseMapInStringOrder(params map[string]string, handler mapEntryHandler)
 	}
 }
 
+func (a *AllProject) getNodefineMapVar(strFile string, varStruct *common.DefineVarStruct) (symbol *common.Symbol) {
+	// 1）先查找该文件是否存在
+	fileStruct := a.getVailidCacheFileStruct(strFile)
+	if fileStruct == nil {
+		log.Error("getNodefineMapVar error, not find file=%s", strFile)
+		return nil
+	}
+	fileResult := fileStruct.FileResult
+	if fileResult == nil {
+		log.Error("getNodefineMapVar error, not find file=%s", strFile)
+		return nil
+	}
+
+	splitArray := varStruct.StrVec
+
+	if splitArray[0] == "_G" {
+		splitArray = splitArray[1:]
+	}
+	if len(splitArray) == 0 {
+		return
+	}
+	strName := splitArray[0]
+
+	if findVar, ok := fileResult.NodefineMaps[strName]; ok {
+		symbol = common.GetDefaultSymbol(findVar.FileName, findVar)
+	}
+	return
+}
+
 func (a *AllProject) convertClassInfoToHovers(oneClass *common.OneClassInfo, existMap map[string]string) {
 	// 1) oneClass所有的成员
 	for strName, fieldState := range oneClass.FieldMap {
@@ -214,7 +256,77 @@ func needReplaceMapStr(oldStr string, strValueType string) bool {
 		return true
 	}
 
+	if strings.Contains(oldStr, ": any") {
+		return true
+	}
+
 	return false
+}
+
+// 只获取expandStrMap的hover
+func getVarInfoExpandStrHover(varInfo *common.VarInfo, strPre string, showPre bool) (str string) {
+	if varInfo == nil {
+		return
+	}
+
+	if varInfo.ExpandStrMap == nil {
+		return
+	}
+
+	vecPre := strings.Split(strPre, ".")
+	beforeStrPre := vecPre[0]
+
+	var existMap map[string]string = map[string]string{}
+	for str := range varInfo.ExpandStrMap {
+		str = beforeStrPre + "." + str
+		if !strings.HasPrefix(str, strPre+".") {
+			continue
+		}
+
+		if (len(strPre) + 1) >= len(str) {
+			continue
+		}
+
+		strRemain := str[len(strPre)+1:]
+		if strRemain == "" {
+			continue
+		}
+
+		strVec := strings.Split(strRemain, ".")
+		oneStr := strVec[0]
+		strType := "any"
+		if len(strVec) > 1 {
+			strType = "table"
+		}
+		newStr := oneStr + ": " + strType + ","
+		if oldStr, ok := existMap[oneStr]; ok {
+			if needReplaceMapStr(oldStr, strType) {
+				existMap[oneStr] = newStr
+			}
+		} else {
+			existMap[oneStr] = newStr
+		}
+
+		if _, ok := existMap[strVec[0]]; !ok {
+			existMap[strVec[0]] = newStr
+		}
+	}
+	if len(existMap) == 0 {
+		return
+	}
+
+	if showPre {
+		str = strPre + " : table = {\n"
+	} else {
+		str = " table = {\n"
+	}
+
+	traverseMapInStringOrder(existMap, func(key string, value string) {
+		str = str + "\t" + value + "\n"
+	})
+
+	str = str + "}"
+	return
 }
 
 func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
@@ -236,6 +348,58 @@ func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
 			existMap[key] = newStr
 		}
 	}
+
+	if varInfo.ExpandStrMap == nil {
+		return
+	}
+
+	for key := range varInfo.ExpandStrMap {
+		strVec := strings.Split(key, ".")
+		if len(strVec) == 0 {
+			continue
+		}
+
+		oneStr := strVec[0]
+		if !common.JudgeSimpleStr(oneStr) {
+			continue
+		}
+
+		strType := "any"
+		if len(strVec) > 1 {
+			strType = "table"
+		}
+
+		newStr := oneStr + ": " + strType + ","
+		if oldStr, ok := existMap[oneStr]; ok {
+			if needReplaceMapStr(oldStr, strType) {
+				existMap[oneStr] = newStr
+			}
+		} else {
+			existMap[oneStr] = newStr
+		}
+	}
+}
+
+// 补全的为expand 的变量，获取展开的信息
+func (a *AllProject) getCompleteExpandInfo(item *common.OneCompleteData) (luaFileStr string) {
+	cache := a.completeCache
+	compStruct := cache.GetCompleteVar()
+	if len(compStruct.StrVec) <= 1 {
+		return
+	}
+
+	strPre := combineStrVec(compStruct.StrVec, compStruct.IsFuncVec)
+	if strPre == "" {
+		return
+	}
+
+	strPre = strPre + item.Label
+	str := getVarInfoExpandStrHover(item.ExpandVarInfo, strPre, false)
+	if str != "" {
+		item.Detail = str
+	}
+
+	return luaFileStr
 }
 
 func isAllClassDefault(classList []*common.OneClassInfo) bool {
@@ -287,7 +451,7 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 		}
 	} else {
 		str = "table = {\n"
-		if symbol.VarInfo == nil || len(symbol.VarInfo.SubMaps) == 0 {
+		if symbol.VarInfo == nil || (len(symbol.VarInfo.SubMaps) == 0 && len(symbol.VarInfo.ExpandStrMap) == 0) {
 			return "table = { }", existMap
 		}
 	}

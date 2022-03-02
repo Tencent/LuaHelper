@@ -308,8 +308,7 @@ func (a *AllProject) gValueComplete(comParam *CommonFuncParam, completeVar *comm
 }
 
 // 前缀是_G符号
-func (a *AllProject) gPreComplete(comParam *CommonFuncParam,
-	completeVar *common.CompleteVarStruct) {
+func (a *AllProject) gPreComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
 	// 1) 单纯_G符号的代码补全
 	lenStrVec := len(completeVar.StrVec)
 	// 最后的进行转换
@@ -494,10 +493,13 @@ func (a *AllProject) varInfoDeepComplete(symbol *common.Symbol, symList []*commo
 
 	// 1) 没有追踪到最后的子项
 	if len(symList) == 0 {
+		a.expandNodefineMapComplete(fileName, strFind, comParam, completeVar, symbol.VarInfo)
+
 		// 只在当前文件做代码提示高级功能
-		sufThreeStrVec := completeVar.StrVec[1:]
+		//sufThreeStrVec := completeVar.StrVec[1:]
+
 		// 尝试用协程进行高级功能展开
-		a.getFileCompleteExt(fileName, strFind, comParam, completeVar, symbol.VarInfo, sufThreeStrVec)
+		//a.getFileCompleteExt(fileName, strFind, comParam, completeVar, symbol.VarInfo, sufThreeStrVec)
 		return
 	}
 
@@ -560,10 +562,12 @@ func (a *AllProject) varInfoDeepComplete(symbol *common.Symbol, symList []*commo
 
 	// 冒号语法不做高级提示功能
 	if explanFlag {
+		a.expandNodefineMapComplete(fileName, strFind, comParam, completeVar, symbol.VarInfo)
+
 		// 只在当前文件做代码提示高级功能
-		sufThreeStrVec := completeVar.StrVec[1:]
+		//sufThreeStrVec := completeVar.StrVec[1:]
 		// 尝试用协程进行高级功能展开
-		a.getFileCompleteExt(fileName, strFind, comParam, completeVar, symbol.VarInfo, sufThreeStrVec)
+		//a.getFileCompleteExt(fileName, strFind, comParam, completeVar, symbol.VarInfo, sufThreeStrVec)
 	}
 }
 
@@ -634,13 +638,57 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 			return
 		}
 
+		// 对NodefineMap内的变量进行展开代码补全
+		a.expandNodefineMapComplete(comParam.fileResult.Name, strName, comParam, completeVar, findVar)
+
 		// 遍历AST树，构造想要的代码补全数据
-		sufThreeStrVec := completeVar.StrVec[1:]
-		a.getFileCompleteExt(comParam.fileResult.Name, strName, comParam, completeVar, findVar, sufThreeStrVec)
+		//sufThreeStrVec := completeVar.StrVec[1:]
+		//a.getFileCompleteExt(comParam.fileResult.Name, strName, comParam, completeVar, findVar, sufThreeStrVec)
 		return
 	}
 
 	a.varInfoDeepComplete(symbol, symList, &varStruct, completeVar, comParam)
+}
+
+func combineStrVec(strVec []string, isFuncVec []bool) (str string) {
+	for i := 0; i < len(strVec); i++ {
+		if len(isFuncVec) > i && isFuncVec[i] {
+			str = str + strVec[i] + "()."
+		} else {
+			str = str + strVec[i] + "."
+		}
+	}
+	return str
+}
+
+func (a *AllProject) expandNodefineMapComplete(luaInFile string, strFind string, comParam *CommonFuncParam,
+	completeVar *common.CompleteVarStruct, varInfo *common.VarInfo) {
+	if varInfo.ExpandStrMap == nil {
+		return
+	}
+
+	for key := range varInfo.ExpandStrMap {
+		key = strFind + "." + key
+		preCompleteStr := combineStrVec(completeVar.StrVec, completeVar.IsFuncVec)
+		if !strings.HasPrefix(key, preCompleteStr) {
+			continue
+		}
+
+		strRemain := key[len(preCompleteStr):]
+		if strRemain == "" {
+			continue
+		}
+
+		strRemainList := strings.Split(strRemain, ".")
+		strOne := strRemainList[0]
+
+		if a.completeCache.ExistStr(strOne) || a.completeCache.IsExcludeStr(strOne) {
+			continue
+		}
+
+		a.completeCache.InsertCompleteExpand(strOne, "", "", common.IKVariable, varInfo)
+		//a.completeCache.InsertCompleteNormal(strOne, "", "", common.IKVariable)
+	}
 }
 
 // 没有前缀的代码补全
@@ -757,13 +805,17 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 			continue
 		}
 
-		detail := ""
-		a.completeCache.InsertCompleteNormal(strName, detail, "", common.IKVariable)
+		subVar := comParam.fileResult.NodefineMaps[strName]
+		a.completeCache.InsertCompleteVar(fileName, strName, subVar)
+		//detail := ""
+		//a.completeCache.InsertCompleteNormal(strName, detail, "", common.IKVariable)
 	}
 }
 
 // 代码补全进行的分发
 func (a *AllProject) lspCodeComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
+	a.GetCompleteCache().SetCompleteVar(completeVar)
+
 	// 1) 查找所有的_G符号
 	if completeVar.StrVec[0] == "_G" {
 		a.gPreComplete(comParam, completeVar)
@@ -869,7 +921,7 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 	item.Detail = varInfo.GetVarTypeDetail()
 	expandFlag := false
 	var firstExistMap map[string]string = map[string]string{}
-	if item.Detail == "table" || len(varInfo.SubMaps) > 0 {
+	if item.Detail == "table" || len(varInfo.SubMaps) > 0 || len(varInfo.ExpandStrMap) > 0 {
 		item.Detail, firstExistMap = a.expandTableHover(symbol)
 		expandFlag = true
 	}
@@ -894,7 +946,7 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 
 			if symbolTmp.VarInfo != nil {
 				strDetail := symbolTmp.VarInfo.GetVarTypeDetail()
-				if strDetail == "table" || len(symbolTmp.VarInfo.SubMaps) > 0 {
+				if strDetail == "table" || len(symbolTmp.VarInfo.SubMaps) > 0 || len(symbolTmp.VarInfo.ExpandStrMap) > 0 {
 					secondStr, sendExistMap := a.expandTableHover(symbolTmp)
 					strDetail = a.mergeTwoExistMap(symbol, item.Detail, firstExistMap, secondStr, sendExistMap)
 				}
@@ -941,11 +993,13 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 		return
 	}
 
-	// 是否为特殊的冒号补全
-	colonFlag := a.completeCache.GetColonFlag()
-
 	// 1) 为普通的配置，直接返回
 	if item.CacheKind == common.CKindNormal {
+		if item.ExpandVarInfo == nil {
+			return
+		}
+
+		luaFileStr = a.getCompleteExpandInfo(&item)
 		return
 	}
 
@@ -988,6 +1042,8 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 		return
 	}
 
+	// 是否为特殊的冒号补全
+	colonFlag := a.completeCache.GetColonFlag()
 	// 4) 配置的为注解field信息
 	if item.CacheKind == common.CkindClassField {
 		if colonFlag {

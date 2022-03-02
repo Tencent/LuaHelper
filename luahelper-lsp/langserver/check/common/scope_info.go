@@ -59,7 +59,7 @@ func (scope *ScopeInfo) AppendSubScope(subScope *ScopeInfo) {
 
 // AddLocVar 块里面增加一个变量（局部变量）
 func (scope *ScopeInfo) AddLocVar(fileName string, name string, LuaType LuaType, exp ast.Exp, loc lexer.Location,
-	 varIndex uint8) *VarInfo {
+	varIndex uint8) *VarInfo {
 	newVar := &VarInfo{
 		FileName:  fileName,
 		VarType:   LuaType,
@@ -98,7 +98,7 @@ func (scope *ScopeInfo) InsertLocalVar(strName string, locVar *VarInfo) {
 }
 
 // FindLocVar 新的方式查找局部变量
-func (scope *ScopeInfo) FindLocVar(name string, loc lexer.Location) (findFlag bool, locVarInfo *VarInfo) {
+func (scope *ScopeInfo) FindLocVar(name string, loc lexer.Location) (locVarInfo *VarInfo, find bool) {
 	locInfoList := scope.LocVarMap[name]
 	if locInfoList == nil {
 		// 当前没有找到，判断上层是否有找的
@@ -106,7 +106,7 @@ func (scope *ScopeInfo) FindLocVar(name string, loc lexer.Location) (findFlag bo
 			return scope.Parent.FindLocVar(name, loc)
 		}
 
-		return false, nil
+		return nil, false
 	}
 
 	// 需要倒序遍历
@@ -114,7 +114,7 @@ func (scope *ScopeInfo) FindLocVar(name string, loc lexer.Location) (findFlag bo
 		locVar := locInfoList.VarVec[i]
 
 		if locVar.IsCorrectPosition(loc) {
-			return true, locVar
+			return locVar, true
 		}
 	}
 
@@ -123,7 +123,7 @@ func (scope *ScopeInfo) FindLocVar(name string, loc lexer.Location) (findFlag bo
 		return scope.Parent.FindLocVar(name, loc)
 	}
 
-	return false, nil
+	return nil, false
 }
 
 // 判断点坐标是否在位置范围内
