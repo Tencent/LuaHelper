@@ -119,8 +119,7 @@ func (a *AllProject) findLocReferSymbol(fileResult *results.FileResult, posLine 
 
 	// 1) 查找局部变量指向的函数信息
 	if !gFlag {
-		findOk, locVarInfo := minScope.FindLocVar(strName, loc)
-		if findOk {
+		if locVarInfo, ok := minScope.FindLocVar(strName, loc); ok {
 			return a.createAnnotateSymbol(strName, locVarInfo)
 		}
 	}

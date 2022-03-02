@@ -82,7 +82,7 @@ func (a *Analysis) findStrReferVarInfo(strName string, loc lexer.Location, gFlag
 
 	// 3) 查找局部变量指向的函数信息
 	if !gFlag {
-		if ok, locVarInfo := scope.FindLocVar(strName, loc); ok {
+		if locVarInfo, ok := scope.FindLocVar(strName, loc); ok {
 			return locVarInfo
 		}
 	}

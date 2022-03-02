@@ -31,7 +31,7 @@ func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bo
 
 	// 3) 查找局部变量指向的函数信息
 	if !gFlag {
-		findOk, locVarInfo := scope.FindLocVar(strName, loc)
+		locVarInfo, findOk := scope.FindLocVar(strName, loc)
 		if findOk {
 			return locVarInfo.ReferFunc
 		}
@@ -134,8 +134,7 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 		// 2.1) 查找局部变量的引用
 		var referInfo *common.ReferInfo
 		loc = common.GetTablePrefixLoc(taExp)
-		findVarFlag, locVarInfo := scope.FindLocVar(strName, loc)
-
+		locVarInfo, findVarFlag := scope.FindLocVar(strName, loc)
 		if findVarFlag {
 			referInfo = locVarInfo.ReferInfo
 		} else {
@@ -399,7 +398,7 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 // 判断局部变量是否定义了未使用
 func (a *Analysis) checkLocVarNotUse(node *ast.NameExp) {
 	scope := a.curScope
-	if ok, locVarInfo := scope.FindLocVar(node.Name, node.Loc); ok {
+	if locVarInfo, ok := scope.FindLocVar(node.Name, node.Loc); ok {
 		locVarInfo.IsUse = true
 	}
 }
@@ -423,7 +422,7 @@ func (a *Analysis) findNameStr(node *ast.NameExp, binParentExp *ast.BinopExp) {
 	scope := a.curScope
 
 	// 2) 查找局部变量或upvalue中是否有该变量
-	if ok, locVarInfo := scope.FindLocVar(strName, node.Loc); ok {
+	if locVarInfo, ok := scope.FindLocVar(strName, node.Loc); ok {
 		if a.isFourTerm() {
 			// 判断是否是自己所要的引用关系
 			a.ReferenceResult.MatchVarInfo(a, strName, fileResult.Name, locVarInfo, fi, "", node, false)
@@ -524,7 +523,7 @@ func (a *Analysis) findThreeLevelCall(node ast.Exp, nameExp ast.Exp) {
 	} else {
 		// 只能是引用
 		var referInfo *common.ReferInfo
-		findVarFlag, locVarInfo := scope.FindLocVar(strOne, keyLoc)
+		locVarInfo, findVarFlag := scope.FindLocVar(strOne, keyLoc)
 		if findVarFlag {
 			referInfo = locVarInfo.ReferInfo
 			if referInfo == nil {
@@ -696,7 +695,7 @@ func (a *Analysis) findFiveTableAccess(prefixExp ast.Exp, nameExp ast.Exp, nodeL
 
 	nameArry = append(nameArry, strKey)
 	loc := common.GetExpLoc(prefixExp)
-	if ok, locVarInfo := scope.FindLocVar(strOne, loc); ok {
+	if locVarInfo, ok := scope.FindLocVar(strOne, loc); ok {
 		if analysisFive.HandAccessFindInfo(strOne, locVarInfo) {
 			strReturn := common.JoinSimpleStr(nameArry)
 			analysisFive.InsertAccessStr(strReturn)
@@ -797,7 +796,7 @@ func (a *Analysis) expandVarStrMap(node *ast.TableAccessExp) {
 func (a *Analysis) findFileVar(strName string, loc lexer.Location) *common.VarInfo {
 	scope := a.curScope
 	// 首先查找当前局部变量下有没有当前表名
-	find, locVar := scope.FindLocVar(strName, loc)
+	locVar, find := scope.FindLocVar(strName, loc)
 	if find {
 		return locVar
 	}
@@ -837,7 +836,7 @@ func (a *Analysis) checkIfNotTableAccess(node *ast.TableAccessExp, binParentExp 
 
 	// 2.1) 查找局部变量的引用
 	loc := common.GetTablePrefixLoc(node)
-	flag, varInfo := scope.FindLocVar(strName, loc)
+	varInfo, flag := scope.FindLocVar(strName, loc)
 	if !flag {
 		return
 	}
@@ -970,7 +969,7 @@ func (a *Analysis) findFuncColon(prefixExp ast.Exp, nameExp ast.Exp, nodeLoc lex
 	// 这里loc = keyLoc 问题不大
 	loc := keyLoc
 	var referInfo *common.ReferInfo
-	findVarFlag, locVarInfo := scope.FindLocVar(strName, loc)
+	locVarInfo, findVarFlag := scope.FindLocVar(strName, loc)
 	if findVarFlag {
 		referInfo = locVarInfo.ReferInfo
 		// 第四轮查找引用的时候，判断是否为返回table的字符串key
@@ -1265,7 +1264,7 @@ func (a *Analysis) findTableDefine(node *ast.TableAccessExp) {
 	//findVarFlag, referInfo, _ := fi.FindVarInfo(strName)
 	loc := common.GetTablePrefixLoc(node)
 	var referInfo *common.ReferInfo
-	findVarFlag, locVarInfo := scope.FindLocVar(strName, loc)
+	locVarInfo, findVarFlag := scope.FindLocVar(strName, loc)
 	if findVarFlag {
 		referInfo = locVarInfo.ReferInfo
 		// 第四轮查找引用的时候，判断是否为返回table的字符串key
@@ -1508,7 +1507,7 @@ func (a *Analysis) isNeedAnalysisNameExp(strName string, loc lexer.Location) boo
 	fileResult := a.curResult
 	scope := a.curScope
 	// 首先查找当前局部变量下有没有当前表名
-	find, _ := scope.FindLocVar(strName, loc)
+	_, find := scope.FindLocVar(strName, loc)
 	if find {
 		return false
 	}
