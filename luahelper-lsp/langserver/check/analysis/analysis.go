@@ -455,7 +455,7 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 	}
 }
 
-// 根据注解判断table成员合法性 包括 t.a t可以是符号 或者函数参数
+// 根据注解判断table成员合法性 包括 t.a t可以是符号 或者函数参数  todo todo
 func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 	if !a.isNeedCheck() || a.realTimeFlag {
 		return
@@ -534,7 +534,7 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 				}
 			}
 
-			// 查找所有的 todo
+			// 查找所有的
 			if !find {
 				ok, varInfo = a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre)
 				if ok {
