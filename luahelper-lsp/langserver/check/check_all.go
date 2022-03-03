@@ -45,7 +45,6 @@ type AllProject struct {
 	checkTerm results.CheckTerm
 }
 
-
 // CreateAllProject 创建整个检查工程
 func CreateAllProject(allFilesList []string, entryFileArr []string, clientExpPathList []string) *AllProject {
 	// 第一阶段（生成AST，第一次遍历AST），用多协程分析所有的扫描出来的文件
@@ -93,6 +92,8 @@ func (a *AllProject) HandleCheck() {
 
 	dirManager := common.GConfig.GetDirManager()
 	mainDir := dirManager.GetMainDir()
+
+	a.rebuidCreateTypeMap()
 
 	// 判断是否要进行特殊的检测
 	if len(a.entryFilesList) == 0 && !common.GConfig.IsSpecialCheck() {
