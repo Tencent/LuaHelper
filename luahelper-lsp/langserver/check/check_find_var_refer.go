@@ -126,27 +126,23 @@ func (a *AllProject) findLocReferSymbol(fileResult *results.FileResult, posLine 
 
 	if comParam.secondProject != nil {
 		// 非底层的函数，需要查找全局的变量
-		findOk, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, "")
-		if findOk {
+		if ok, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, ""); ok {
 			return a.createAnnotateSymbol(strName, oneVar)
 		}
 
-		findOk, oneVar = comParam.secondProject.FindGlobalGInfo(strName, results.CheckTermFirst, "")
-		if findOk {
+		if ok, oneVar := comParam.secondProject.FindGlobalGInfo(strName, results.CheckTermFirst, ""); ok {
 			return a.createAnnotateSymbol(strName, oneVar)
 		}
 	}
 
 	if comParam.thirdStruct != nil {
 		// 非底层的函数，需要查找全局的变量
-		findOk, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, "")
-		if findOk {
+		if ok, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, ""); ok {
 			return a.createAnnotateSymbol(strName, oneVar)
 		}
 
 		// 查找所有的
-		findOk, oneVar = comParam.thirdStruct.FindThirdGlobalGInfo(gFlag, strName, "")
-		if findOk {
+		if ok, oneVar := comParam.thirdStruct.FindThirdGlobalGInfo(gFlag, strName, ""); ok {
 			return a.createAnnotateSymbol(strName, oneVar)
 		}
 	}

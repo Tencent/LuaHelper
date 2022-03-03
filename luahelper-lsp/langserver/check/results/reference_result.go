@@ -19,11 +19,11 @@ type ReferenceFileResult struct {
 	fileResult       *FileResult            // 单个文件分析的指针
 	fileName         string                 // 引用所在的lua文件
 	referSuffVec     []string               // 引用的后缀存放字符串数组，例如引用a.b.c, referName存放的值为a，b和c的值存放在数组中
-	findSymbol      *common.VarInfo        // 引用如果为局部信息，有值
+	findSymbol       *common.VarInfo        // 引用如果为局部信息，有值
 	secondProjectVec []*SingleProjectResult // 引用的文件所需要处理的第二阶段工程名
 	thirdStruct      *AnalysisThird         // 引用所包含的第三阶段散落的文件
-	FindLocVec       []lexer.Location        // 找到的引用关系位置
-	ignoreDefineLoc  lexer.Location          // 需要忽略的定义位置
+	FindLocVec       []lexer.Location       // 找到的引用关系位置
+	ignoreDefineLoc  lexer.Location         // 需要忽略的定义位置
 }
 
 // CreateReferenceFileResult 创建单个引用的指针
@@ -31,7 +31,7 @@ func CreateReferenceFileResult(strFile string) *ReferenceFileResult {
 	return &ReferenceFileResult{
 		StrFile:         strFile,
 		fileResult:      nil,
-		findSymbol:     nil,
+		findSymbol:      nil,
 		referSuffVec:    []string{},
 		ignoreDefineLoc: lexer.Location{},
 	}
@@ -127,7 +127,7 @@ func (r *ReferenceFileResult) FindProjectGlobal(selfConvert SelfConvertInterface
 
 	for _, secondProject := range r.secondProjectVec {
 		ok, oneVar := secondProject.FindGlobalGInfo(strName, CheckTermFirst, strProPre)
-		if ok != true {
+		if !ok {
 			continue
 		}
 
