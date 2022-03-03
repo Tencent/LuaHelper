@@ -237,11 +237,7 @@ func needReplaceMapStr(oldStr string, strValueType string) bool {
 
 // 只获取expandStrMap的hover
 func getVarInfoExpandStrHover(varInfo *common.VarInfo, strPre string, showPre bool) (str string) {
-	if varInfo == nil {
-		return
-	}
-
-	if varInfo.ExpandStrMap == nil {
+	if varInfo == nil || varInfo.ExpandStrMap == nil {
 		return
 	}
 
@@ -561,6 +557,161 @@ func (a *AllProject) mergeTwoExistMap(symbol *common.Symbol, fristStr string, fr
 	return mergeStr
 }
 
+// 获取函数的完整展示信息
+// paramTipFlag 表示是否提示函数的参数
+// colonFlag 如果是冒号语法，有时候需要忽略掉self
+// returnFlag 是否需要获取函数的返回值类型
+func (a *AllProject) getFuncShowStr(varInfo *common.VarInfo, funcName string, paramTipFlag, colonFlag, returnFlag bool) (str string) {
+	if varInfo == nil || varInfo.ReferFunc == nil {
+		return
+	}
+
+	if !paramTipFlag {
+		return funcName
+	}
+
+	fun := varInfo.ReferFunc
+	inLuaFile := fun.FileName
+	lastLine := fun.Loc.StartLine
+	annotateParamInfo := a.GetFuncParamInfo(inLuaFile, lastLine-1)
+
+	// 1) 获取函数的参数
+	funcName += "("
+	preFlag := false
+	for index, oneParam := range fun.ParamList {
+		if colonFlag && fun.IsColon && index == 0 {
+			continue
+		}
+
+		if preFlag {
+			funcName += ", "
+		}
+
+		funcName += oneParam
+
+		paramShortStr, annType := a.getAnnotateFuncParamDocument(oneParam, annotateParamInfo, inLuaFile, lastLine-1)
+		if paramShortStr != "" {
+			funcName += ": " + annotateast.TypeConvertStr(annType)
+		} else {
+			// 获取参数变量关联的varinfo
+			oneVar := fun.MainScope.GetParamVarInfo(oneParam)
+			funcName += ": " + getParamVarinfoType(oneVar)
+		}
+
+		preFlag = true
+	}
+
+	if fun.IsVararg {
+		if preFlag {
+			funcName += ", "
+		}
+		funcName += "..."
+	}
+
+	funcName += ")"
+
+	// 如果不需要返回类型，直接返回
+	if !returnFlag {
+		return funcName
+	}
+
+	// 2 获取返回值
+	// 2.1) 先获取注解的参数
+	oldSymbol := common.GetDefaultSymbol(varInfo.FileName, varInfo)
+	flag, _, typeList := a.getFuncReturnAnnotateTypeList(oldSymbol)
+	var resultList []string = []string{}
+
+	if flag {
+		for _, oneType := range typeList {
+			oneStr := annotateast.TypeConvertStr(oneType)
+			resultList = append(resultList, oneStr)
+		}
+	}
+
+	if len(fun.ReturnVecs) == 0 {
+		for i, oneStr := range resultList {
+			funcName = fmt.Sprintf("%s\n  ->%d. %s", funcName, i+1, oneStr)
+		}
+
+		if len(resultList) > 0 {
+			funcName += "\n"
+		}
+
+		return funcName
+	}
+
+	oldLen := len(resultList)
+
+	for _, oneReturnInfo := range fun.ReturnVecs {
+		for i, oneReturn := range oneReturnInfo.ReturnVarVec {
+			if i < oldLen {
+				continue
+			}
+
+			strType := a.getOneFuncReturnStr(varInfo.FileName, oneReturn)
+			if len(resultList) > i {
+				if strType != "any" {
+					resultList[i] = strType
+				}
+			} else {
+				resultList = append(resultList, strType)
+			}
+		}
+	}
+
+	for i, oneStr := range resultList {
+		funcName = fmt.Sprintf("%s\n  ->%d. %s", funcName, i+1, oneStr)
+	}
+	if len(resultList) > 0 {
+		funcName += "\n"
+	}
+	return funcName
+}
+
+// 获取函数一个return值的返回类型
+func (a *AllProject) getOneFuncReturnStr(fileName string, oneReturn common.ReturnItem) (strType string) {
+	strType = common.GetLuaTypeString(common.GetExpType(oneReturn.ReturnExp), oneReturn.ReturnExp)
+	loc := common.GetExpLoc(oneReturn.ReturnExp)
+	comParam := a.getCommFunc(fileName, loc.StartLine, loc.StartColumn)
+	findExpList := &[]common.FindExpFile{}
+	symbol := a.FindVarReferSymbol(fileName, oneReturn.ReturnExp, comParam, findExpList, 1)
+	if symbol == nil {
+		return
+	}
+
+	if symbol.AnnotateType != nil {
+		strType = annotateast.TypeConvertStr(symbol.AnnotateType)
+	} else {
+		if symbol.VarInfo != nil {
+			strTmp := getParamVarinfoType(symbol.VarInfo)
+			if strTmp != "any" {
+				strType = strTmp
+			}
+		}
+	}
+
+	return strType
+}
+
+func getParamVarinfoType(oneVar *common.VarInfo) string {
+	if oneVar == nil {
+		return "any"
+	}
+
+	str := oneVar.GetVarTypeDetail()
+	strSplit := strings.Split(str, " ")
+	oneStr := strSplit[0]
+	if oneStr != "any" {
+		return oneStr
+	}
+
+	if len(oneVar.SubMaps) > 0 || len(oneVar.ExpandStrMap) > 0 {
+		return "table"
+	}
+
+	return "any"
+}
+
 func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varStruct *common.DefineVarStruct) (strType string,
 	strLabel, strDoc, strPre string, findFlag bool) {
 	// 1) 首先提取注解类型
@@ -592,7 +743,7 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 	} else {
 		strType = symbol.VarInfo.GetVarTypeDetail()
 		// 判断是否指向的一个table，如果是展开table的具体内容
-		if strType == "table" || len(symbol.VarInfo.SubMaps) > 0 {
+		if strType == "table" || len(symbol.VarInfo.SubMaps) > 0 || len(symbol.VarInfo.ExpandStrMap) > 0 {
 			strType, _ = a.expandTableHover(symbol)
 		}
 
@@ -601,8 +752,8 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 			if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 				strPre = "local "
 			}
-
-			strFunc := referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
+			strFunc := a.getFuncShowStr(symbol.VarInfo, varStruct.StrVec[len(varStruct.StrVec)-1], true, false, true)
+			//strFunc := referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
 			strType = "function " + strFunc
 		}
 	}

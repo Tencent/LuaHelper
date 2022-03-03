@@ -359,6 +359,24 @@ func (scope *ScopeInfo) CheckNotVarInfo(strName string) (findVar *VarInfo, findS
 	return nil, nil
 }
 
+// GetParamVarInfo 获取参数变量关联的VarInfo
+func (scope *ScopeInfo) GetParamVarInfo(paramName string) *VarInfo {
+	varInfoList, ok := scope.LocVarMap[paramName]
+	if !ok {
+		return nil
+	}
+	if len(varInfoList.VarVec) == 0 {
+		return nil
+	}
+
+	oneVac := varInfoList.VarVec[0]
+	if !oneVac.IsParam {
+		return nil
+	}
+
+	return oneVac
+}
+
 // FindAllLocalVal 获取当前scope下所有local function | variable
 func (scope *ScopeInfo) FindAllLocalVal(gScopes []*ScopeInfo) (allSymbolStruct []FileSymbolStruct) {
 	// 存储不在当前scope下的subscope 没有在当前层显示的变量与函数

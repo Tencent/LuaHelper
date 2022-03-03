@@ -385,6 +385,21 @@ func (a *AllProject) getVarCompleteExt(fileName string, varInfo *common.VarInfo,
 			a.completeCache.InsertCompleteVar(fileName, strName, oneVar)
 		}
 	}
+
+	// 获取扩展的成员
+	if varInfo.ExpandStrMap == nil {
+		return
+	}
+
+	for key := range varInfo.ExpandStrMap {
+		strRemainList := strings.Split(key, ".")
+		strOne := strRemainList[0]
+		if a.completeCache.ExistStr(strOne) || a.completeCache.IsExcludeStr(strOne) {
+			continue
+		}
+
+		a.completeCache.InsertCompleteExpand(strOne, "", "", common.IKVariable, varInfo)
+	}
 }
 
 // CompleteResultCh 结构的协程封装
@@ -965,7 +980,9 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 				}
 
 				if symbolTmp.VarInfo.ReferFunc != nil {
-					item.Detail = "function " + symbolTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
+					strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true)
+					item.Detail = "function " + strFunc
+					//item.Detail = "function " + symbolTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
 				}
 
 				// 如果为引用的模块
@@ -977,7 +994,9 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 	}
 
 	if varInfo.ReferFunc != nil {
-		item.Detail = "function " + varInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
+		strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true)
+		item.Detail = "function " + strFunc
+		//item.Detail = "function " + varInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
 	}
 
 	// 如果为引用的模块
