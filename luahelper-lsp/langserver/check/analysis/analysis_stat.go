@@ -249,7 +249,7 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 
 			// if not a then 需要判断a是否为局部变量
 			for _, strName := range simpleNotValueArr {
-				locVarInfo, flag := scope.FindLocVar(strName, node.Loc)
+				locVar, flag := scope.FindLocVar(strName, node.Loc)
 				if !flag {
 					continue
 				}
@@ -276,7 +276,7 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 				}
 
 				notVal := common.NotValStruct{
-					Var:     locVarInfo,
+					Var:     locVar,
 					SetFlag: false,
 				}
 
@@ -600,7 +600,7 @@ func (a *Analysis) checkLeftAssign(valExp ast.Exp) (needDefine bool, flagG bool,
 		strName = nameExp.Name
 		loc = nameExp.Loc
 		// 先在局部变量中查找
-		if varTemp, flag := scope.FindLocVar(strName, loc); flag {
+		if varTemp, ok := scope.FindLocVar(strName, loc); ok {
 			needDefine = false
 			varInfo = varTemp
 			return
@@ -706,7 +706,7 @@ func (a *Analysis) checkLeftAssign(valExp ast.Exp) (needDefine bool, flagG bool,
 		strVec = append(strVec, strKeyName)
 
 		strName = splitArray[0]
-		if varTemp, flag := scope.FindLocVar(strName, loc); flag {
+		if varTemp, ok := scope.FindLocVar(strName, loc); ok {
 			varInfo = varTemp
 			return
 		}
