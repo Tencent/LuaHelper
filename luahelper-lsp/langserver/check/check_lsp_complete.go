@@ -836,6 +836,38 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 	}
 }
 
+// 判断是否为注解table中的key值补全，例如:
+// ---@type oneTable
+// local one = {
+//	  b-- 此时输入b时候，代码补全one的成员
+//}
+func (a *AllProject) needAnnotateTableFieldRepair(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
+	if len(completeVar.StrVec) != 1 || completeVar.LastEmptyFlag {
+		return
+	}
+
+	strName := completeVar.StrVec[0]
+	// 1) 优先判断局部变量
+	firstStr, onVar := comParam.scope.GetTableKeyVar(strName, completeVar.PosLine+1, completeVar.PosCh)
+	if firstStr == "" {
+		// 2) 局部变量没有找到，查找全局变量
+		firstStr, onVar = comParam.fileResult.GetGlobalVarTableStrKey(strName, completeVar.PosLine+1, completeVar.PosCh)
+	}
+
+	if firstStr != "" {
+		symbol := a.createAnnotateSymbol(comParam.fileResult.Name, onVar)
+		if symbol.AnnotateType == nil {
+			// 变量没有关联注解类型，返回
+			return
+		}
+
+		// 修改代码的补全
+		completeVar.StrVec[0] = firstStr
+		completeVar.LastEmptyFlag = true
+		return
+	}
+}
+
 // 代码补全进行的分发
 func (a *AllProject) lspCodeComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
 	a.GetCompleteCache().SetCompleteVar(completeVar)
@@ -845,6 +877,9 @@ func (a *AllProject) lspCodeComplete(comParam *CommonFuncParam, completeVar *com
 		a.gPreComplete(comParam, completeVar)
 		return
 	}
+
+	// 判断是否为注解table中的key值补全, 增强修复
+	a.needAnnotateTableFieldRepair(comParam, completeVar)
 
 	// 2） 没有前缀的代码补全, len(completeVar.StrVec) == 1
 	if len(completeVar.StrVec) == 1 && !completeVar.LastEmptyFlag {
