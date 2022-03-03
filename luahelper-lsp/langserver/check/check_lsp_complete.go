@@ -669,64 +669,6 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 	a.varInfoDeepComplete(symbol, symList, &varStruct, completeVar, comParam)
 }
 
-func matchVecsExpandStrMap(inputVec []string, inputFuncVec []bool, expandStr string) (remainVec []string) {
-	expandVec := strings.Split(expandStr, ".")
-	if len(expandVec) <= len(inputVec) {
-		return
-	}
-
-	for i, inputStr := range inputVec {
-		oneStr := expandVec[i]
-
-		if len(inputFuncVec) > i && inputFuncVec[i] {
-			inputStr = inputStr + "()"
-		}
-
-		// 直接相等，匹配上来
-		if inputStr == oneStr {
-			continue
-		}
-
-		// #或是！开头都认为是相同的
-		if (strings.HasPrefix(inputStr, "!") || strings.HasPrefix(inputStr, "#")) &&
-			(strings.HasPrefix(oneStr, "!") || strings.HasPrefix(oneStr, "#")) {
-			continue
-		}
-
-		// 没有匹配到，提前返回
-		return
-	}
-
-	remainVec = expandVec[len(inputVec):]
-	return
-}
-
-func (a *AllProject) expandNodefineMapComplete(luaInFile string, strFind string, comParam *CommonFuncParam,
-	completeVar *common.CompleteVarStruct, varInfo *common.VarInfo) {
-	if varInfo.ExpandStrMap == nil {
-		return
-	}
-
-	for key := range varInfo.ExpandStrMap {
-		key = strFind + "." + key
-		remainVec := matchVecsExpandStrMap(completeVar.StrVec, completeVar.IsFuncVec, key)
-		if len(remainVec) == 0 {
-			return
-		}
-
-		strOne := remainVec[0]
-		if strOne == "" || !common.JudgeSimpleStr(strOne) {
-			continue
-		}
-
-		if a.completeCache.ExistStr(strOne) || a.completeCache.IsExcludeStr(strOne) {
-			continue
-		}
-
-		a.completeCache.InsertCompleteExpand(strOne, "", "", common.IKVariable, varInfo)
-	}
-}
-
 func (a *AllProject) paramCandidateComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) bool {
 	if completeVar.ParamCandidateType == nil {
 		return false
@@ -853,39 +795,6 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 
 		subVar := comParam.fileResult.NodefineMaps[strName]
 		a.completeCache.InsertCompleteVar(fileName, strName, subVar)
-		//detail := ""
-		//a.completeCache.InsertCompleteNormal(strName, detail, "", common.IKVariable)
-	}
-}
-
-// 判断是否为注解table中的key值补全，例如:
-// ---@type oneTable
-// local one = {
-//	  b-- 此时输入b时候，代码补全one的成员
-//}
-func (a *AllProject) needAnnotateTableFieldRepair(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
-	if len(completeVar.StrVec) != 1 || completeVar.LastEmptyFlag {
-		return
-	}
-
-	strName := completeVar.StrVec[0]
-	// 1) 优先判断局部变量
-	firstStr, onVar := comParam.scope.GetTableKeyVar(strName, completeVar.PosLine+1, completeVar.PosCh)
-	if firstStr == "" {
-		// 2) 局部变量没有找到，查找全局变量
-		firstStr, onVar = comParam.fileResult.GetGlobalVarTableStrKey(strName, completeVar.PosLine+1, completeVar.PosCh)
-	}
-
-	if firstStr != "" {
-		symbol := a.createAnnotateSymbol(comParam.fileResult.Name, onVar)
-		if symbol.AnnotateType == nil {
-			// 变量没有关联注解类型，返回
-			return
-		}
-
-		completeVar.StrVec[0] = firstStr
-		completeVar.LastEmptyFlag = true
-		return
 	}
 }
 
@@ -920,48 +829,6 @@ func (a *AllProject) GetCompleteCacheItems() (items []common.OneCompleteData) {
 // ClearCompleteCache 清除所有的代码补全缓冲
 func (a *AllProject) ClearCompleteCache() {
 	a.completeCache.ResertData()
-}
-
-func (a *AllProject) getCommFunc(strFile string, line, ch int) (comParam *CommonFuncParam) {
-	// 1）先查找该文件是否存在
-	fileStruct := a.getVailidCacheFileStruct(strFile)
-	if fileStruct == nil {
-		log.Error("CodeComplete error, file not valid file=%s", strFile)
-		return
-	}
-
-	var secondProject *results.SingleProjectResult
-	var thirdStruct *results.AnalysisThird
-	if fileStruct.IsCommonFile {
-		// 2) 查找该文件属于第哪个第二阶段的指针
-		secondProject = a.findMaxSecondProject(strFile)
-		// 3) 文件属于的第三阶段的指针
-		thirdStruct = a.thirdStruct
-	}
-	minScope, minFunc := fileStruct.FileResult.FindASTNode(line, ch)
-	if minScope == nil || minFunc == nil {
-		log.Error("CodeComplete error, minScope or minFunc is nil file=%s", strFile)
-		return
-	}
-
-	loc := lexer.Location{
-		StartLine:   line,
-		StartColumn: ch,
-		EndLine:     line,
-		EndColumn:   ch,
-	}
-
-	// 5) 开始真正的代码补全
-	comParam = &CommonFuncParam{
-		fileResult:    fileStruct.FileResult,
-		fi:            minFunc,
-		scope:         minScope,
-		loc:           loc,
-		secondProject: secondProject,
-		thirdStruct:   thirdStruct,
-	}
-
-	return comParam
 }
 
 func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.OneCompleteData) (luaFileStr string) {

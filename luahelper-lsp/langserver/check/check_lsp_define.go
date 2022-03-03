@@ -8,7 +8,6 @@ import (
 	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/check/results"
 	"luahelper-lsp/langserver/log"
-	"strings"
 )
 
 // 查找全局的变量信息
@@ -459,95 +458,6 @@ func (a *AllProject) AnnotateTypeDefine(strFile string, strLine string, line int
 		}
 
 		defineVecs = append(defineVecs, one)
-	}
-
-	return
-}
-
-// AnnotateTypeHover 注解类型代码补全
-func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, col int) (strLabel, strHover, strLuaFile string) {
-	l := annotatelexer.CreateAnnotateLexer(&strLine, 0, 0)
-
-	// 判断这行内容是否以-@开头，是否合法
-	if !l.CheckHeardValid() {
-		return
-	}
-
-	// 后面的内容进行词法解析
-	annotateState, parseErr := annotateparser.ParserLine(l)
-	_, flag := annotateState.(*annotateast.AnnotateNotValidState)
-	// 1) 判断是否为解析有效
-	if flag || parseErr.ErrType != annotatelexer.AErrorOk {
-		return
-	}
-
-	dirManager := common.GConfig.GetDirManager()
-
-	// 2) 遍历位置信息
-	typeStr, noticeStr, commentStr := annotateast.GetStateLocInfo(annotateState, col)
-
-	if typeStr == "" && noticeStr == "alias name" {
-		// 判断是否alias多个候选词
-		// ---@alias exitcode2 '"exit"' | '"signal"'
-		strCandidate := a.getAliasMultiCandidate(strWord, strFile, line)
-		noticeStr = noticeStr + strCandidate
-		strLabel = strWord + " : " + noticeStr
-		strHover = commentStr
-		return
-	}
-
-	if typeStr == "" && noticeStr == "class name" {
-		typeStr = strWord
-	}
-
-	if typeStr != "" {
-		createType := a.getAnnotateStrTypeInfo(typeStr, strFile, line)
-		if createType == nil {
-			return "", "not find annotate type", ""
-		}
-
-		if createType.AliasInfo != nil {
-			strComment := createType.AliasInfo.AliasState.Comment
-			strLabel = "alias " + createType.AliasInfo.AliasState.Name
-			strCandidate := a.getAliasMultiCandidate(typeStr, strFile, line)
-			strLabel = strLabel + strCandidate
-			if strComment != "" {
-				strHover = strComment
-			}
-
-			strLuaFile = dirManager.RemovePathDirPre(createType.AliasInfo.LuaFile)
-			return
-		}
-
-		if createType.ClassInfo != nil {
-			//str := a.expandTableHover(symbol)
-			strLabel = "class " + typeStr
-
-			if len(createType.ClassInfo.ClassState.ParentNameList) > 0 {
-				strLabel = strLabel + " : " + strings.Join(createType.ClassInfo.ClassState.ParentNameList, " , ")
-			} else {
-				strLabel = "class " + typeStr + a.getClassFieldStr(createType.ClassInfo)
-			}
-
-			strComment := createType.ClassInfo.ClassState.Comment
-			if strComment != "" {
-				strHover = strComment
-			}
-
-			strLuaFile = dirManager.RemovePathDirPre(createType.ClassInfo.LuaFile)
-			return
-		}
-	}
-
-	if noticeStr == "comment info" {
-		strHover = commentStr + " : " + noticeStr
-		return
-	}
-
-	if noticeStr != "" {
-		strLabel = strWord + " : " + noticeStr
-		strHover = commentStr
-		return
 	}
 
 	return
