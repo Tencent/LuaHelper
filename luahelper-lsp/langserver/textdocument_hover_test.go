@@ -1085,7 +1085,7 @@ func TestHover12(t *testing.T) {
 		Character: 15,
 	})
 	resultList = append(resultList, "function ")
-	resultList = append(resultList, "(a, b)")
+	resultList = append(resultList, "(a: any, b: any)")
 
 	for index, onePoisiton := range positionList {
 		hoverParams := lsp.TextDocumentPositionParams{
