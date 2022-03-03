@@ -262,6 +262,24 @@ func (scope *ScopeInfo) FindTableKeyReferVarName(strTableKey string, line int, c
 	return scope.Parent.FindTableKeyReferVarName(strTableKey, line, charactor)
 }
 
+// GetTableKeyVar 获取scope下的VarInfo，它是指向一个table，它的key是一个strTableKey；或是是key为nil，value为strTableKey
+func (scope *ScopeInfo) GetTableKeyVar(strTableKey string, line int, charactor int) (string, *VarInfo) {
+	for strName, locInfo := range scope.LocVarMap {
+		for _, oneVar := range locInfo.VarVec {
+			if oneVar.IsHasReferTableKey(strTableKey, line, charactor) {
+				return strName, oneVar
+			}
+		}
+	}
+
+	// 尝试在父的scope中找，如果父的不存在直接返回
+	if scope.Parent == nil {
+		return "", nil
+	}
+
+	return scope.Parent.GetTableKeyVar(strTableKey, line, charactor)
+}
+
 // IsExistLocVarTableStrKey 查找块中所有的局部变量，判断是否有定义的table，包含下面的字符串key
 func (scope *ScopeInfo) IsExistLocVarTableStrKey(strTableKey string, line int, charactor int) (firstStr, secondStr string) {
 	firstStr, secondStr = scope.FindTableKeyReferVarName(strTableKey, line, charactor)
@@ -357,6 +375,24 @@ func (scope *ScopeInfo) CheckNotVarInfo(strName string) (findVar *VarInfo, findS
 	}
 
 	return nil, nil
+}
+
+// GetParamVarInfo 获取参数变量关联的VarInfo
+func (scope *ScopeInfo) GetParamVarInfo(paramName string) *VarInfo {
+	varInfoList, ok := scope.LocVarMap[paramName]
+	if !ok {
+		return nil
+	}
+	if len(varInfoList.VarVec) == 0 {
+		return nil
+	}
+
+	oneVac := varInfoList.VarVec[0]
+	if !oneVac.IsParam {
+		return nil
+	}
+
+	return oneVac
 }
 
 // FindAllLocalVal 获取当前scope下所有local function | variable

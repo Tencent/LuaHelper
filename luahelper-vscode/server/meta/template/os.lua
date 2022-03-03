@@ -119,6 +119,13 @@ function os.remove(filename) end
 ---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.rename)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.rename"])
 function os.rename(oldname, newname) end
 
+---@alias localecategory
+---| '"all"'
+---| '"collate"'
+---| '"ctype"'
+---| '"monetary"'
+---| '"numeric"'
+---| '"time"'
 
 --- Sets the current locale of the program. `locale` is a system-dependent
 --- string specifying a locale; `category` is an optional string describing
@@ -137,7 +144,7 @@ function os.rename(oldname, newname) end
 --- This function may be not thread safe because of its reliance on C function
 --- `setlocale`.
 ---@param locale    string|nil
----@param category? string @"all" or "collate" or "ctype" or "monetary" or "numeric" or "time"
+---@param category? localecategory @"all" or "collate" or "ctype" or "monetary" or "numeric" or "time"
 ---@return string localecategory
 ---[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-os.setlocale)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-os.setlocale"])
 function os.setlocale(locale, category) end

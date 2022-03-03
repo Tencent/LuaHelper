@@ -43,6 +43,20 @@ function io.input(file) end
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.lines)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.lines"])
 function io.lines(filename, ...) end
 
+---@alias openmode
+---| '"r"'   # read mode (the default);
+---| '"w"'   # write mode;
+---| '"a"'   # append mode;
+---| '"r+"'  # update mode, all previous data is preserved;
+---| '"w+"'  # update mode, all previous data is erased;
+---| '"a+"'  # append update mode, previous data is preserved, writing is only allowed at the end of file.
+---| '"rb"'  # read mode(in binary mode);
+---| '"wb"'  # write mode(in binary mode);
+---| '"ab"'  # append mode(in binary mode);
+---| '"r+b"' # update mode, all previous data is preserved(in binary mode);
+---| '"w+b"' # update mode, all previous data is erased(in binary mode);
+---| '"a+b"' # append update mode, previous data is preserved, writing is only allowed at the end of file(in binary mode).
+
 --- This function opens a file, in the mode specified in the string `mode`.  In
 --- case of success, it returns a new file handle. The `mode` string can be
 --- any of the following:
@@ -58,7 +72,7 @@ function io.lines(filename, ...) end
 --- The `mode` string can also have a '`b`' at the end, which is needed in
 --- some systems to open the file in binary mode.
 ---@param filename string
----@param mode string
+---@param mode openmode
 ---@return file
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.open)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.open"])
 function io.open(filename, mode) end
@@ -68,13 +82,18 @@ function io.open(filename, mode) end
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.output)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.output"])
 function io.output(file) end
 
+
+---@alias popenmode
+---| '"r"' # read data from this program(default)
+---| '"w"' # write data to this program
+
 --- This function is system dependent and is not available on all platforms.
 ---
 --- Starts program `prog` in a separated process and returns a file handle that
 --- you can use to read data from this program (if `mode` is "`r`", the default)
 --- or to write data to this program (if `mode` is "`w`").
 ---@param prog  string
----@param mode? string @"r" or "w"
+---@param mode? popenmode @"r" or "w"
 ---@return file
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.popen)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.popen"])
 function io.popen(prog, mode) end
@@ -89,12 +108,16 @@ function io.read(...) end
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.tmpfile)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.tmpfile"])
 function io.tmpfile() end
 
+---@alias filetype
+---| '"file"'        # ---#DESTAIL 'filetype.file'
+---| '"closed file"' # ---#DESTAIL 'filetype.closed file'
+---| 'nil'           # ---#DESTAIL 'filetype.nil'
 
 --- Checks whether `obj` is a valid file handle. Returns the string "`file`"
 --- if `obj` is an open file handle, "`closed file`" if `obj` is a closed file
 --- handle, or **nil** if `obj` is not a file handle.
 ---@param file file | string
----@return string @"file" or "closed file" or "nil"
+---@return filetype @"file" or "closed file" or "nil"
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-io.type)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-io.type"])
 function io.type(file) end
 
@@ -160,6 +183,11 @@ function file:lines(...) end
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:read)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:read"])
 function file:read(...) end
 
+---@alias seekwhence
+---| '"set"' # base is position 0 (beginning of the file);
+---| '"cur"' # base is current position;
+---| '"end"' # base is end of file;
+
 --- Sets and gets the file position, measured from the beginning of the
 --- file, to the position given by `offset` plus a base specified by the string
 --- `whence`, as follows:
@@ -176,11 +204,16 @@ function file:read(...) end
 --- it; the call `file:seek("set")` sets the position to the beginning of the
 --- file (and returns 0); and the call `file:seek("end")` sets the position
 --- to the end of the file, and returns its size.
----@param whence? string @ "set" or "cur" or "end"
+---@param whence? seekwhence @ "set" or "cur" or "end"
 ---@param offset? number
 ---@return integer @offset
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:seek)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:seek"])
 function file:seek(whence, offset) end
+
+---@alias vbuf
+---| '"no"'   # no buffering; the result of any output operation appears immediately.
+---| '"full"' # full buffering;
+---| '"line"' # line buffering;
 
 --- Sets the buffering mode for an output file. There are three available
 --- modes:
@@ -193,7 +226,7 @@ function file:seek(whence, offset) end
 ---
 --- For the last two cases, `size` specifies the size of the buffer, in
 --- bytes. The default is an appropriate size.
----@param mode? string @ "no" or "full" or "line"
+---@param mode? vbuf @ "no" or "full" or "line"
 ---@param size? number
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-file:setvbuf)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-file:setvbuf"])
 function file:setvbuf(mode, size) end
