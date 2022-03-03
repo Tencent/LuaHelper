@@ -345,7 +345,6 @@ func (a *AllProject) generateAllGlobalMaps(third *results.AnalysisThird) {
 		}
 
 		fileResult := fileStruct.FileResult
-
 		if fileResult.NodefineMaps == nil {
 			continue
 		}
@@ -355,12 +354,15 @@ func (a *AllProject) generateAllGlobalMaps(third *results.AnalysisThird) {
 			if oneVar.SubMaps == nil {
 				continue
 			}
+
 			ok, gVar := third.FindThirdGlobalGInfo(false, strName, "")
-			if ok {
-				for subName, subVar := range oneVar.SubMaps {
-					if !gVar.IsExistMember(subName) {
-						gVar.InsertSubMember(subName, subVar)
-					}
+			if !ok {
+				continue
+			}
+
+			for subName, subVar := range oneVar.SubMaps {
+				if !gVar.IsExistMember(subName) {
+					gVar.InsertSubMember(subName, subVar)
 				}
 			}
 		}

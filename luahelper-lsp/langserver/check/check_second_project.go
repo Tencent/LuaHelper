@@ -345,11 +345,13 @@ func (a *AllProject) handleOtherFileInsertSub(second *results.SingleProjectResul
 			}
 
 			ok, gVar := second.FindGlobalGInfo(strName, results.CheckTermFirst, "")
-			if ok {
-				for subName, subVar := range oneVar.SubMaps {
-					if !gVar.IsExistMember(subName) {
-						gVar.InsertSubMember(subName, subVar)
-					}
+			if !ok {
+				continue
+			}
+
+			for subName, subVar := range oneVar.SubMaps {
+				if !gVar.IsExistMember(subName) {
+					gVar.InsertSubMember(subName, subVar)
 				}
 			}
 		}

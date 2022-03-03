@@ -42,24 +42,20 @@ func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bo
 		secondFileResult := fileResult
 		if fi.FuncLv == 0 {
 			// 最顶层的函数，只在前面的定义中查找
-			findOk, oneVar := secondFileResult.FindGlobalVarInfo(strName, gFlag, strProPre)
-			if findOk {
+			if ok, oneVar := secondFileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
 				return oneVar.ReferFunc
 			}
 
-			findOk, oneVar = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre)
-			if findOk {
+			if ok, oneVar := a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre); ok {
 				return oneVar.ReferFunc
 			}
 		} else {
 			// 非底层的函数，需要查找全局的变量
-			findOk, oneVar := firstFile.FindGlobalVarInfo(strName, gFlag, strProPre)
-			if findOk {
+			if ok, oneVar := firstFile.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
 				return oneVar.ReferFunc
 			}
 
-			findOk, oneVar = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre)
-			if findOk {
+			if ok, oneVar := a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre); ok {
 				return oneVar.ReferFunc
 			}
 		}
@@ -67,21 +63,18 @@ func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bo
 		thirdFileResult := fileResult
 		if fi.FuncLv == 0 {
 			// 最顶层的函数，只在前面的定义中查找
-			findOk, oneVar := thirdFileResult.FindGlobalVarInfo(strName, gFlag, strProPre)
-			if findOk {
+			if ok, oneVar := thirdFileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
 				return oneVar.ReferFunc
 			}
 		} else {
 			// 非底层的函数，需要查找全局的变量
-			findOk, oneVar := firstFile.FindGlobalVarInfo(strName, gFlag, strProPre)
-			if findOk {
+			if ok, oneVar := firstFile.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
 				return oneVar.ReferFunc
 			}
 		}
 
 		// 查找所有的
-		findOk, oneVar := a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre)
-		if findOk {
+		if ok, oneVar := a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre); ok {
 			return oneVar.ReferFunc
 		}
 	}
