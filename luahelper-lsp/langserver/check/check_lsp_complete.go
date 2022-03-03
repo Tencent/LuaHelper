@@ -1038,7 +1038,6 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 				if symbolTmp.VarInfo.ReferFunc != nil {
 					strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true)
 					item.Detail = "function " + strFunc
-					//item.Detail = "function " + symbolTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
 				}
 
 				// 如果为引用的模块
@@ -1052,7 +1051,6 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 	if varInfo.ReferFunc != nil {
 		strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true)
 		item.Detail = "function " + strFunc
-		//item.Detail = "function " + varInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
 	}
 
 	// 如果为引用的模块

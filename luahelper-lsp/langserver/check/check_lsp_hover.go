@@ -735,7 +735,6 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 				strPre = "local "
 			}
 			strFunc := a.getFuncShowStr(symbol.VarInfo, varStruct.StrVec[len(varStruct.StrVec)-1], true, false, true)
-			//strFunc := referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
 			strType = "function " + strFunc
 		}
 	}
