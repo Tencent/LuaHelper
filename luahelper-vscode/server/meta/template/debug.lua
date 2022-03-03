@@ -46,6 +46,16 @@ function debug.getfenv(o) end
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.gethook)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.gethook"])
 function debug.gethook(co) end
 
+---@alias infowhat string
+---|'"n"'     # ---#DESTAIL 'infowhat.n'
+---|'"S"'     # ---#DESTAIL 'infowhat.S'
+---|'"l"'     # ---#DESTAIL 'infowhat.l'
+---|'"t"'     # ---#DESTAIL 'infowhat.t'
+---|'"u"'     # ---#DESTAIL 'infowhat.u'
+---|'"f"'     # ---#DESTAIL 'infowhat.f'
+---|'"r"'     # ---#DESTAIL 'infowhat.r'
+---|'"L"'     # ---#DESTAIL 'infowhat.L'
+
 --- Returns a table with information about a function. You can give the
 --- function directly, or you can give a number as the value of `f`,
 --- which means the function running at level `f` of the call stack
@@ -68,7 +78,7 @@ function debug.gethook(co) end
 ---@overload fun(f: integer|function, what?: string):debuginfo
 ---@param thread thread
 ---@param f      integer|function
----@param what?  string
+---@param what?  infowhat
 ---@return debuginfo
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.getinfo)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.getinfo"])
 function debug.getinfo(thread, f, what) end
@@ -142,6 +152,10 @@ function debug.getupvalue(f, up) end
 ---@return T object
 function debug.setfenv(object, env) end
 
+---@alias hookmask string
+---|'"c"' # the hook is called every time Lua calls a function;
+---|'"r"' # the hook is called every time Lua returns from a function;
+---|'"l"' # the hook is called every time Lua enters a new line of code.
 
 --- Sets the given function as a hook. The string `mask` and the number `count`
 --- describe when the hook will be called. The string mask may have any
@@ -166,7 +180,7 @@ function debug.setfenv(object, env) end
 ---@overload fun(hook: function, mask: string, count?: integer)
 ---@param thread thread
 ---@param hook   function
----@param mask   string @"c" or "r" or "l"
+---@param mask   hookmask @"c" or "r" or "l"
 ---@param count? integer
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-debug.sethook)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-debug.sethook"])
 function debug.sethook(thread, hook, mask, count) end

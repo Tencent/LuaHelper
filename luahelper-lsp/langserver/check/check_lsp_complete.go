@@ -385,6 +385,21 @@ func (a *AllProject) getVarCompleteExt(fileName string, varInfo *common.VarInfo,
 			a.completeCache.InsertCompleteVar(fileName, strName, oneVar)
 		}
 	}
+
+	// 获取扩展的成员
+	if varInfo.ExpandStrMap == nil {
+		return
+	}
+
+	for key := range varInfo.ExpandStrMap {
+		strRemainList := strings.Split(key, ".")
+		strOne := strRemainList[0]
+		if a.completeCache.ExistStr(strOne) || a.completeCache.IsExcludeStr(strOne) {
+			continue
+		}
+
+		a.completeCache.InsertCompleteExpand(strOne, "", "", common.IKVariable, varInfo)
+	}
 }
 
 // CompleteResultCh 结构的协程封装
@@ -687,44 +702,53 @@ func (a *AllProject) expandNodefineMapComplete(luaInFile string, strFind string,
 		}
 
 		a.completeCache.InsertCompleteExpand(strOne, "", "", common.IKVariable, varInfo)
-		//a.completeCache.InsertCompleteNormal(strOne, "", "", common.IKVariable)
 	}
+}
+
+func (a *AllProject) paramCandidateComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) bool {
+	if completeVar.ParamCandidateType == nil {
+		return false
+	}
+
+	strMap := a.getSymbolAliasMultiCandidateMap(completeVar.ParamCandidateType, comParam.fi.FileName, comParam.loc.StartLine)
+	if len(strMap) > 0 {
+		if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
+			a.completeCache.SetClearParamQuotes(true)
+		}
+
+		for strKey, strComment := range strMap {
+			if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
+				// 如果分割的是为单引号或是双引号，strKey需要为引号的字符串
+				if !strings.HasPrefix(strKey, "\"") {
+					continue
+				}
+
+				if completeVar.SplitByte == '\'' {
+					strKey = strings.ReplaceAll(strKey, "\"", "'")
+				}
+			} else {
+				if completeVar.SplitByte != ' ' && strings.HasPrefix(strKey, "\"") {
+					continue
+				}
+			}
+
+			a.completeCache.InsertCompleteNormal(strKey, strComment, "", common.IKConstant)
+		}
+		return true
+	}
+
+	if completeVar.OnelyParamQuotesFlag {
+		return true
+	}
+
+	return false
 }
 
 // 没有前缀的代码补全
 func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
-	// 先判断是否为函数参数的候选词代码补全
-	if completeVar.ParamCandidateType != nil {
-		strMap := a.getSymbolAliasMultiCandidateMap(completeVar.ParamCandidateType, comParam.fi.FileName, comParam.loc.StartLine)
-		if len(strMap) > 0 {
-			if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
-				a.completeCache.SetClearParamQuotes(true)
-			}
-
-			for strKey, strComment := range strMap {
-				if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
-					// 如果分割的是为单引号或是双引号，strKey需要为引号的字符串
-					if !strings.HasPrefix(strKey, "\"") {
-						continue
-					}
-
-					if completeVar.SplitByte == '\'' {
-						strKey = strings.ReplaceAll(strKey, "\"", "'")
-					}
-				} else {
-					if completeVar.SplitByte != ' ' && strings.HasPrefix(strKey, "\"") {
-						continue
-					}
-				}
-
-				a.completeCache.InsertCompleteNormal(strKey, strComment, "", common.IKConstant)
-			}
-			return
-		}
-
-		if completeVar.OnelyParamQuotesFlag {
-			return
-		}
+	// 3.0) 先判断是否为函数参数的候选词代码补全
+	if a.paramCandidateComplete(comParam, completeVar) {
+		return
 	}
 
 	// 3) 单纯的文件范围内代码补全
@@ -812,6 +836,38 @@ func (a *AllProject) noPreComplete(comParam *CommonFuncParam, completeVar *commo
 	}
 }
 
+// 判断是否为注解table中的key值补全，例如:
+// ---@type oneTable
+// local one = {
+//	  b-- 此时输入b时候，代码补全one的成员
+//}
+func (a *AllProject) needAnnotateTableFieldRepair(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
+	if len(completeVar.StrVec) != 1 || completeVar.LastEmptyFlag {
+		return
+	}
+
+	strName := completeVar.StrVec[0]
+	// 1) 优先判断局部变量
+	firstStr, onVar := comParam.scope.GetTableKeyVar(strName, completeVar.PosLine+1, completeVar.PosCh)
+	if firstStr == "" {
+		// 2) 局部变量没有找到，查找全局变量
+		firstStr, onVar = comParam.fileResult.GetGlobalVarTableStrKey(strName, completeVar.PosLine+1, completeVar.PosCh)
+	}
+
+	if firstStr != "" {
+		symbol := a.createAnnotateSymbol(comParam.fileResult.Name, onVar)
+		if symbol.AnnotateType == nil {
+			// 变量没有关联注解类型，返回
+			return
+		}
+
+		// 修改代码的补全
+		completeVar.StrVec[0] = firstStr
+		completeVar.LastEmptyFlag = true
+		return
+	}
+}
+
 // 代码补全进行的分发
 func (a *AllProject) lspCodeComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) {
 	a.GetCompleteCache().SetCompleteVar(completeVar)
@@ -821,6 +877,9 @@ func (a *AllProject) lspCodeComplete(comParam *CommonFuncParam, completeVar *com
 		a.gPreComplete(comParam, completeVar)
 		return
 	}
+
+	// 判断是否为注解table中的key值补全, 增强修复
+	a.needAnnotateTableFieldRepair(comParam, completeVar)
 
 	// 2） 没有前缀的代码补全, len(completeVar.StrVec) == 1
 	if len(completeVar.StrVec) == 1 && !completeVar.LastEmptyFlag {
@@ -956,7 +1015,9 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 				}
 
 				if symbolTmp.VarInfo.ReferFunc != nil {
-					item.Detail = "function " + symbolTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
+					strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true)
+					item.Detail = "function " + strFunc
+					//item.Detail = "function " + symbolTmp.VarInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
 				}
 
 				// 如果为引用的模块
@@ -968,7 +1029,9 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 	}
 
 	if varInfo.ReferFunc != nil {
-		item.Detail = "function " + varInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
+		strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true)
+		item.Detail = "function " + strFunc
+		//item.Detail = "function " + varInfo.ReferFunc.GetFuncCompleteStr(item.Label, true, colonFlag)
 	}
 
 	// 如果为引用的模块

@@ -496,3 +496,66 @@ func (varInfo *VarInfo) HasDeepSubVarInfo(subSymbol *VarInfo) bool {
 
 	return false
 }
+
+func findValidKey(oneExp *ast.TableConstructorExp, strTableKey string, line int, charactor int) bool {
+	for index, keyExp := range oneExp.KeyExps {
+		if keyExp == nil {
+			// 查看value
+			if len(oneExp.ValExps) <= index {
+				continue
+			}
+
+			valueExp := oneExp.ValExps[index]
+			nameExp, ok := valueExp.(*ast.NameExp)
+			if !ok {
+				continue
+			}
+
+			if nameExp.Name != strTableKey {
+				continue
+			}
+
+			if nameExp.Loc.IsInLocStruct(line, charactor) {
+				return true
+			}
+		} else {
+			strExp, ok := keyExp.(*ast.StringExp)
+			if !ok {
+				continue
+			}
+
+			if strExp.Str != strTableKey {
+				continue
+			}
+
+			if strExp.Loc.IsInLocStruct(line, charactor) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// IsHasReferTableKey 判断这个变量是否指向一个table，且它的key是一个strTableKey；或是是key为nil，value为strTableKey
+func (varInfo *VarInfo) IsHasReferTableKey(strTableKey string, line int, charactor int) bool {
+	referExp := varInfo.ReferExp
+	if referExp == nil {
+		return false
+	}
+
+	oneExp, ok := referExp.(*ast.TableConstructorExp)
+	if !ok {
+		return false
+	}
+
+	if !oneExp.Loc.IsInLocStruct(line, charactor) {
+		return false
+	}
+
+	if findValidKey(oneExp, strTableKey, line, charactor) {
+		return true
+	}
+
+	return false
+}

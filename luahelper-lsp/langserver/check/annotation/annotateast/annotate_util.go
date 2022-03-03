@@ -87,6 +87,11 @@ func TypeConvertStr(astType Type) string {
 			funStr = funStr + TypeConvertStr(oneReturn)
 		}
 		return funStr
+	case *ConstType:
+		if subAst.QuotesFlag {
+			return "\"" + subAst.Name + "\""
+		}
+		return subAst.Name
 	}
 
 	return ""

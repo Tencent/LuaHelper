@@ -613,6 +613,25 @@ func (f *FileResult) IsExistGlobalVarTableStrKey(strTableKey string, line int, c
 	return "", ""
 }
 
+// GetGlobalVarTableStrKey 代码补全时候，变量是否指向一个table，且它的key是一个strTableKey；或是是key为nil，value为strTableKey
+func (f *FileResult) GetGlobalVarTableStrKey(strTableKey string, line int, charactor int) (string, *common.VarInfo) {
+	for strName, globaInfo := range f.GlobalMaps {
+		for {
+			if globaInfo.IsHasReferTableKey(strTableKey, line, charactor) {
+				return strName, globaInfo
+			}
+
+			if globaInfo.ExtraGlobal.Prev != nil {
+				globaInfo = globaInfo.ExtraGlobal.Prev
+			} else {
+				break
+			}
+		}
+	}
+
+	return "", nil
+}
+
 // GetAstCheckError 获取AST的错误
 func (f *FileResult) GetAstCheckError() (errList []common.CheckError) {
 	fileError := f.CheckErrVec
