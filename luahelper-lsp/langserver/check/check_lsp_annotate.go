@@ -1692,3 +1692,49 @@ func (a *AllProject) getAliasMultiCandidateMap(className string, fileName string
 		strMap[oneStr] = constType.Comment
 	}
 }
+
+func (a *AllProject) getSymbolAliasMultiCandidate(annotateType annotateast.Type, fileName string, line int) (str string) {
+	if annotateType == nil {
+		return
+	}
+
+	multiType, ok := annotateType.(*annotateast.MultiType)
+	if !ok {
+		return
+	}
+
+	for _, oneType := range multiType.TypeList {
+		// 判断是否在几个候选词中
+		if constType, ok := oneType.(*annotateast.ConstType); ok {
+			oneStr := ""
+			if constType.QuotesFlag {
+				oneStr = "\"" + constType.Name + "\""
+			} else {
+				oneStr = constType.Name
+			}
+
+			if str != "" {
+				str = str + " | " + oneStr
+			} else {
+				str = oneStr
+			}
+			continue
+		}
+
+		simpleType, ok := oneType.(*annotateast.NormalType)
+		if !ok {
+			continue
+		}
+
+		if isDefaultType(simpleType.StrName) {
+			continue
+		}
+
+		str = str + a.getAliasMultiCandidate(simpleType.StrName, fileName, line)
+		if str != "" {
+			return str
+		}
+	}
+
+	return str
+}
