@@ -431,17 +431,17 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 		return
 	}
 
-	isStrict, fieldMap, className := a.Projects.GetAnnotateClassByLoc(a.curResult.Name, nodeLoc.StartLine-1)
-	if !isStrict || len(fieldMap) == 0 {
+	isStrict, isMemberMap, className := a.Projects.IsMemberOfAnnotateClassByLoc(a.curResult.Name, strFieldNamelist, nodeLoc.StartLine-1)
+	if !isStrict || len(isMemberMap) == 0 {
 		return
 	}
 
-	for _, strFieldName := range strFieldNamelist {
+	for strFieldName, isMember := range isMemberMap {
 		if !common.JudgeSimpleStr(strFieldName) {
 			continue
 		}
 
-		if fieldMap[strFieldName] {
+		if isMember {
 			log.Debug("CheckTableDec currect, tableName=%s, keyName=%s", strTableName, strFieldName)
 		} else {
 			ok, keyLoc := common.GetTableConstructorExpKeyStrLoc(*node, strFieldName)
@@ -449,8 +449,6 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 			if ok {
 				errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strFieldName, className)
 				a.curResult.InsertError(common.CheckErrorClassField, errStr, keyLoc)
-				//a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, keyLoc)
-
 			}
 		}
 	}
@@ -526,9 +524,9 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	// if strTableName == "tableA" {
-	// 	strTableName = "tableA"
-	// }
+	if strTableName == "tableA" {
+		strTableName = "tableA"
+	}
 
 	strKey := common.GetExpName(node.KeyExp)
 	// 如果不是简单字符，退出
@@ -541,21 +539,14 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	isStrict, fieldMap, className := a.Projects.GetAnnotateClassByVar(strTableName, varInfo)
-	if !isStrict || len(fieldMap) == 0 {
+	isStrict, isMember, className := a.Projects.IsMemberOfAnnotateClassByVar(strKey, strTableName, varInfo)
+	if !isStrict || isMember {
 		return
 	}
 
-	if fieldMap[strKey] {
-		log.Debug("checkTableAccess currect, tableName=%s, keyName=%s", strTableName, strKey)
-	} else {
-		errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strKey, className)
-		a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
-		//a.curResult.InsertError(common.CheckErrorSelfAssign, errStr, node.Loc)
-	}
-
+	errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strKey, className)
+	a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
 	return
-
 }
 
 // 是否给常量赋值
@@ -578,6 +569,10 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		//loc = exp
 		// case *ast.TableConstructorExp:
 		// 	name = exp.ValExps
+	}
+
+	if len(name) <= 0 {
+		return
 	}
 
 	ok, varInfo := a.FindVarDefineForCheck(name, loc)

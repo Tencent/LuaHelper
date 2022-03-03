@@ -297,33 +297,29 @@ func (a *AllProject) GetAnnotateClassAllFieldOfStrict(astType annotateast.Type, 
 }
 
 // 获取注解class
-func (a *AllProject) GetAnnotateClassByVar(strName string, varInfo *common.VarInfo) (isStrict bool, retMap map[string]bool, className string) {
+func (a *AllProject) IsMemberOfAnnotateClassByVar(strMemName string, strVarName string, varInfo *common.VarInfo) (isStrict bool, isMember bool, className string) {
 	isStrict = false
-	retMap = map[string]bool{}
+	isMember = false
 	className = ""
 
 	if varInfo == nil {
-		return isStrict, retMap, className
+		return
 	}
 
-	strFile := varInfo.FileName
-
-	// 1) 获取文件对应的annotateFile
-	annotateFile := a.getAnnotateFile(strFile)
+	//1 找到变量定义处的前一行的注解
+	annotateFile := a.getAnnotateFile(varInfo.FileName)
 	if annotateFile == nil {
-		log.Error("GetAnnotateClassByVar annotateFile is nil, file=%s", strFile)
-		return isStrict, retMap, className
+		log.Error("GetAnnotateClassByVar annotateFile is nil, file=%s", varInfo.FileName)
+		return
 	}
 
-	decLine := varInfo.Loc.StartLine - 1
+	fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
 
-	// 这里判断是否为函数参数的注解
-	// 函数参数的注解，会额外的用下面的注解类型
-	// ---@param one class
-	// todo 这里如果为函数参数的，函数的注释一定要在前面一行，如果函数的参数占用两行，整个会有问题
+	//2 取出class name
 	if varInfo.IsParam || varInfo.IsForParam {
-
-		fragmentInfo := annotateFile.GetLineFragementInfo(decLine)
+		// 这里判断是否为函数参数的注解
+		// 函数参数的注解，会额外的用下面的注解类型
+		// ---@param one class
 		if fragmentInfo != nil &&
 			fragmentInfo.ParamInfo != nil &&
 			len(fragmentInfo.ParamInfo.ParamList) > 0 {
@@ -332,37 +328,63 @@ func (a *AllProject) GetAnnotateClassByVar(strName string, varInfo *common.VarIn
 				paramLine := fragmentInfo.ParamInfo.ParamList[i]
 
 				//找到对应的那行---@param one class 再获取class
-				if paramLine.Name == strName {
-					return a.GetAnnotateClassAllFieldOfStrict(paramLine.ParamType, strFile, decLine)
+				if paramLine.Name == strVarName {
+
+					strSimpleList := annotateast.GetAllNormalStrList(paramLine.ParamType)
+					if len(strSimpleList) == 0 {
+						return
+					}
+
+					className = strSimpleList[0]
+					break
 				}
 			}
 		}
 	} else {
-		fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
-
+		// 非函数参数 一般是 ---@type
 		if fragmentInfo != nil &&
 			fragmentInfo.TypeInfo != nil &&
 			len(fragmentInfo.TypeInfo.TypeList) > 0 &&
 			fragmentInfo.TypeInfo.TypeList[0] != nil {
-			return a.GetAnnotateClassAllFieldOfStrict(fragmentInfo.TypeInfo.TypeList[0], strFile, varInfo.Loc.StartLine-1)
+
+			strSimpleList := annotateast.GetAllNormalStrList(fragmentInfo.TypeInfo.TypeList[0])
+			if len(strSimpleList) == 0 {
+				return
+			}
+
+			className = strSimpleList[0]
 		}
 	}
 
-	//没找到返回空的
-	return isStrict, retMap, className
+	if len(className) <= 0 {
+		return
+	}
+
+	//3 根据className 查找注解的class信息
+	createTypeList, flag := a.createTypeMap[className]
+	if !flag || len(createTypeList.List) == 0 ||
+		createTypeList.List[0].ClassInfo == nil ||
+		createTypeList.List[0].ClassInfo.ClassState == nil {
+		return
+	}
+
+	//只取第一个，如果有多个，后续会报警
+	isStrict = createTypeList.List[0].ClassInfo.ClassState.IsStrict
+	_, isMember = createTypeList.List[0].ClassInfo.FieldMap[strMemName]
+	return isStrict, isMember, className
 }
 
 // 获取注解class
-func (a *AllProject) GetAnnotateClassByLoc(strFile string, lineForGetAnnotate int) (isStrict bool, retMap map[string]bool, className string) {
+func (a *AllProject) IsMemberOfAnnotateClassByLoc(strFile string, strFieldNamelist []string, lineForGetAnnotate int) (isStrict bool, isMemberMap map[string]bool, className string) {
 	isStrict = false
-	retMap = map[string]bool{}
+	isMemberMap = map[string]bool{}
 	className = ""
 
 	// 1) 获取文件对应的annotateFile
 	annotateFile := a.getAnnotateFile(strFile)
 	if annotateFile == nil {
-		log.Error("GetAnnotateClassByLoc annotateFile is nil, file=%s", strFile)
-		return isStrict, retMap, className
+		log.Error("IsMemberOfAnnotateClassByLoc annotateFile is nil, file=%s", strFile)
+		return
 	}
 
 	fragmentInfo := annotateFile.GetLineFragementInfo(lineForGetAnnotate)
@@ -370,10 +392,35 @@ func (a *AllProject) GetAnnotateClassByLoc(strFile string, lineForGetAnnotate in
 		fragmentInfo.TypeInfo != nil &&
 		len(fragmentInfo.TypeInfo.TypeList) > 0 &&
 		fragmentInfo.TypeInfo.TypeList[0] != nil {
-		return a.GetAnnotateClassAllFieldOfStrict(fragmentInfo.TypeInfo.TypeList[0], strFile, lineForGetAnnotate)
+
+		strSimpleList := annotateast.GetAllNormalStrList(fragmentInfo.TypeInfo.TypeList[0])
+		if len(strSimpleList) == 0 {
+			return
+		}
+
+		className = strSimpleList[0]
 	}
 
-	return isStrict, retMap, className
+	if len(className) <= 0 {
+		return
+	}
+
+	//3 根据className 查找注解的class信息
+	createTypeList, flag := a.createTypeMap[className]
+	if !flag || len(createTypeList.List) == 0 ||
+		createTypeList.List[0].ClassInfo == nil ||
+		createTypeList.List[0].ClassInfo.ClassState == nil {
+		return
+	}
+
+	//只取第一个，如果有多个，后续会报警
+	isStrict = createTypeList.List[0].ClassInfo.ClassState.IsStrict
+
+	for _, strMemName := range strFieldNamelist {
+		_, isMemberMap[strMemName] = createTypeList.List[0].ClassInfo.FieldMap[strMemName]
+	}
+
+	return isStrict, isMemberMap, className
 }
 
 // 获取注解 ---type
