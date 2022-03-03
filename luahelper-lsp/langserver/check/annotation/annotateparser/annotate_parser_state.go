@@ -7,14 +7,22 @@ import (
 )
 
 // 解析最基础的@type
-// ---@type MY_TYPE[|OTHER_TYPE] [@comment]
-// ---@type MY_TYPE[|OTHER_TYPE], MY_TYPE[|OTHER_TYPE] [@comment] [@comment]
+// ---@type [const] MY_TYPE[|OTHER_TYPE] [@comment]
+// ---@type [const] MY_TYPE[|OTHER_TYPE], [const] MY_TYPE[|OTHER_TYPE] [@comment] [@comment]
 func parserTypeState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState {
 	// skip type token
 	l.NextTokenOfKind(annotatelexer.ATokenKwType)
 
 	typeState := &annotateast.AnnotateTypeState{}
+
 	for {
+		if l.LookAheadKind() == annotatelexer.ATokenKwConst {
+			typeState.ListConst = append(typeState.ListConst, true)
+			l.NextTokenOfKind(annotatelexer.ATokenKwConst)
+		} else {
+			typeState.ListConst = append(typeState.ListConst, false)
+		}
+
 		oneType := parserOneType(l)
 		typeState.ListType = append(typeState.ListType, oneType)
 
@@ -70,8 +78,8 @@ func parserAliasState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState 
 }
 
 // 解析@class
-// ---@class MY_TYPE[:PARENT_TYPE] [@comment]
-// ---@class MY_TYPE{:PARENT_TYPE [,PARENT_TYPE]}
+// ---@class [strict] MY_TYPE[:PARENT_TYPE] [@comment]
+// ---@class [strict] MY_TYPE{:PARENT_TYPE [,PARENT_TYPE]}
 func parserClassState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState {
 	// skip class token
 	l.NextTokenOfKind(annotatelexer.ATokenKwClass)

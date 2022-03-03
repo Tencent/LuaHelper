@@ -296,30 +296,22 @@ func (a *AllProject) GetAnnotateClassAllFieldOfStrict(astType annotateast.Type, 
 
 }
 
-// 获取注解class decLoc定义位置 refLoc引用位置 只用传一个 优先用decLoc
-func (a *AllProject) GetAnnotateClass(strFile string, strName string, varInfo *common.VarInfo, lineForGetAnnotate int, curScope *common.ScopeInfo) (isStrict bool, retMap map[string]bool, className string) {
+// 获取注解class
+func (a *AllProject) GetAnnotateClassByVar(strName string, varInfo *common.VarInfo) (isStrict bool, retMap map[string]bool, className string) {
 	isStrict = false
 	retMap = map[string]bool{}
 	className = ""
 
-	// 1) 获取文件对应的annotateFile
-	annotateFile := a.getAnnotateFile(strFile)
-	if annotateFile == nil {
-		log.Error("GetAnnotateClass annotateFile is nil, file=%s", strFile)
+	if varInfo == nil {
 		return isStrict, retMap, className
 	}
 
-	//没有符号 直接用lineForGetAnnotate
-	if varInfo == nil {
-		fragmentInfo := annotateFile.GetLineFragementInfo(lineForGetAnnotate)
+	strFile := varInfo.FileName
 
-		if fragmentInfo != nil &&
-			fragmentInfo.TypeInfo != nil &&
-			len(fragmentInfo.TypeInfo.TypeList) > 0 &&
-			fragmentInfo.TypeInfo.TypeList[0] != nil {
-			return a.GetAnnotateClassAllFieldOfStrict(fragmentInfo.TypeInfo.TypeList[0], strFile, lineForGetAnnotate)
-		}
-
+	// 1) 获取文件对应的annotateFile
+	annotateFile := a.getAnnotateFile(strFile)
+	if annotateFile == nil {
+		log.Error("GetAnnotateClassByVar annotateFile is nil, file=%s", strFile)
 		return isStrict, retMap, className
 	}
 
@@ -332,7 +324,6 @@ func (a *AllProject) GetAnnotateClass(strFile string, strName string, varInfo *c
 	if varInfo.IsParam || varInfo.IsForParam {
 
 		fragmentInfo := annotateFile.GetLineFragementInfo(decLine)
-
 		if fragmentInfo != nil &&
 			fragmentInfo.ParamInfo != nil &&
 			len(fragmentInfo.ParamInfo.ParamList) > 0 {
@@ -359,6 +350,53 @@ func (a *AllProject) GetAnnotateClass(strFile string, strName string, varInfo *c
 
 	//没找到返回空的
 	return isStrict, retMap, className
+}
+
+// 获取注解class
+func (a *AllProject) GetAnnotateClassByLoc(strFile string, lineForGetAnnotate int) (isStrict bool, retMap map[string]bool, className string) {
+	isStrict = false
+	retMap = map[string]bool{}
+	className = ""
+
+	// 1) 获取文件对应的annotateFile
+	annotateFile := a.getAnnotateFile(strFile)
+	if annotateFile == nil {
+		log.Error("GetAnnotateClassByLoc annotateFile is nil, file=%s", strFile)
+		return isStrict, retMap, className
+	}
+
+	fragmentInfo := annotateFile.GetLineFragementInfo(lineForGetAnnotate)
+	if fragmentInfo != nil &&
+		fragmentInfo.TypeInfo != nil &&
+		len(fragmentInfo.TypeInfo.TypeList) > 0 &&
+		fragmentInfo.TypeInfo.TypeList[0] != nil {
+		return a.GetAnnotateClassAllFieldOfStrict(fragmentInfo.TypeInfo.TypeList[0], strFile, lineForGetAnnotate)
+	}
+
+	return isStrict, retMap, className
+}
+
+// 获取注解 ---type
+func (a *AllProject) IsAnnotateTypeConst(varInfo *common.VarInfo) (isConst bool) {
+	isConst = false
+
+	// 1) 获取文件对应的annotateFile
+	annotateFile := a.getAnnotateFile(varInfo.FileName)
+	if annotateFile == nil {
+		log.Error("GetAnnotateType annotateFile is nil, file=%s", varInfo.FileName)
+		return isConst
+	}
+
+	fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
+
+	if fragmentInfo != nil &&
+		fragmentInfo.TypeInfo != nil &&
+		len(fragmentInfo.TypeInfo.ConstList) > 0 {
+		return fragmentInfo.TypeInfo.ConstList[0]
+	}
+
+	//没找到返回空的
+	return isConst
 }
 
 // GetFirstFileStuct 获取第一阶段文件处理的结果

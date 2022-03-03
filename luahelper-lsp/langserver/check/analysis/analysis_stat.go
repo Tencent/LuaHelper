@@ -1044,6 +1044,8 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 				fileResult.InsertError(common.CheckErrorAssignParamNum, errStr, node.Loc)
 			}
 		} else {
+
+			//检查自我赋值
 			if !common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorSelfAssign) {
 				isSame := true
 				for i := 0; i < nExps; i++ {
@@ -1091,5 +1093,8 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 		if leftExp, ok := node.VarList[0].(*ast.TableAccessExp); ok {
 			a.checkTableAccess(leftExp)
 		}
+
+		//检查 是否给常量赋值
+		a.checkConstAssgin(&node.VarList[0])
 	}
 }
