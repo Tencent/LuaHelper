@@ -387,10 +387,6 @@ func (a *AllProject) getVarCompleteExt(fileName string, varInfo *common.VarInfo,
 	}
 
 	// 获取扩展的成员
-	if varInfo.ExpandStrMap == nil {
-		return
-	}
-
 	for key := range varInfo.ExpandStrMap {
 		strRemainList := strings.Split(key, ".")
 		strOne := strRemainList[0]
