@@ -455,7 +455,6 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 }
 
 func (a *Analysis) FindVarDefineForCheck(varName string, loc lexer.Location) (find bool, varInfo *common.VarInfo) {
-
 	find = false
 	//先尝试找local变量
 	varInfo, find = a.curScope.FindLocVar(varName, loc)

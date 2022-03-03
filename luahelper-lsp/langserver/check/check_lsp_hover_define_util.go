@@ -186,10 +186,6 @@ func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
 		}
 	}
 
-	if varInfo.ExpandStrMap == nil {
-		return
-	}
-
 	for key := range varInfo.ExpandStrMap {
 		strVec := strings.Split(key, ".")
 		if len(strVec) == 0 {
@@ -403,10 +399,6 @@ func GetStrComment(strComment string) (str string) {
 
 func (a *AllProject) expandNodefineMapComplete(luaInFile string, strFind string, comParam *CommonFuncParam,
 	completeVar *common.CompleteVarStruct, varInfo *common.VarInfo) {
-	if varInfo.ExpandStrMap == nil {
-		return
-	}
-
 	for key := range varInfo.ExpandStrMap {
 		key = strFind + "." + key
 		remainVec := matchVecsExpandStrMap(completeVar.StrVec, completeVar.IsFuncVec, key)
