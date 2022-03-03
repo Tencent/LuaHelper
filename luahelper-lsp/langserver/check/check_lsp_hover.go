@@ -39,7 +39,7 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 	}
 
 	if symbol != nil && len(findList) == 0 {
-		lableStr = getVarInfoExpandStrHover(symbol.VarInfo, varStruct.Str, true)
+		lableStr = getVarInfoExpandStrHover(symbol.VarInfo, varStruct.StrVec, varStruct.IsFuncVec, varStruct.Str)
 		if lableStr != "" {
 			return
 		}
@@ -236,34 +236,24 @@ func needReplaceMapStr(oldStr string, strValueType string) bool {
 }
 
 // 只获取expandStrMap的hover
-func getVarInfoExpandStrHover(varInfo *common.VarInfo, strPre string, showPre bool) (str string) {
+func getVarInfoExpandStrHover(varInfo *common.VarInfo, inputVec []string, inputFuncVec []bool, strPre string) (str string) {
 	if varInfo == nil || varInfo.ExpandStrMap == nil {
 		return
 	}
 
-	vecPre := strings.Split(strPre, ".")
-	beforeStrPre := vecPre[0]
+	beforeStrPre := inputVec[0]
 
 	var existMap map[string]string = map[string]string{}
 	for str := range varInfo.ExpandStrMap {
 		str = beforeStrPre + "." + str
-		if !strings.HasPrefix(str, strPre+".") {
+		remainVec := matchVecsExpandStrMap(inputVec, inputFuncVec, str)
+		if len(remainVec) == 0 {
 			continue
 		}
 
-		if (len(strPre) + 1) >= len(str) {
-			continue
-		}
-
-		strRemain := str[len(strPre)+1:]
-		if strRemain == "" {
-			continue
-		}
-
-		strVec := strings.Split(strRemain, ".")
-		oneStr := strVec[0]
+		oneStr := remainVec[0]
 		strType := "any"
-		if len(strVec) > 1 {
+		if len(remainVec) > 1 {
 			strType = "table"
 		}
 		newStr := oneStr + ": " + strType + ","
@@ -274,16 +264,12 @@ func getVarInfoExpandStrHover(varInfo *common.VarInfo, strPre string, showPre bo
 		} else {
 			existMap[oneStr] = newStr
 		}
-
-		if _, ok := existMap[strVec[0]]; !ok {
-			existMap[strVec[0]] = newStr
-		}
 	}
 	if len(existMap) == 0 {
 		return
 	}
 
-	if showPre {
+	if strPre != "" {
 		str = strPre + " : table = {\n"
 	} else {
 		str = " table = {\n"
@@ -356,13 +342,9 @@ func (a *AllProject) getCompleteExpandInfo(item *common.OneCompleteData) (luaFil
 		return
 	}
 
-	strPre := combineStrVec(compStruct.StrVec, compStruct.IsFuncVec)
-	if strPre == "" {
-		return
-	}
-
-	strPre = strPre + item.Label
-	str := getVarInfoExpandStrHover(item.ExpandVarInfo, strPre, false)
+	tempVec := compStruct.StrVec
+	tempVec = append(tempVec, item.Label)
+	str := getVarInfoExpandStrHover(item.ExpandVarInfo, tempVec, compStruct.IsFuncVec, "")
 	if str != "" {
 		item.Detail = str
 	}
