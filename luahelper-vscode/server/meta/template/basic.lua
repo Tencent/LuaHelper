@@ -11,6 +11,18 @@ _ENV = {}
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-assert)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-assert"])
 function assert(v, message) end
 
+---@alias cgopt
+---| '"collect"'      # performs a full garbage-collection cycle. This is the default option.
+---| '"stop"'         # stops automatic execution of the garbage collector.
+---| '"restart"'      # restarts automatic execution of the garbage collector.
+---| '"count"'        # returns the total memory in use by Lua in Kbytes.
+---| '"step"'         # Runs one step of garbage collection. The larger the second argument is, the larger this step will be. The collectgarbage will return true if the triggered step was the last step of a garbage-collection cycle.
+---| '"isrunning"'    # returns a boolean that tells whether the collector is running (i.e., not stopped).
+---| '"incremental"'  # Change the collector mode to incremental.
+---| '"generational"' # Change the collector mode to generational. This option can be followed by two numbers: the garbage-collector minor multiplier and the major multiplier.
+---| '"setpause"'     # sets `arg` as the new value for the *pause* of the collector Returns the previous value for *pause`.
+---| '"setstepmul"'   # Sets the value given as second parameter divided by 100 to the garbage step multiplier variable. Its uses are as discussed a little above.
+
 ---
 --- This function is a generic interface to the garbage collector. It performs
 --- different functions according to its first argument, `opt`:
@@ -38,7 +50,7 @@ function assert(v, message) end
 --- the major multiplier.
 --- **"isrunning"**: returns a boolean that tells whether the collector is
 --- running (i.e., not stopped).
----@param opt? string
+---@param opt? cgopt
 ---@param arg? string
 ---@return any
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-collectgarbage)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-collectgarbage"])
@@ -93,6 +105,11 @@ function getmetatable(object) end
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-ipairs)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-ipairs"])
 function ipairs(t) end
 
+---@alias loadmode
+---| '"b"'  # ---#DESTAIL 'loadmode.b'
+---| '"t"'  # ---#DESTAIL 'loadmode.t'
+---| '"bt"' # ---#DESTAIL 'loadmode.bt'
+
 --- Loads a chunk.
 --- If `chunk` is a string, the chunk is this string. If `chunk` is a function,
 --- `load` calls it repeatedly to get the chunk pieces. Each call to `chunk`
@@ -123,14 +140,14 @@ function ipairs(t) end
 --- binary chunks can crash the interpreter.
 ---@param chunk fun():string
 ---@param chunkname? string
----@param mode? string
+---@param mode? loadmode
 ---@param env? any
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-load)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-load"])
 function load(chunk, chunkname, mode, env) end
 
 --- Similar to `load`, but gets the chunk from file `filename` or from the standard input, if no file name is given.
 ---@param filename? string
----@param mode? string
+---@param mode? loadmode
 ---@param env? any
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-loadfile)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-loadfile"])
 function loadfile(filename, mode, env) end
@@ -325,6 +342,16 @@ function tonumber(e, base) end
 ---@return string
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-tostring)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-tostring"])
 function tostring(v) end
+
+---@alias typestr
+---| '"nil"'
+---| '"number"'
+---| '"string"'
+---| '"boolean"'
+---| '"table"'
+---| '"function"'
+---| '"thread"'
+---| '"userdata"'
 
 --- Returns the type of its only argument, coded as a string. The possible
 --- results of this function are "`nil`" (a string, not the value **nil**),
