@@ -147,20 +147,15 @@ func (a *AllProject) findMaxSecondProject(strFile string) (secondProject *result
 }
 
 // 变量查找引用时候，跟踪到变量import或require引入的关系
-func (a *AllProject) findLspReferenceVarDefine(comParam *CommonFuncParam, varStruct *common.DefineVarStruct) (findInFile string,
-	findLocVar *common.VarInfo) {
-	_, findLocVar = a.findOldDefineInfo(comParam, varStruct)
+func (a *AllProject) findLspReferenceVarDefine(comParam *CommonFuncParam, varStruct *common.DefineVarStruct) (string, *common.VarInfo) {
+	_, findLocVar := a.findOldDefineInfo(comParam, varStruct)
 	if findLocVar == nil {
 		// 直接返回
-		return "", findLocVar
+		return "", nil
 	}
 
 	findPreFile := findLocVar.FileName
-
-	var referInfo *common.ReferInfo
-	if findLocVar != nil {
-		referInfo = findLocVar.ReferInfo
-	}
+	referInfo := findLocVar.ReferInfo
 
 	// 判断是否有引用其他的信息
 	if referInfo == nil || len(varStruct.StrVec) <= 1 {
