@@ -206,6 +206,9 @@ func GetExpName(node ast.Exp) string {
 func GetTableAccessName1(tabExp *ast.TableAccessExp) string {
 	strPre := GetExpName1(tabExp.PrefixExp)
 	strKey := GetExpName1(tabExp.KeyExp)
+	if strings.Contains(strKey, ".") || strings.Contains(strKey, "()") {
+		strKey = "#other"
+	}
 	return strPre + "." + strKey
 }
 

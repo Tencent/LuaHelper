@@ -394,6 +394,10 @@ func (a *AllProject) getVarCompleteExt(fileName string, varInfo *common.VarInfo,
 	for key := range varInfo.ExpandStrMap {
 		strRemainList := strings.Split(key, ".")
 		strOne := strRemainList[0]
+		if !common.JudgeSimpleStr(strOne) {
+			continue
+		}
+
 		if a.completeCache.ExistStr(strOne) || a.completeCache.IsExcludeStr(strOne) {
 			continue
 		}
@@ -665,15 +669,36 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 	a.varInfoDeepComplete(symbol, symList, &varStruct, completeVar, comParam)
 }
 
-func combineStrVec(strVec []string, isFuncVec []bool) (str string) {
-	for i := 0; i < len(strVec); i++ {
-		if len(isFuncVec) > i && isFuncVec[i] {
-			str = str + strVec[i] + "()."
-		} else {
-			str = str + strVec[i] + "."
-		}
+func matchVecsExpandStrMap(inputVec []string, inputFuncVec []bool, expandStr string) (remainVec []string) {
+	expandVec := strings.Split(expandStr, ".")
+	if len(expandVec) <= len(inputVec) {
+		return
 	}
-	return str
+
+	for i, inputStr := range inputVec {
+		oneStr := expandVec[i]
+
+		if len(inputFuncVec) > i && inputFuncVec[i] {
+			inputStr = inputStr + "()"
+		}
+
+		// 直接相等，匹配上来
+		if inputStr == oneStr {
+			continue
+		}
+
+		// #或是！开头都认为是相同的
+		if (strings.HasPrefix(inputStr, "!") || strings.HasPrefix(inputStr, "#")) &&
+			(strings.HasPrefix(oneStr, "!") || strings.HasPrefix(oneStr, "#")) {
+			continue
+		}
+
+		// 没有匹配到，提前返回
+		return
+	}
+
+	remainVec = expandVec[len(inputVec):]
+	return
 }
 
 func (a *AllProject) expandNodefineMapComplete(luaInFile string, strFind string, comParam *CommonFuncParam,
@@ -684,18 +709,15 @@ func (a *AllProject) expandNodefineMapComplete(luaInFile string, strFind string,
 
 	for key := range varInfo.ExpandStrMap {
 		key = strFind + "." + key
-		preCompleteStr := combineStrVec(completeVar.StrVec, completeVar.IsFuncVec)
-		if !strings.HasPrefix(key, preCompleteStr) {
-			continue
+		remainVec := matchVecsExpandStrMap(completeVar.StrVec, completeVar.IsFuncVec, key)
+		if len(remainVec) == 0 {
+			return
 		}
 
-		strRemain := key[len(preCompleteStr):]
-		if strRemain == "" {
+		strOne := remainVec[0]
+		if strOne == "" || !common.JudgeSimpleStr(strOne) {
 			continue
 		}
-
-		strRemainList := strings.Split(strRemain, ".")
-		strOne := strRemainList[0]
 
 		if a.completeCache.ExistStr(strOne) || a.completeCache.IsExcludeStr(strOne) {
 			continue
@@ -861,7 +883,6 @@ func (a *AllProject) needAnnotateTableFieldRepair(comParam *CommonFuncParam, com
 			return
 		}
 
-		// 修改代码的补全
 		completeVar.StrVec[0] = firstStr
 		completeVar.LastEmptyFlag = true
 		return
