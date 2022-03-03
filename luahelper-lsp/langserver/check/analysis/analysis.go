@@ -452,7 +452,6 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 			}
 		}
 	}
-	return
 }
 
 func (a *Analysis) FindVarDefineForCheck(varName string, loc lexer.Location) (find bool, varInfo *common.VarInfo) {
@@ -546,7 +545,6 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 
 	errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strKey, className)
 	a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
-	return
 }
 
 // 是否给常量赋值
