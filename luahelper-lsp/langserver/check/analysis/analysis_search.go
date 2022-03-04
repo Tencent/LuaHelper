@@ -130,8 +130,7 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 			referInfo = locVar.ReferInfo
 		} else {
 			// 2.2) 局部变量没有找到，查找全局变量
-			ok, oneVar := fileResult.FindGlobalVarInfo(strName, false, "")
-			if ok {
+			if ok, oneVar := fileResult.FindGlobalVarInfo(strName, false, ""); ok {
 				referInfo = oneVar.ReferInfo
 			}
 		}
@@ -153,12 +152,11 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 			return nil, strName
 		}
 
-		ok, oneVar := referFile.FindGlobalVarInfo(strKeyName, false, "")
-		if ok {
+		if ok, oneVar := referFile.FindGlobalVarInfo(strKeyName, false, ""); ok {
 			return oneVar.ReferFunc, strKeyName
 		}
-		return nil, strKeyName
 
+		return nil, strKeyName
 	}
 
 	return nil, strName
@@ -522,8 +520,7 @@ func (a *Analysis) findThreeLevelCall(node ast.Exp, nameExp ast.Exp) {
 			}
 		} else {
 			// 2.2) 局部变量没有找到，查找全局变量
-			ok, findVar := fileResult.FindGlobalVarInfo(strOne, false, "")
-			if ok {
+			if ok, findVar := fileResult.FindGlobalVarInfo(strOne, false, ""); ok {
 				referInfo = findVar.ReferInfo
 				if referInfo == nil {
 					a.ReferenceResult.MatchVarInfo(a, strOne, fileResult.Name, findVar, fi, strTable, nameExp, false)
@@ -974,8 +971,7 @@ func (a *Analysis) findFuncColon(prefixExp ast.Exp, nameExp ast.Exp, nodeLoc lex
 		}
 	} else {
 		// 2.2) 局部变量没有找到，查找全局变量
-		ok, findVar := fileResult.FindGlobalVarInfo(strName, false, "")
-		if ok {
+		if ok, findVar := fileResult.FindGlobalVarInfo(strName, false, ""); ok {
 			referInfo = findVar.ReferInfo
 		}
 
