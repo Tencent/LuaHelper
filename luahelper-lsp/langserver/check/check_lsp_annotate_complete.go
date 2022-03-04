@@ -407,7 +407,7 @@ func (a *AllProject) getFuncReturnCompleteExt(symbol *common.Symbol, colonFlag b
 	findExpList := []common.FindExpFile{}
 	// 这里也需要做判断，函数返回的变量逐层跟踪，目前只跟踪了一层
 	symList := a.FindDeepSymbolList(symbol.FileName, returnExp, comParam, &findExpList, true, 1)
-	for _, varFileTmp := range symList {
-		a.getVarInfoCompleteExt(varFileTmp, colonFlag)
+	for _, subSym := range symList {
+		a.getVarInfoCompleteExt(subSym, colonFlag)
 	}
 }

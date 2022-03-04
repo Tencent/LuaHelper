@@ -693,7 +693,7 @@ func StrToDefineVarStruct(str string) (defineVar common.DefineVarStruct) {
 }
 
 // 判断是否为默认的exp，转换成对应的注解的类型
-func extChangeVarInfo(exp ast.Exp, fileName string) (symbol *common.Symbol) {
+func extChangeSymbol(exp ast.Exp, fileName string) (symbol *common.Symbol) {
 	expType := common.GetSimpleExpType(exp)
 	if expType == common.LuaTypeAll || expType == common.LuaTypeRefer {
 		return nil
