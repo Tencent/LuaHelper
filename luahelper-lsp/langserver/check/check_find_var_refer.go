@@ -418,10 +418,9 @@ func (a *AllProject) symbolHasSubKey(oldSymbol *common.Symbol, strKey string,
 	// 简单的类型，先判断是否为子成员
 	if simpleStrFlag {
 		classList := a.getAllNormalAnnotateClass(oldSymbol.AnnotateType, oldSymbol.FileName, line)
-		varSubFile := a.getClassListSubMem(classList, strKey)
-		if varSubFile != nil {
+		if subSombol := a.getClassListSubMem(classList, strKey); subSombol != nil {
 			// 表示通过注解类型找到了子成员
-			symbol = varSubFile
+			symbol = subSombol
 			return
 		}
 	}

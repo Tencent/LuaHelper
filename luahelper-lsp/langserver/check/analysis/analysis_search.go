@@ -293,11 +293,11 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 			}
 
 			// 最底层的函数，调用了顺序导致的变量未定义
-			if ok, findVarTmp := firstFile.FindGlobalVarInfo(strName, gFindGlag, strProPre); ok {
+			if ok, findVar := firstFile.FindGlobalVarInfo(strName, gFindGlag, strProPre); ok {
 				cycleFlag = true
 
 				// 判断是否要忽略指定的循环定义情况
-				if a.ignoreCircleDefine(strName, loc, findVarTmp, binParentExp) {
+				if a.ignoreCircleDefine(strName, loc, findVar, binParentExp) {
 					return
 				}
 			}
@@ -305,11 +305,11 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 			// 向工程的globalMaps中查找变量
 			// 向工程的第一阶段全局_G符号表中查找
 			if !cycleFlag {
-				if ok, findVarTmp := a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre); ok {
+				if ok, findVar := a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre); ok {
 					cycleFlag = true
 
 					// 判断是否要忽略指定的循环定义情况
-					if a.ignoreCircleDefine(strName, loc, findVarTmp, binParentExp) {
+					if a.ignoreCircleDefine(strName, loc, findVar, binParentExp) {
 						return
 					}
 				}
@@ -352,9 +352,9 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 			}
 
 			// 是否因为循环引用或是加载顺序导致的变量未定义
-			if ok, findVarTmp := firstFile.FindGlobalVarInfo(strName, gFindGlag, strProPre); ok {
+			if ok, findVar := firstFile.FindGlobalVarInfo(strName, gFindGlag, strProPre); ok {
 				// 判断是否要忽略指定的循环定义情况
-				if a.ignoreCircleDefine(strName, loc, findVarTmp, binParentExp) {
+				if a.ignoreCircleDefine(strName, loc, findVar, binParentExp) {
 					return
 				}
 
@@ -377,9 +377,9 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 		thirdFileResult.InsertError(common.CheckErrorNoDefine, errStr, loc)
 	} else if a.isFourTerm() {
 		// 非顶层的函数，需要查找自己定义的全局的变量
-		if ok, oneVar := firstFile.FindGlobalVarInfo(strName, gFindGlag, strProPre); ok {
+		if ok, findVar := firstFile.FindGlobalVarInfo(strName, gFindGlag, strProPre); ok {
 			// 判断是否是自己所要的引用关系
-			a.ReferenceResult.MatchVarInfo(a, strName, firstFile.Name, oneVar, fi, "", nameExp, false)
+			a.ReferenceResult.MatchVarInfo(a, strName, firstFile.Name, findVar, fi, "", nameExp, false)
 			return
 		}
 		a.ReferenceResult.FindProjectGlobal(a, strName, strProPre, fi, "", nameExp)
