@@ -42,6 +42,8 @@
     "luahelper.Warn.CheckDuplicateIf": "[Warn Type:19], duplicate if condition",
     "luahelper.Warn.CheckSelfAssign": "[Warn Type:20], assign self",
     "luahelper.Warn.CheckFloatEq": "[Warn Type:21], equal to float",
+    "luahelper.Warn.CheckClassField": "[Warn Type:22], is not a class field",
+    "luahelper.Warn.CheckConstAssign": "[Warn Type:23], assignment to constant variable",
     "luahelper.project.IgnoreFileOrDir": "Ignore analysis files and directories. Sample：one11.lua , indicates to ignore files; .vscode/ , indicates to ignore directories.",
     "luahelper.project.IgnoreFileOrDirErrors": "Ignored file and directory errors. Sample: one11.lua,  indicates to ignore file errors, .vscode/ , indicates to ignore directory errors.",
     "luahelper.format.allReadMe": "Read all formatting settings [here](https://github.com/Koihik/LuaFormatter/blob/master/docs/Style-Config.md).\n",
