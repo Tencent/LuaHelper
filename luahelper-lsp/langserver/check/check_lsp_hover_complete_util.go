@@ -86,6 +86,7 @@ func (a *AllProject) getClassFieldStr(classInfo *common.OneClassInfo) (str strin
 	return str
 }
 
+// funcFlag 表示是否为函数名匹配，增加（）后能够匹配
 func matchVecsExpandStrMap(inputVec []string, inputFuncVec []bool, expandStr string) (remainVec []string) {
 	expandVec := strings.Split(expandStr, ".")
 	if len(expandVec) <= len(inputVec) {
@@ -155,10 +156,6 @@ func needReplaceMapStr(oldStr string, strValueType string) bool {
 func (a *AllProject) getCompleteExpandInfo(item *common.OneCompleteData) (luaFileStr string) {
 	cache := a.completeCache
 	compStruct := cache.GetCompleteVar()
-	if len(compStruct.StrVec) <= 1 {
-		return
-	}
-
 	tempVec := compStruct.StrVec
 	tempVec = append(tempVec, item.Label)
 	str := getVarInfoExpandStrHover(item.ExpandVarInfo, tempVec, compStruct.IsFuncVec, "")
@@ -200,7 +197,7 @@ func getVarInfoExpandStrHover(varInfo *common.VarInfo, inputVec []string, inputF
 		}
 	}
 	if len(existMap) == 0 {
-		return
+		return "any"
 	}
 
 	if strPre != "" {
