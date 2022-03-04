@@ -187,8 +187,7 @@ func (a *AllProject) HandleFileEventChanges(fileEventVec []FileEventStruct) (cha
 
 // RemoveCacheContent 删除cache的结构
 func (a *AllProject) RemoveCacheContent(strFile string) {
-	flag := a.fileLRUMap.Remove(strFile)
-	if flag {
+	if ok := a.fileLRUMap.Remove(strFile); ok {
 		log.Debug("RemoveCacheContent ok strFile=%s", strFile)
 	}
 }

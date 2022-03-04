@@ -359,8 +359,7 @@ func (a *AllProject) getFuncReturnCompleteExt(symbol *common.Symbol, colonFlag b
 
 	// 判断注解类型是否存在
 	// 首先获取变量是否直接注解为函数的返回
-	flag, _, typeList := a.getFuncReturnAnnotateTypeList(symbol)
-	if flag {
+	if ok, _, typeList := a.getFuncReturnAnnotateTypeList(symbol); ok {
 		if len(typeList) > 0 {
 			returnType := typeList[0]
 			line := symbol.VarInfo.Loc.StartLine - 1

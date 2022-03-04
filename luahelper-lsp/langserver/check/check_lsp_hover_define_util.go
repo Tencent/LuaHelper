@@ -118,6 +118,57 @@ func matchVecsExpandStrMap(inputVec []string, inputFuncVec []bool, expandStr str
 	return
 }
 
+func isDefaultType(str string) bool {
+	if str == "number" || str == "any" || str == "string" || str == "boolean" || str == "nil" || str == "thread" ||
+		str == "userdata" || str == "lightuserdata" || str == "integer" || str == "void" {
+		return true
+	}
+
+	return false
+}
+
+func needReplaceMapStr(oldStr string, strValueType string) bool {
+	if strValueType == "any" {
+		return false
+	}
+
+	if strings.Contains(oldStr, ": number") && !strings.Contains(oldStr, ": number = ") {
+		return true
+	}
+
+	if strings.Contains(oldStr, ": string") && !strings.Contains(oldStr, ": string = ") {
+		return true
+	}
+
+	if strings.Contains(oldStr, ": boolean") && !strings.Contains(oldStr, ": boolean = ") {
+		return true
+	}
+
+	if strings.Contains(oldStr, ": any") {
+		return true
+	}
+
+	return false
+}
+
+// 补全的为expand 的变量，获取展开的信息
+func (a *AllProject) getCompleteExpandInfo(item *common.OneCompleteData) (luaFileStr string) {
+	cache := a.completeCache
+	compStruct := cache.GetCompleteVar()
+	if len(compStruct.StrVec) <= 1 {
+		return
+	}
+
+	tempVec := compStruct.StrVec
+	tempVec = append(tempVec, item.Label)
+	str := getVarInfoExpandStrHover(item.ExpandVarInfo, tempVec, compStruct.IsFuncVec, "")
+	if str != "" {
+		item.Detail = str
+	}
+
+	return luaFileStr
+}
+
 // 只获取expandStrMap的hover
 func getVarInfoExpandStrHover(varInfo *common.VarInfo, inputVec []string, inputFuncVec []bool, strPre string) (str string) {
 	if varInfo == nil || varInfo.ExpandStrMap == nil {
@@ -211,6 +262,16 @@ func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
 			existMap[oneStr] = newStr
 		}
 	}
+}
+
+func isAllClassDefault(classList []*common.OneClassInfo) bool {
+	for _, oneClass := range classList {
+		if oneClass.ClassState != nil && !isDefaultType(oneClass.ClassState.Name) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // hover 的时候是指向一个table，展开这个table的内容
@@ -309,6 +370,46 @@ func (a *AllProject) getSymbolAliasMultiCandidateMap(annotateType annotateast.Ty
 	}
 
 	return strMap
+}
+
+// 判断是否为函数参数的候选词代码补全, 函数的参数为alias类型，补全参数常量
+func (a *AllProject) paramCandidateComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) bool {
+	if completeVar.ParamCandidateType == nil {
+		return false
+	}
+
+	strMap := a.getSymbolAliasMultiCandidateMap(completeVar.ParamCandidateType, comParam.fi.FileName, comParam.loc.StartLine)
+	if len(strMap) > 0 {
+		if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
+			a.completeCache.SetClearParamQuotes(true)
+		}
+
+		for strKey, strComment := range strMap {
+			if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
+				// 如果分割的是为单引号或是双引号，strKey需要为引号的字符串
+				if !strings.HasPrefix(strKey, "\"") {
+					continue
+				}
+
+				if completeVar.SplitByte == '\'' {
+					strKey = strings.ReplaceAll(strKey, "\"", "'")
+				}
+			} else {
+				if completeVar.SplitByte != ' ' && strings.HasPrefix(strKey, "\"") {
+					continue
+				}
+			}
+
+			a.completeCache.InsertCompleteNormal(strKey, strComment, "", common.IKConstant)
+		}
+		return true
+	}
+
+	if completeVar.OnelyParamQuotesFlag {
+		return true
+	}
+
+	return false
 }
 
 func (a *AllProject) mergeTwoExistMap(symbol *common.Symbol, fristStr string, fristMap map[string]string,
@@ -447,5 +548,208 @@ func (a *AllProject) needAnnotateTableFieldRepair(comParam *CommonFuncParam, com
 		completeVar.StrVec[0] = firstStr
 		completeVar.LastEmptyFlag = true
 		return
+	}
+}
+func getParamVarinfoType(oneVar *common.VarInfo) string {
+	if oneVar == nil {
+		return "any"
+	}
+
+	str := oneVar.GetVarTypeDetail()
+	strSplit := strings.Split(str, " ")
+	oneStr := strSplit[0]
+	if oneStr != "any" {
+		return oneStr
+	}
+
+	if len(oneVar.SubMaps) > 0 || len(oneVar.ExpandStrMap) > 0 {
+		return "table"
+	}
+
+	return "any"
+}
+
+// 获取函数一个return值的返回类型
+func (a *AllProject) getOneFuncReturnStr(fileName string, oneReturn common.ReturnItem) (strType string) {
+	strType = common.GetLuaTypeString(common.GetExpType(oneReturn.ReturnExp), oneReturn.ReturnExp)
+	loc := common.GetExpLoc(oneReturn.ReturnExp)
+	comParam := a.getCommFunc(fileName, loc.StartLine, loc.StartColumn)
+	findExpList := &[]common.FindExpFile{}
+	symbol := a.FindVarReferSymbol(fileName, oneReturn.ReturnExp, comParam, findExpList, 1)
+	if symbol == nil {
+		return
+	}
+
+	if symbol.AnnotateType != nil {
+		strType = annotateast.TypeConvertStr(symbol.AnnotateType)
+	} else {
+		if symbol.VarInfo != nil {
+			strTmp := getParamVarinfoType(symbol.VarInfo)
+			if strTmp != "any" {
+				strType = strTmp
+			}
+		}
+	}
+
+	return strType
+}
+
+// 获取函数的完整展示信息
+// paramTipFlag 表示是否提示函数的参数
+// colonFlag 如果是冒号语法，有时候需要忽略掉self
+// returnFlag 是否需要获取函数的返回值类型
+func (a *AllProject) getFuncShowStr(varInfo *common.VarInfo, funcName string, paramTipFlag, colonFlag, returnFlag bool) (str string) {
+	if varInfo == nil || varInfo.ReferFunc == nil {
+		return
+	}
+
+	if !paramTipFlag {
+		return funcName
+	}
+
+	fun := varInfo.ReferFunc
+	inLuaFile := fun.FileName
+	lastLine := fun.Loc.StartLine
+	annotateParamInfo := a.GetFuncParamInfo(inLuaFile, lastLine-1)
+
+	// 1) 获取函数的参数
+	funcName += "("
+	preFlag := false
+	for index, oneParam := range fun.ParamList {
+		if colonFlag && fun.IsColon && index == 0 {
+			continue
+		}
+
+		if preFlag {
+			funcName += ", "
+		}
+
+		funcName += oneParam
+
+		paramShortStr, annType := a.getAnnotateFuncParamDocument(oneParam, annotateParamInfo, inLuaFile, lastLine-1)
+		if paramShortStr != "" {
+			funcName += ": " + annotateast.TypeConvertStr(annType)
+		} else {
+			// 获取参数变量关联的varinfo
+			oneVar := fun.MainScope.GetParamVarInfo(oneParam)
+			funcName += ": " + getParamVarinfoType(oneVar)
+		}
+
+		preFlag = true
+	}
+
+	if fun.IsVararg {
+		if preFlag {
+			funcName += ", "
+		}
+		funcName += "..."
+	}
+
+	funcName += ")"
+
+	// 如果不需要返回类型，直接返回
+	if !returnFlag {
+		return funcName
+	}
+
+	// 2 获取返回值
+	// 2.1) 先获取注解的参数
+	oldSymbol := common.GetDefaultSymbol(varInfo.FileName, varInfo)
+	flag, _, typeList := a.getFuncReturnAnnotateTypeList(oldSymbol)
+	var resultList []string = []string{}
+
+	if flag {
+		for _, oneType := range typeList {
+			oneStr := annotateast.TypeConvertStr(oneType)
+			resultList = append(resultList, oneStr)
+		}
+	}
+
+	if len(fun.ReturnVecs) == 0 {
+		for i, oneStr := range resultList {
+			funcName = fmt.Sprintf("%s\n  ->%d. %s", funcName, i+1, oneStr)
+		}
+
+		if len(resultList) > 0 {
+			funcName += "\n"
+		}
+
+		return funcName
+	}
+
+	oldLen := len(resultList)
+
+	for _, oneReturnInfo := range fun.ReturnVecs {
+		for i, oneReturn := range oneReturnInfo.ReturnVarVec {
+			if i < oldLen {
+				continue
+			}
+
+			strType := a.getOneFuncReturnStr(varInfo.FileName, oneReturn)
+			if len(resultList) > i {
+				if strType != "any" {
+					resultList[i] = strType
+				}
+			} else {
+				resultList = append(resultList, strType)
+			}
+		}
+	}
+
+	for i, oneStr := range resultList {
+		funcName = fmt.Sprintf("%s\n  ->%d. %s", funcName, i+1, oneStr)
+	}
+	if len(resultList) > 0 {
+		funcName += "\n"
+	}
+	return funcName
+}
+
+// getVarCompleteExt 获取变量关联的所有子成员信息，用于代码补全
+// excludeMap 表示这次因为冒号语法剔除掉的字符串
+// colonFlag 表示是否获取冒号成员
+func (a *AllProject) getVarCompleteExt(fileName string, varInfo *common.VarInfo, colonFlag bool) {
+	if varInfo == nil || varInfo.SubMaps == nil {
+		return
+	}
+
+	for strName, oneVar := range varInfo.SubMaps {
+		if colonFlag && (oneVar.ReferFunc == nil || !oneVar.ReferFunc.IsColon) {
+			a.completeCache.InsertExcludeStr(strName)
+			// 只获取冒号成员
+			continue
+		}
+
+		// 对.的用法特殊提，能够提示：函数
+		getJugdeColon := common.GConfig.GetJudgeColonFlag()
+		if getJugdeColon != 0 && !colonFlag && (oneVar.ReferFunc != nil && oneVar.ReferFunc.IsColon) {
+			a.completeCache.InsertExcludeStr(strName)
+			continue
+		}
+
+		if a.completeCache.ExistStr(strName) {
+			continue
+		}
+
+		if getJugdeColon == 0 && !colonFlag && (oneVar.ReferFunc != nil && oneVar.ReferFunc.IsColon) {
+			a.completeCache.InsertCompleteVarInclude(fileName, strName, oneVar)
+		} else {
+			a.completeCache.InsertCompleteVar(fileName, strName, oneVar)
+		}
+	}
+
+	// 获取扩展的成员
+	for key := range varInfo.ExpandStrMap {
+		strRemainList := strings.Split(key, ".")
+		strOne := strRemainList[0]
+		if !common.JudgeSimpleStr(strOne) {
+			continue
+		}
+
+		if a.completeCache.ExistStr(strOne) || a.completeCache.IsExcludeStr(strOne) {
+			continue
+		}
+
+		a.completeCache.InsertCompleteExpand(strOne, "", "", common.IKVariable, varInfo)
 	}
 }
