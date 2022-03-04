@@ -241,6 +241,8 @@ async function doStartServer() {
             CheckDuplicateIf: getWarnCheckFlag("CheckDuplicateIf"),
             CheckSelfAssign: getWarnCheckFlag("CheckSelfAssign"),
             CheckFloatEq: getWarnCheckFlag("CheckFloatEq"),
+            CheckClassField: getWarnCheckFlag("CheckClassField"),
+            CheckConstAssign: getWarnCheckFlag("CheckConstAssign"),
             IgnoreFileOrDir: ignoreFileOrDirArr,
             IgnoreFileOrDirError: ignoreFileOrDirErrArr,
             RequirePathSeparator: requirePathSeparator,
