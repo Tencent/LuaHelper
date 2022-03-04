@@ -550,9 +550,9 @@ func (a *AllProject) systemMoudleComplete(strModule string) bool {
 			oneFunc.Documentation, common.IKFunction)
 	}
 
-	for _, oneValue := range oneModule.ModuleVarVec {
-		a.completeCache.InsertCompleteSysModuleMem(oneValue.Label, oneValue.Detail,
-			oneValue.Documentation, common.IKVariable)
+	for _, oneVar := range oneModule.ModuleVarVec {
+		a.completeCache.InsertCompleteSysModuleMem(oneVar.Label, oneVar.Detail,
+			oneVar.Documentation, common.IKVariable)
 	}
 	return true
 }
@@ -589,20 +589,17 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 
 	symbol, symList := a.FindVarDefine(comParam.fileResult.Name, &varStruct)
 	if symbol == nil {
-		// 判断是否在globalNodefineMaps中
-		strName := completeVar.StrVec[0]
-		findVar, ok := comParam.fileResult.NodefineMaps[strName]
-		if !ok {
-			return
-		}
-
 		// 判断是否为系统模块函数提示
 		if a.systemMoudleComplete(strFind) {
 			return
 		}
 
-		// 对NodefineMap内的变量进行展开代码补全
-		a.expandNodefineMapComplete(comParam.fileResult.Name, strName, comParam, completeVar, findVar)
+		// 判断是否在globalNodefineMaps中
+		strName := completeVar.StrVec[0]
+		if findVar, ok := comParam.fileResult.NodefineMaps[strName]; ok {
+			// 对NodefineMap内的变量进行展开代码补全
+			a.expandNodefineMapComplete(comParam.fileResult.Name, strName, comParam, completeVar, findVar)
+		}
 
 		// 遍历AST树，构造想要的代码补全数据
 		//sufThreeStrVec := completeVar.StrVec[1:]
@@ -746,14 +743,12 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 	astType, strComment, strPreComment := a.getInfoFileAnnotateType(item.Label, symbol)
 	if astType != nil {
 		str := a.completeAnnotatTypeStr(astType, item.LuaFile, symbol.GetLine())
-		if strPreComment != "" {
-			if strPreComment == "type" {
-				item.Detail = item.Label + " : " + str
-			} else {
-				item.Detail = strPreComment + "  " + str
-			}
-		} else {
+		if strPreComment == "" {
 			item.Detail = str
+		} else if strPreComment == "type" {
+			item.Detail = item.Label + " : " + str
+		} else {
+			item.Detail = strPreComment + "  " + str
 		}
 
 		// 判断是否关联成number，如果是number类型尝试获取具体的值
@@ -906,8 +901,7 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 				// 判断是否为隐藏式的，如果是隐藏式的，去掉第一个参数
 				// ---@class ClassA
 				// ---@field FunctionC fun(self:ClassA):void
-				oneFuncType := annotateast.GetAllFuncType(item.FieldState.FiledType)
-				if oneFuncType != nil {
+				if oneFuncType := annotateast.GetAllFuncType(item.FieldState.FiledType); oneFuncType != nil {
 					subFuncType, _ := oneFuncType.(*annotateast.FuncType)
 					item.Detail = annotateast.FuncTypeConvertStr(subFuncType, 1)
 				}
@@ -921,8 +915,7 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 			// ---@class ClassA
 			// ---@field FunctionC : fun():void
 			if item.FieldColonFlag == annotateast.FieldColonYes {
-				oneFuncType := annotateast.GetAllFuncType(item.FieldState.FiledType)
-				if oneFuncType != nil {
+				if oneFuncType := annotateast.GetAllFuncType(item.FieldState.FiledType); oneFuncType != nil {
 					subFuncType, _ := oneFuncType.(*annotateast.FuncType)
 					item.Detail = annotateast.FuncTypeConvertStr(subFuncType, 2)
 				}
