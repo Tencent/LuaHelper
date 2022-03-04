@@ -524,8 +524,8 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	if strTableName == "tableA" {
-		strTableName = "tableA"
+	if strTableName == "tableB" {
+		strTableName = "tableB"
 	}
 
 	strKey := common.GetExpName(node.KeyExp)
@@ -573,6 +573,10 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 
 	if len(name) <= 0 {
 		return
+	}
+
+	if name == "tableB" {
+		name = "tableB"
 	}
 
 	ok, varInfo := a.FindVarDefineForCheck(name, loc)
