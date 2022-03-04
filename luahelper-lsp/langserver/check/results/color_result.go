@@ -8,7 +8,7 @@ import (
 // ColorFileResult 第6阶段，分析单个文件，获取全局变量着色的功能
 type ColorFileResult struct {
 	StrFile     string                                     // 文件的名称
-	FileResult  *FileResult                        // 单个文件分析的指针
+	FileResult  *FileResult                                // 单个文件分析的指针
 	ColorResult map[common.ColorType]*common.OneColorResut // 保存找到的文件中，所有的颜色数据
 }
 
@@ -48,4 +48,3 @@ func (color *ColorFileResult) InsertOneGlobalColor(varInfo *common.VarInfo, loc 
 		color.InsertOneColorElem(common.CTGlobalVar, loc)
 	}
 }
-

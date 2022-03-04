@@ -1277,7 +1277,7 @@ func (a *AllProject) getVarInfoFuncHasKey(lastSymbol *common.Symbol, strKey stri
 		findExpList, false, lastSymbol.VarInfo.VarIndex)
 	for _, oneSymbol := range tmpList {
 		// 如果找到了，判断是否有注解类型
-		if flag, findSymbol := a.getAnnotateFunStrKey(oneSymbol, strKey, comParam, findExpList); flag {
+		if ok, findSymbol := a.getAnnotateFunStrKey(oneSymbol, strKey, comParam, findExpList); ok {
 			findFlag = 0
 			// 通过注解找到了信息
 			if findSymbol != nil {

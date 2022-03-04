@@ -277,7 +277,6 @@ func (a *AllProject) judgetSystemFuncSignature(strName string) (flag bool,
 	if oneSystemTips, ok := common.GConfig.SystemTipsMap[strName]; ok {
 		flag = true
 		sinatureInfo, paramInfo = a.systemFuncConver(&oneSystemTips)
-		return
 	}
 
 	return
@@ -291,11 +290,9 @@ func (a *AllProject) judgetSystemModuleFuncSigatrue(strName string, strKey strin
 		return
 	}
 
-	oneSystemTips, ok1 := oneMouleInfo.ModuleFuncMap[strKey]
-	if ok1 {
+	if oneSystemTips, ok := oneMouleInfo.ModuleFuncMap[strKey]; ok {
 		flag = true
 		sinatureInfo, paramInfo = a.systemFuncConver(oneSystemTips)
-		return
 	}
 	return
 }

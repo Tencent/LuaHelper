@@ -353,55 +353,6 @@ func (a *AllProject) gPreComplete(comParam *CommonFuncParam, completeVar *common
 	a.varInfoDeepComplete(oldSymbol, symList, varStruct, completeVar, comParam)
 }
 
-// getVarCompleteExt 获取变量关联的所有子成员信息，用于代码补全
-// excludeMap 表示这次因为冒号语法剔除掉的字符串
-// colonFlag 表示是否获取冒号成员
-func (a *AllProject) getVarCompleteExt(fileName string, varInfo *common.VarInfo, colonFlag bool) {
-	if varInfo == nil || varInfo.SubMaps == nil {
-		return
-	}
-
-	for strName, oneVar := range varInfo.SubMaps {
-		if colonFlag && (oneVar.ReferFunc == nil || !oneVar.ReferFunc.IsColon) {
-			a.completeCache.InsertExcludeStr(strName)
-			// 只获取冒号成员
-			continue
-		}
-
-		// 对.的用法特殊提，能够提示：函数
-		getJugdeColon := common.GConfig.GetJudgeColonFlag()
-		if getJugdeColon != 0 && !colonFlag && (oneVar.ReferFunc != nil && oneVar.ReferFunc.IsColon) {
-			a.completeCache.InsertExcludeStr(strName)
-			continue
-		}
-
-		if a.completeCache.ExistStr(strName) {
-			continue
-		}
-
-		if getJugdeColon == 0 && !colonFlag && (oneVar.ReferFunc != nil && oneVar.ReferFunc.IsColon) {
-			a.completeCache.InsertCompleteVarInclude(fileName, strName, oneVar)
-		} else {
-			a.completeCache.InsertCompleteVar(fileName, strName, oneVar)
-		}
-	}
-
-	// 获取扩展的成员
-	for key := range varInfo.ExpandStrMap {
-		strRemainList := strings.Split(key, ".")
-		strOne := strRemainList[0]
-		if !common.JudgeSimpleStr(strOne) {
-			continue
-		}
-
-		if a.completeCache.ExistStr(strOne) || a.completeCache.IsExcludeStr(strOne) {
-			continue
-		}
-
-		a.completeCache.InsertCompleteExpand(strOne, "", "", common.IKVariable, varInfo)
-	}
-}
-
 // CompleteResultCh 结构的协程封装
 type CompleteResultCh struct {
 	strMap map[string]bool
@@ -587,14 +538,12 @@ func (a *AllProject) varInfoDeepComplete(symbol *common.Symbol, symList []*commo
 }
 
 // 查找所有的协议前缀
-func (a *AllProject) systemMoudleComplete(strModule string) (flag bool) {
-	flag = false
+func (a *AllProject) systemMoudleComplete(strModule string) bool {
 	oneModule, ok := common.GConfig.SystemModuleTipsMap[strModule]
 	if !ok {
-		return
+		return false
 	}
 
-	flag = true
 	// 提示该模块的所有函数
 	for strName, oneFunc := range oneModule.ModuleFuncMap {
 		a.completeCache.InsertCompleteSysModuleMem(strName, oneFunc.Detail,
@@ -605,7 +554,7 @@ func (a *AllProject) systemMoudleComplete(strModule string) (flag bool) {
 		a.completeCache.InsertCompleteSysModuleMem(oneValue.Label, oneValue.Detail,
 			oneValue.Documentation, common.IKVariable)
 	}
-	return
+	return true
 }
 
 // 其他前缀代码补全
@@ -648,8 +597,7 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 		}
 
 		// 判断是否为系统模块函数提示
-		moduleFlag := a.systemMoudleComplete(strFind)
-		if moduleFlag {
+		if a.systemMoudleComplete(strFind) {
 			return
 		}
 
@@ -663,45 +611,6 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 	}
 
 	a.varInfoDeepComplete(symbol, symList, &varStruct, completeVar, comParam)
-}
-
-func (a *AllProject) paramCandidateComplete(comParam *CommonFuncParam, completeVar *common.CompleteVarStruct) bool {
-	if completeVar.ParamCandidateType == nil {
-		return false
-	}
-
-	strMap := a.getSymbolAliasMultiCandidateMap(completeVar.ParamCandidateType, comParam.fi.FileName, comParam.loc.StartLine)
-	if len(strMap) > 0 {
-		if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
-			a.completeCache.SetClearParamQuotes(true)
-		}
-
-		for strKey, strComment := range strMap {
-			if completeVar.SplitByte == '\'' || completeVar.SplitByte == '"' {
-				// 如果分割的是为单引号或是双引号，strKey需要为引号的字符串
-				if !strings.HasPrefix(strKey, "\"") {
-					continue
-				}
-
-				if completeVar.SplitByte == '\'' {
-					strKey = strings.ReplaceAll(strKey, "\"", "'")
-				}
-			} else {
-				if completeVar.SplitByte != ' ' && strings.HasPrefix(strKey, "\"") {
-					continue
-				}
-			}
-
-			a.completeCache.InsertCompleteNormal(strKey, strComment, "", common.IKConstant)
-		}
-		return true
-	}
-
-	if completeVar.OnelyParamQuotesFlag {
-		return true
-	}
-
-	return false
 }
 
 // 没有前缀的代码补全

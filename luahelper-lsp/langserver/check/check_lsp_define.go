@@ -111,10 +111,10 @@ func (a *AllProject) FindOpenFileDefine(strFile string, strOpenFile string) (def
 		return defineVecs
 	}
 
-	fileOpenStruct, _ := a.GetFirstFileStuct(strOpenFile)
-	if fileOpenStruct == nil {
+	if fileOpenStruct, _ := a.GetFirstFileStuct(strOpenFile); fileOpenStruct == nil {
 		return defineVecs
 	}
+
 	defineVecs = append(defineVecs, DefineStruct{
 		StrFile: strOpenFile,
 		Loc: lexer.Location{
@@ -227,20 +227,22 @@ func (a *AllProject) FindReferenceVarDefine(strFile string, varStruct *common.De
 	}
 
 	isWhole = true
-	if findVar != nil {
-		lastDefine = findVar.Loc
-		oldVar := findVar
-		for i := 1; i < len(varStruct.StrVec); i++ {
-			strTemp := varStruct.StrVec[i]
-			if oldVar.SubMaps == nil {
-				isWhole = false
-				break
-			}
+	if findVar == nil {
+		return lastDefine, oldSymbol, isWhole
+	}
 
-			if subVarMem, ok := oldVar.SubMaps[strTemp]; ok {
-				lastDefine = subVarMem.Loc
-				oldVar = subVarMem
-			}
+	lastDefine = findVar.Loc
+	oldVar := findVar
+	for i := 1; i < len(varStruct.StrVec); i++ {
+		strTemp := varStruct.StrVec[i]
+		if oldVar.SubMaps == nil {
+			isWhole = false
+			break
+		}
+
+		if subVarMem, ok := oldVar.SubMaps[strTemp]; ok {
+			lastDefine = subVarMem.Loc
+			oldVar = subVarMem
 		}
 	}
 	return lastDefine, oldSymbol, isWhole
