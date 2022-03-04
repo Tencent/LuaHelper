@@ -504,7 +504,7 @@ func (a *AllProject) expandNodefineMapComplete(luaInFile string, strFind string,
 		key = strFind + "." + key
 		remainVec := matchVecsExpandStrMap(completeVar.StrVec, completeVar.IsFuncVec, key)
 		if len(remainVec) == 0 {
-			return
+			continue
 		}
 
 		strOne := remainVec[0]
