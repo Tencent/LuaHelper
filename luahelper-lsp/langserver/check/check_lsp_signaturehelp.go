@@ -58,7 +58,6 @@ func (a *AllProject) SignaturehelpFunc(strFile string, varStruct *common.DefineV
 
 	strName := varStruct.StrVec[len(varStruct.StrVec)-1]
 	funAllStr := a.getFuncShowStr(lastSymbol.VarInfo, strName, true, varStruct.ColonFlag, false)
-	//funAllStr := referFunc.GetFuncCompleteStr(strName, true, varStruct.ColonFlag)
 	sinatureInfo.Label = funAllStr
 	strDocumentation := getFinalStrComment(a.GetLineComment(inLuaFile, lastLine), false)
 
@@ -278,7 +277,6 @@ func (a *AllProject) judgetSystemFuncSignature(strName string) (flag bool,
 	if oneSystemTips, ok := common.GConfig.SystemTipsMap[strName]; ok {
 		flag = true
 		sinatureInfo, paramInfo = a.systemFuncConver(&oneSystemTips)
-		return
 	}
 
 	return
@@ -292,11 +290,9 @@ func (a *AllProject) judgetSystemModuleFuncSigatrue(strName string, strKey strin
 		return
 	}
 
-	oneSystemTips, ok1 := oneMouleInfo.ModuleFuncMap[strKey]
-	if ok1 {
+	if oneSystemTips, ok := oneMouleInfo.ModuleFuncMap[strKey]; ok {
 		flag = true
 		sinatureInfo, paramInfo = a.systemFuncConver(oneSystemTips)
-		return
 	}
 	return
 }

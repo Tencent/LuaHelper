@@ -1,13 +1,102 @@
 package check
 
 import (
-	"fmt"
 	"luahelper-lsp/langserver/check/annotation/annotateast"
+	"luahelper-lsp/langserver/check/annotation/annotatelexer"
+	"luahelper-lsp/langserver/check/annotation/annotateparser"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/log"
-	"sort"
 	"strings"
 )
+
+// AnnotateTypeHover 注解类型代码补全
+func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, col int) (strLabel, strHover, strLuaFile string) {
+	l := annotatelexer.CreateAnnotateLexer(&strLine, 0, 0)
+
+	// 判断这行内容是否以-@开头，是否合法
+	if !l.CheckHeardValid() {
+		return
+	}
+
+	// 后面的内容进行词法解析
+	annotateState, parseErr := annotateparser.ParserLine(l)
+	_, flag := annotateState.(*annotateast.AnnotateNotValidState)
+	// 1) 判断是否为解析有效
+	if flag || parseErr.ErrType != annotatelexer.AErrorOk {
+		return
+	}
+
+	dirManager := common.GConfig.GetDirManager()
+
+	// 2) 遍历位置信息
+	typeStr, noticeStr, commentStr := annotateast.GetStateLocInfo(annotateState, col)
+
+	if typeStr == "" && noticeStr == "alias name" {
+		// 判断是否alias多个候选词
+		// ---@alias exitcode2 '"exit"' | '"signal"'
+		strCandidate := a.getAliasMultiCandidate(strWord, strFile, line)
+		noticeStr = noticeStr + strCandidate
+		strLabel = strWord + " : " + noticeStr
+		strHover = commentStr
+		return
+	}
+
+	if typeStr == "" && noticeStr == "class name" {
+		typeStr = strWord
+	}
+
+	if typeStr != "" {
+		createType := a.getAnnotateStrTypeInfo(typeStr, strFile, line)
+		if createType == nil {
+			return "", "not find annotate type", ""
+		}
+
+		if createType.AliasInfo != nil {
+			strComment := createType.AliasInfo.AliasState.Comment
+			strLabel = "alias " + createType.AliasInfo.AliasState.Name
+			strCandidate := a.getAliasMultiCandidate(typeStr, strFile, line)
+			strLabel = strLabel + strCandidate
+			if strComment != "" {
+				strHover = strComment
+			}
+
+			strLuaFile = dirManager.RemovePathDirPre(createType.AliasInfo.LuaFile)
+			return
+		}
+
+		if createType.ClassInfo != nil {
+			//str := a.expandTableHover(symbol)
+			strLabel = "class " + typeStr
+
+			if len(createType.ClassInfo.ClassState.ParentNameList) > 0 {
+				strLabel = strLabel + " : " + strings.Join(createType.ClassInfo.ClassState.ParentNameList, " , ")
+			} else {
+				strLabel = "class " + typeStr + a.getClassFieldStr(createType.ClassInfo)
+			}
+
+			strComment := createType.ClassInfo.ClassState.Comment
+			if strComment != "" {
+				strHover = strComment
+			}
+
+			strLuaFile = dirManager.RemovePathDirPre(createType.ClassInfo.LuaFile)
+			return
+		}
+	}
+
+	if noticeStr == "comment info" {
+		strHover = commentStr + " : " + noticeStr
+		return
+	}
+
+	if noticeStr != "" {
+		strLabel = strWord + " : " + noticeStr
+		strHover = commentStr
+		return
+	}
+
+	return
+}
 
 // GetLspHoverVarStr 提示信息hover
 func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineVarStruct) (lableStr, docStr, luaFileStr string) {
@@ -39,7 +128,7 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 	}
 
 	if symbol != nil && len(findList) == 0 {
-		lableStr = getVarInfoExpandStrHover(symbol.VarInfo, varStruct.Str, true)
+		lableStr = getVarInfoExpandStrHover(symbol.VarInfo, varStruct.StrVec, varStruct.IsFuncVec, varStruct.Str)
 		if lableStr != "" {
 			return
 		}
@@ -95,26 +184,6 @@ func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineV
 	return
 }
 
-type mapEntryHandler func(string, string)
-
-// 按字母顺序遍历map
-func traverseMapInStringOrder(params map[string]string, handler mapEntryHandler) {
-	keys := make([]string, 0)
-	for k := range params {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for index, k := range keys {
-		if index == common.GConfig.PreviewFieldsNum {
-			strMore := fmt.Sprintf("...(+%d)", len(keys)-common.GConfig.PreviewFieldsNum)
-			handler(k, strMore)
-			break
-		} else {
-			handler(k, params[k])
-		}
-	}
-}
-
 func (a *AllProject) getNodefineMapVar(strFile string, varStruct *common.DefineVarStruct) (symbol *common.Symbol) {
 	// 1）先查找该文件是否存在
 	fileStruct := a.getVailidCacheFileStruct(strFile)
@@ -142,574 +211,6 @@ func (a *AllProject) getNodefineMapVar(strFile string, varStruct *common.DefineV
 		symbol = common.GetDefaultSymbol(findVar.FileName, findVar)
 	}
 	return
-}
-
-func (a *AllProject) convertClassInfoToHovers(oneClass *common.OneClassInfo, existMap map[string]string) {
-	// 1) oneClass所有的成员
-	for strName, fieldState := range oneClass.FieldMap {
-		if _, ok := existMap[strName]; ok {
-			continue
-		}
-
-		strFiled := annotateast.TypeConvertStr(fieldState.FiledType)
-		existMap[strName] = strName + ": " + strFiled + ","
-	}
-
-	getVarInfoMapStr(oneClass.RelateVar, existMap)
-}
-
-func (a *AllProject) getClassFieldStr(classInfo *common.OneClassInfo) (str string) {
-	var existMap map[string]string = map[string]string{}
-	str = " = {\n"
-	a.convertClassInfoToHovers(classInfo, existMap)
-
-	traverseMapInStringOrder(existMap, func(key string, value string) {
-		str = str + "\t" + value + "\n"
-	})
-
-	str = str + "}"
-	return str
-}
-
-func isDefaultType(str string) bool {
-	if str == "number" || str == "any" || str == "string" || str == "boolean" || str == "nil" || str == "thread" ||
-		str == "userdata" || str == "lightuserdata" || str == "integer" || str == "void" {
-		return true
-	}
-
-	return false
-}
-
-// 代码补全时，有注解类型的字段提示
-func (a *AllProject) completeAnnotatTypeStr(astType annotateast.Type, fileName string, line int) (str string) {
-	str = annotateast.TypeConvertStr(astType)
-	if isDefaultType(str) {
-		return str
-	}
-
-	classList := a.getAllNormalAnnotateClass(astType, fileName, line)
-	if len(classList) == 0 {
-		// 没有找到相应的class成员，直接返回
-		str = str + a.getSymbolAliasMultiCandidate(astType, fileName, line)
-		return str
-	}
-
-	// 为已经存在的map，防止重复
-	var existMap map[string]string = map[string]string{}
-	strType := annotateast.TypeConvertStr(astType)
-	str = strType + " = {\n"
-	for _, oneClass := range classList {
-		a.convertClassInfoToHovers(oneClass, existMap)
-	}
-
-	traverseMapInStringOrder(existMap, func(key string, value string) {
-		str = str + "\t" + value + "\n"
-	})
-
-	str = str + "}"
-	str = str + a.getSymbolAliasMultiCandidate(astType, fileName, line)
-	return str
-}
-
-func needReplaceMapStr(oldStr string, strValueType string) bool {
-	if strValueType == "any" {
-		return false
-	}
-
-	if strings.Contains(oldStr, ": number") && !strings.Contains(oldStr, ": number = ") {
-		return true
-	}
-
-	if strings.Contains(oldStr, ": string") && !strings.Contains(oldStr, ": string = ") {
-		return true
-	}
-
-	if strings.Contains(oldStr, ": boolean") && !strings.Contains(oldStr, ": boolean = ") {
-		return true
-	}
-
-	if strings.Contains(oldStr, ": any") {
-		return true
-	}
-
-	return false
-}
-
-// 只获取expandStrMap的hover
-func getVarInfoExpandStrHover(varInfo *common.VarInfo, strPre string, showPre bool) (str string) {
-	if varInfo == nil || varInfo.ExpandStrMap == nil {
-		return
-	}
-
-	vecPre := strings.Split(strPre, ".")
-	beforeStrPre := vecPre[0]
-
-	var existMap map[string]string = map[string]string{}
-	for str := range varInfo.ExpandStrMap {
-		str = beforeStrPre + "." + str
-		if !strings.HasPrefix(str, strPre+".") {
-			continue
-		}
-
-		if (len(strPre) + 1) >= len(str) {
-			continue
-		}
-
-		strRemain := str[len(strPre)+1:]
-		if strRemain == "" {
-			continue
-		}
-
-		strVec := strings.Split(strRemain, ".")
-		oneStr := strVec[0]
-		strType := "any"
-		if len(strVec) > 1 {
-			strType = "table"
-		}
-		newStr := oneStr + ": " + strType + ","
-		if oldStr, ok := existMap[oneStr]; ok {
-			if needReplaceMapStr(oldStr, strType) {
-				existMap[oneStr] = newStr
-			}
-		} else {
-			existMap[oneStr] = newStr
-		}
-
-		if _, ok := existMap[strVec[0]]; !ok {
-			existMap[strVec[0]] = newStr
-		}
-	}
-	if len(existMap) == 0 {
-		return
-	}
-
-	if showPre {
-		str = strPre + " : table = {\n"
-	} else {
-		str = " table = {\n"
-	}
-
-	traverseMapInStringOrder(existMap, func(key string, value string) {
-		str = str + "\t" + value + "\n"
-	})
-
-	str = str + "}"
-	return
-}
-
-func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
-	if varInfo == nil {
-		return
-	}
-
-	for key, value := range varInfo.SubMaps {
-		strValueType := value.GetVarTypeDetail()
-		if value.ReferFunc != nil {
-			strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
-		}
-		newStr := key + ": " + strValueType + ","
-		if oldStr, ok := existMap[key]; ok {
-			if needReplaceMapStr(oldStr, strValueType) {
-				existMap[key] = newStr
-			}
-		} else {
-			existMap[key] = newStr
-		}
-	}
-
-	if varInfo.ExpandStrMap == nil {
-		return
-	}
-
-	for key := range varInfo.ExpandStrMap {
-		strVec := strings.Split(key, ".")
-		if len(strVec) == 0 {
-			continue
-		}
-
-		oneStr := strVec[0]
-		if !common.JudgeSimpleStr(oneStr) {
-			continue
-		}
-
-		strType := "any"
-		if len(strVec) > 1 {
-			strType = "table"
-		}
-
-		newStr := oneStr + ": " + strType + ","
-		if oldStr, ok := existMap[oneStr]; ok {
-			if needReplaceMapStr(oldStr, strType) {
-				existMap[oneStr] = newStr
-			}
-		} else {
-			existMap[oneStr] = newStr
-		}
-	}
-}
-
-// 补全的为expand 的变量，获取展开的信息
-func (a *AllProject) getCompleteExpandInfo(item *common.OneCompleteData) (luaFileStr string) {
-	cache := a.completeCache
-	compStruct := cache.GetCompleteVar()
-	if len(compStruct.StrVec) <= 1 {
-		return
-	}
-
-	strPre := combineStrVec(compStruct.StrVec, compStruct.IsFuncVec)
-	if strPre == "" {
-		return
-	}
-
-	strPre = strPre + item.Label
-	str := getVarInfoExpandStrHover(item.ExpandVarInfo, strPre, false)
-	if str != "" {
-		item.Detail = str
-	}
-
-	return luaFileStr
-}
-
-func isAllClassDefault(classList []*common.OneClassInfo) bool {
-	for _, oneClass := range classList {
-		if oneClass.ClassState != nil && !isDefaultType(oneClass.ClassState.Name) {
-			return false
-		}
-	}
-
-	return true
-}
-
-// hover 的时候是指向一个table，展开这个table的内容
-func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existMap map[string]string) {
-	// 为已经存在的map，防止重复
-	existMap = map[string]string{}
-
-	// 1) 先判断是否有注解类型
-	if symbol.AnnotateType != nil {
-		strType := annotateast.TypeConvertStr(symbol.AnnotateType)
-		// if isDefaultType(strType) {
-		// 	return strType, existMap
-		// }
-
-		classList := a.getAllNormalAnnotateClass(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
-		if isAllClassDefault(classList) {
-			// 没有找到相应的class成员，直接返回
-			strCandidate := a.getSymbolAliasMultiCandidate(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
-			if strCandidate == "" {
-				return strType, existMap
-			}
-			if strType == "" {
-				strType = strCandidate
-				return strType, existMap
-			}
-
-			if strings.HasPrefix(strCandidate, "\n") {
-				strType = strType + strCandidate
-			} else {
-				strType = strType + " | " + strCandidate
-			}
-
-			return strType, existMap
-		}
-
-		str = strType + " = {\n"
-		for _, oneClass := range classList {
-			a.convertClassInfoToHovers(oneClass, existMap)
-		}
-	} else {
-		str = "table = {\n"
-		if symbol.VarInfo == nil || (len(symbol.VarInfo.SubMaps) == 0 && len(symbol.VarInfo.ExpandStrMap) == 0) {
-			return "table = { }", existMap
-		}
-	}
-
-	getVarInfoMapStr(symbol.VarInfo, existMap)
-	traverseMapInStringOrder(existMap, func(key string, value string) {
-		str = str + "\t" + value + "\n"
-	})
-
-	str = str + "}"
-
-	if symbol.AnnotateType != nil {
-		str = str + a.getSymbolAliasMultiCandidate(symbol.AnnotateType, symbol.FileName, symbol.GetLine())
-	}
-	return str, existMap
-}
-
-func (a *AllProject) getSymbolAliasMultiCandidate(annotateType annotateast.Type, fileName string, line int) (str string) {
-	if annotateType == nil {
-		return
-	}
-
-	multiType, ok := annotateType.(*annotateast.MultiType)
-	if !ok {
-		return
-	}
-
-	for _, oneType := range multiType.TypeList {
-		// 判断是否在几个候选词中
-		if constType, ok := oneType.(*annotateast.ConstType); ok {
-			oneStr := ""
-			if constType.QuotesFlag {
-				oneStr = "\"" + constType.Name + "\""
-			} else {
-				oneStr = constType.Name
-			}
-
-			if str != "" {
-				str = str + " | " + oneStr
-			} else {
-				str = oneStr
-			}
-			continue
-		}
-
-		simpleType, ok := oneType.(*annotateast.NormalType)
-		if !ok {
-			continue
-		}
-
-		if isDefaultType(simpleType.StrName) {
-			continue
-		}
-
-		str = str + a.getAliasMultiCandidate(simpleType.StrName, fileName, line)
-		if str != "" {
-			return str
-		}
-	}
-
-	return str
-}
-
-func (a *AllProject) getSymbolAliasMultiCandidateMap(annotateType annotateast.Type, fileName string, line int) (strMap map[string]string) {
-	strMap = map[string]string{}
-
-	if annotateType == nil {
-		return
-	}
-
-	multiType, ok := annotateType.(*annotateast.MultiType)
-	if !ok {
-		return
-	}
-
-	for _, oneType := range multiType.TypeList {
-		// 判断是否在几个候选词中
-		if constType, ok := oneType.(*annotateast.ConstType); ok {
-			oneStr := ""
-			if constType.QuotesFlag {
-				oneStr = "\"" + constType.Name + "\""
-			} else {
-				oneStr = constType.Name
-			}
-
-			strMap[oneStr] = ""
-			continue
-		}
-
-		simpleType, ok := oneType.(*annotateast.NormalType)
-		if !ok {
-			continue
-		}
-
-		if isDefaultType(simpleType.StrName) {
-			continue
-		}
-
-		a.getAliasMultiCandidateMap(simpleType.StrName, fileName, line, strMap)
-	}
-
-	return strMap
-}
-
-func (a *AllProject) mergeTwoExistMap(symbol *common.Symbol, fristStr string, fristMap map[string]string,
-	secondStr string, secondMap map[string]string) (mergeStr string) {
-	if len(fristMap) == 0 {
-		return secondStr
-	}
-
-	if len(secondMap) == 0 {
-		return fristStr
-	}
-
-	// 1) 先判断是否有注解类型
-	if symbol.AnnotateType != nil {
-		strType := annotateast.TypeConvertStr(symbol.AnnotateType)
-		mergeStr = strType + " = {\n"
-	} else {
-		mergeStr = "table = {\n"
-	}
-
-	for oneStr, oneValue := range fristMap {
-		_, ok := secondMap[oneStr]
-		if !ok {
-			secondMap[oneStr] = oneValue
-		}
-	}
-
-	traverseMapInStringOrder(secondMap, func(key string, value string) {
-		mergeStr = mergeStr + "\t" + value + "\n"
-	})
-
-	mergeStr = mergeStr + "}"
-	return mergeStr
-}
-
-// 获取函数的完整展示信息
-// paramTipFlag 表示是否提示函数的参数
-// colonFlag 如果是冒号语法，有时候需要忽略掉self
-// returnFlag 是否需要获取函数的返回值类型
-func (a *AllProject) getFuncShowStr(varInfo *common.VarInfo, funcName string, paramTipFlag, colonFlag, returnFlag bool) (str string) {
-	if varInfo == nil || varInfo.ReferFunc == nil {
-		return
-	}
-
-	if !paramTipFlag {
-		return funcName
-	}
-
-	fun := varInfo.ReferFunc
-	inLuaFile := fun.FileName
-	lastLine := fun.Loc.StartLine
-	annotateParamInfo := a.GetFuncParamInfo(inLuaFile, lastLine-1)
-
-	// 1) 获取函数的参数
-	funcName += "("
-	preFlag := false
-	for index, oneParam := range fun.ParamList {
-		if colonFlag && fun.IsColon && index == 0 {
-			continue
-		}
-
-		if preFlag {
-			funcName += ", "
-		}
-
-		funcName += oneParam
-
-		paramShortStr, annType := a.getAnnotateFuncParamDocument(oneParam, annotateParamInfo, inLuaFile, lastLine-1)
-		if paramShortStr != "" {
-			funcName += ": " + annotateast.TypeConvertStr(annType)
-		} else {
-			// 获取参数变量关联的varinfo
-			oneVar := fun.MainScope.GetParamVarInfo(oneParam)
-			funcName += ": " + getParamVarinfoType(oneVar)
-		}
-
-		preFlag = true
-	}
-
-	if fun.IsVararg {
-		if preFlag {
-			funcName += ", "
-		}
-		funcName += "..."
-	}
-
-	funcName += ")"
-
-	// 如果不需要返回类型，直接返回
-	if !returnFlag {
-		return funcName
-	}
-
-	// 2 获取返回值
-	// 2.1) 先获取注解的参数
-	oldSymbol := common.GetDefaultSymbol(varInfo.FileName, varInfo)
-	flag, _, typeList := a.getFuncReturnAnnotateTypeList(oldSymbol)
-	var resultList []string = []string{}
-
-	if flag {
-		for _, oneType := range typeList {
-			oneStr := annotateast.TypeConvertStr(oneType)
-			resultList = append(resultList, oneStr)
-		}
-	}
-
-	if len(fun.ReturnVecs) == 0 {
-		for i, oneStr := range resultList {
-			funcName = fmt.Sprintf("%s\n  ->%d. %s", funcName, i+1, oneStr)
-		}
-
-		if len(resultList) > 0 {
-			funcName += "\n"
-		}
-
-		return funcName
-	}
-
-	oldLen := len(resultList)
-
-	for _, oneReturnInfo := range fun.ReturnVecs {
-		for i, oneReturn := range oneReturnInfo.ReturnVarVec {
-			if i < oldLen {
-				continue
-			}
-
-			strType := a.getOneFuncReturnStr(varInfo.FileName, oneReturn)
-			if len(resultList) > i {
-				if strType != "any" {
-					resultList[i] = strType
-				}
-			} else {
-				resultList = append(resultList, strType)
-			}
-		}
-	}
-
-	for i, oneStr := range resultList {
-		funcName = fmt.Sprintf("%s\n  ->%d. %s", funcName, i+1, oneStr)
-	}
-	if len(resultList) > 0 {
-		funcName += "\n"
-	}
-	return funcName
-}
-
-// 获取函数一个return值的返回类型
-func (a *AllProject) getOneFuncReturnStr(fileName string, oneReturn common.ReturnItem) (strType string) {
-	strType = common.GetLuaTypeString(common.GetExpType(oneReturn.ReturnExp), oneReturn.ReturnExp)
-	loc := common.GetExpLoc(oneReturn.ReturnExp)
-	comParam := a.getCommFunc(fileName, loc.StartLine, loc.StartColumn)
-	findExpList := &[]common.FindExpFile{}
-	symbol := a.FindVarReferSymbol(fileName, oneReturn.ReturnExp, comParam, findExpList, 1)
-	if symbol == nil {
-		return
-	}
-
-	if symbol.AnnotateType != nil {
-		strType = annotateast.TypeConvertStr(symbol.AnnotateType)
-	} else {
-		if symbol.VarInfo != nil {
-			strTmp := getParamVarinfoType(symbol.VarInfo)
-			if strTmp != "any" {
-				strType = strTmp
-			}
-		}
-	}
-
-	return strType
-}
-
-func getParamVarinfoType(oneVar *common.VarInfo) string {
-	if oneVar == nil {
-		return "any"
-	}
-
-	str := oneVar.GetVarTypeDetail()
-	strSplit := strings.Split(str, " ")
-	oneStr := strSplit[0]
-	if oneStr != "any" {
-		return oneStr
-	}
-
-	if len(oneVar.SubMaps) > 0 || len(oneVar.ExpandStrMap) > 0 {
-		return "table"
-	}
-
-	return "any"
 }
 
 func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varStruct *common.DefineVarStruct) (strType string,
@@ -753,7 +254,6 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 				strPre = "local "
 			}
 			strFunc := a.getFuncShowStr(symbol.VarInfo, varStruct.StrVec[len(varStruct.StrVec)-1], true, false, true)
-			//strFunc := referFunc.GetFuncCompleteStr(varStruct.StrVec[len(varStruct.StrVec)-1], true, false)
 			strType = "function " + strFunc
 		}
 	}
@@ -771,59 +271,6 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 	strDoc = a.GetLineComment(symbol.FileName, symbol.VarInfo.Loc.EndLine)
 	strDoc = GetStrComment(strDoc)
 	return
-}
-
-// GetStrComment 对注释进行一些处理, 提取出注解的特殊的markdown格式
-func GetStrComment(strComment string) (str string) {
-	if strComment == "" {
-		return strComment
-	}
-
-	// 之前lua格式的doc
-	preLuaStr := ""
-
-	// 删除注释一些空格和其他的多余的格式
-	splitStrArr := strings.Split(strComment, "\n")
-	annotatFlag := false
-	for index, oneStr := range splitStrArr {
-		oneStr = strings.TrimLeft(oneStr, " ")
-		oneStr = strings.TrimPrefix(oneStr, "-*")
-		//oneStr = strings.TrimPrefix(oneStr, "*")
-		oneStr = strings.TrimPrefix(oneStr, "-")
-		oneStr = strings.TrimLeft(oneStr, " ")
-
-		annotatFlag = false
-		if strings.HasPrefix(oneStr, "@class") || strings.HasPrefix(oneStr, "@alias") || strings.HasPrefix(oneStr, "@param") ||
-			strings.HasPrefix(oneStr, "@return") || strings.HasPrefix(oneStr, "@type") || strings.HasPrefix(oneStr, "@overload") ||
-			strings.HasPrefix(oneStr, "@generic") || strings.HasPrefix(oneStr, "@vararg") || strings.HasPrefix(oneStr, "@version") {
-			annotatFlag = true
-		}
-
-		if annotatFlag {
-			if preLuaStr == "" {
-				// 如果之前没有注解，拼接lua
-				preLuaStr = fmt.Sprintf("\n```%s\n%s\n", "lua", oneStr)
-			} else {
-				// 如果之前有注解，拼接这次
-				preLuaStr = preLuaStr + oneStr + "\n"
-			}
-
-			if index == len(splitStrArr)-1 {
-				if preLuaStr != "" {
-					str = str + preLuaStr + "```"
-				}
-			}
-		} else {
-			if preLuaStr == "" {
-				str = str + "  \n" + oneStr
-			} else {
-				str = str + preLuaStr + "```" + "  \n" + oneStr
-				preLuaStr = ""
-			}
-		}
-	}
-
-	return str
 }
 
 // 判断变量是否直接为系统模块或函数的hover

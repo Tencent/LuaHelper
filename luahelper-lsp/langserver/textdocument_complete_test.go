@@ -96,6 +96,7 @@ type TestCompleteInfo struct {
 	compLoc      lsp.Position // 代码补全的坐标信息
 	resultList   []string     // 所有的提示的结构字符串
 	noResultList []string     // 不应该出现的结果列表
+	resolveList  []string     // 当选择某一个子项时，具体显示的内容
 }
 
 func TestComplete2(t *testing.T) {
@@ -2293,6 +2294,783 @@ func TestCompleteTableKey(t *testing.T) {
 
 		resolveFlag := false
 		for _, oneStr := range resultList {
+			if strings.Contains(resultItem.Documentation.Value, oneStr) {
+				resolveFlag = true
+			}
+		}
+		if !resolveFlag {
+			t.Fatalf("TextDocumentCompleteResolve file=%s, index=%d", fileName, index)
+		}
+		if strings.Contains(resultItem.InsertText, "\"") || strings.Contains(resultItem.InsertText, "'") {
+			t.Fatalf("TextDocumentCompleteResolve file=%s, index=%d contains err", fileName, index)
+		}
+	}
+}
+
+// 历史记录智能补全，全局变量
+func TestCompleteIntelligent1(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/complete"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "test_intelligent1.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+
+	var testCompleteList []TestCompleteInfo = []TestCompleteInfo{}
+	var oneComplete TestCompleteInfo
+
+	// 0)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcd"
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"abcdd"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 1)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"addd", "a", "eff", "dd()", "ccc"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 2)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd:dd()."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"dd1"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 3)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.addd()."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"ddd"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 4)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.addd().ddd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"a", "dd", "dddp"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 5)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.addd().ddd.dd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"ddd"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 6)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.ccc(one, one)."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"a"}
+		oneComplete.resolveList = []string{"table = {"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 6)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.ccc(one, one).a."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"b"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	for index, oneComplete := range testCompleteList {
+		openParams := lsp.DidOpenTextDocumentParams{
+			TextDocument: lsp.TextDocumentItem{
+				URI:  lsp.DocumentURI(fileName),
+				Text: string(data),
+			},
+		}
+		err1 := lspServer.TextDocumentDidOpen(context, openParams)
+		if err1 != nil {
+			t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+		}
+
+		changParams := lsp.DidChangeTextDocumentParams{
+			TextDocument: lsp.VersionedTextDocumentIdentifier{
+				TextDocumentIdentifier: lsp.TextDocumentIdentifier{
+					URI: lsp.DocumentURI(fileName),
+				},
+			},
+			ContentChanges: []lsp.TextDocumentContentChangeEvent{
+				{
+					Range:       &oneComplete.changeRange,
+					RangeLength: 0,
+					Text:        oneComplete.changText,
+				},
+			},
+		}
+
+		lspServer.TextDocumentDidChange(context, changParams)
+
+		completionParams := lsp.CompletionParams{
+			TextDocumentPositionParams: lsp.TextDocumentPositionParams{
+				TextDocument: lsp.TextDocumentIdentifier{
+					URI: lsp.DocumentURI(fileName),
+				},
+				Position: oneComplete.compLoc,
+			},
+			Context: lsp.CompletionContext{
+				TriggerKind: lsp.CompletionTriggerKind(1),
+			},
+		}
+
+		completionReturn, err2 := lspServer.TextDocumentComplete(context, completionParams)
+		if err2 != nil {
+			t.Fatalf("complete file:%s err=%s", fileName, err2.Error())
+		}
+
+		completionListTmp, _ := completionReturn.(CompletionListTmp)
+		var oneItem CompletionItemTmp
+		for _, resultStr := range oneComplete.resultList {
+			findFlag := false
+			for _, oneCompReturn := range completionListTmp.Items {
+				if resultStr == oneCompReturn.Label {
+					findFlag = true
+					oneItem = oneCompReturn
+				}
+			}
+
+			if !findFlag {
+				t.Fatalf("not find complete index=%d, str=%s", index, resultStr)
+			}
+		}
+
+		var inputItem lsp.CompletionItem = lsp.CompletionItem{
+			Label: oneItem.Label,
+			Kind:  oneItem.Kind,
+			Data:  oneItem.Data,
+		}
+
+		resultItem, err3 := lspServer.TextDocumentCompleteResolve(context, inputItem)
+		if err3 != nil {
+			t.Fatalf("TextDocumentCompleteResolve err, index=%d", index)
+		}
+
+		if len(oneComplete.resolveList) == 0 {
+			continue
+		}
+
+		resolveFlag := false
+		for _, oneStr := range oneComplete.resolveList {
+			if strings.Contains(resultItem.Documentation.Value, oneStr) {
+				resolveFlag = true
+			}
+		}
+		if !resolveFlag {
+			t.Fatalf("TextDocumentCompleteResolve file=%s, index=%d", fileName, index)
+		}
+		if strings.Contains(resultItem.InsertText, "\"") || strings.Contains(resultItem.InsertText, "'") {
+			t.Fatalf("TextDocumentCompleteResolve file=%s, index=%d contains err", fileName, index)
+		}
+	}
+}
+
+// 历史记录智能补全, local变量
+func TestCompleteIntelligent2(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/complete"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "test_intelligent2.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+
+	var testCompleteList []TestCompleteInfo = []TestCompleteInfo{}
+	var oneComplete TestCompleteInfo
+
+	// 0)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcd"
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"abcdd"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 1)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"addd", "a", "eff", "dd()", "ccc"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 2)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd:dd()."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"dd1"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 3)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.addd()."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"ddd"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 4)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.addd().ddd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"a", "dd", "dddp"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 5)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.addd().ddd.dd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"ddd"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 6)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.ccc(one, one)."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"a"}
+		oneComplete.resolveList = []string{"table = {"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 6)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.ccc(one, one).a."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"b"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	for index, oneComplete := range testCompleteList {
+		openParams := lsp.DidOpenTextDocumentParams{
+			TextDocument: lsp.TextDocumentItem{
+				URI:  lsp.DocumentURI(fileName),
+				Text: string(data),
+			},
+		}
+		err1 := lspServer.TextDocumentDidOpen(context, openParams)
+		if err1 != nil {
+			t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+		}
+
+		changParams := lsp.DidChangeTextDocumentParams{
+			TextDocument: lsp.VersionedTextDocumentIdentifier{
+				TextDocumentIdentifier: lsp.TextDocumentIdentifier{
+					URI: lsp.DocumentURI(fileName),
+				},
+			},
+			ContentChanges: []lsp.TextDocumentContentChangeEvent{
+				{
+					Range:       &oneComplete.changeRange,
+					RangeLength: 0,
+					Text:        oneComplete.changText,
+				},
+			},
+		}
+
+		lspServer.TextDocumentDidChange(context, changParams)
+
+		completionParams := lsp.CompletionParams{
+			TextDocumentPositionParams: lsp.TextDocumentPositionParams{
+				TextDocument: lsp.TextDocumentIdentifier{
+					URI: lsp.DocumentURI(fileName),
+				},
+				Position: oneComplete.compLoc,
+			},
+			Context: lsp.CompletionContext{
+				TriggerKind: lsp.CompletionTriggerKind(1),
+			},
+		}
+
+		completionReturn, err2 := lspServer.TextDocumentComplete(context, completionParams)
+		if err2 != nil {
+			t.Fatalf("complete file:%s err=%s", fileName, err2.Error())
+		}
+
+		completionListTmp, _ := completionReturn.(CompletionListTmp)
+		var oneItem CompletionItemTmp
+		for _, resultStr := range oneComplete.resultList {
+			findFlag := false
+			for _, oneCompReturn := range completionListTmp.Items {
+				if resultStr == oneCompReturn.Label {
+					findFlag = true
+					oneItem = oneCompReturn
+				}
+			}
+
+			if !findFlag {
+				t.Fatalf("not find complete index=%d, str=%s", index, resultStr)
+			}
+		}
+
+		var inputItem lsp.CompletionItem = lsp.CompletionItem{
+			Label: oneItem.Label,
+			Kind:  oneItem.Kind,
+			Data:  oneItem.Data,
+		}
+
+		resultItem, err3 := lspServer.TextDocumentCompleteResolve(context, inputItem)
+		if err3 != nil {
+			t.Fatalf("TextDocumentCompleteResolve err, index=%d", index)
+		}
+
+		if len(oneComplete.resolveList) == 0 {
+			continue
+		}
+
+		resolveFlag := false
+		for _, oneStr := range oneComplete.resolveList {
+			if strings.Contains(resultItem.Documentation.Value, oneStr) {
+				resolveFlag = true
+			}
+		}
+		if !resolveFlag {
+			t.Fatalf("TextDocumentCompleteResolve file=%s, index=%d", fileName, index)
+		}
+		if strings.Contains(resultItem.InsertText, "\"") || strings.Contains(resultItem.InsertText, "'") {
+			t.Fatalf("TextDocumentCompleteResolve file=%s, index=%d contains err", fileName, index)
+		}
+	}
+}
+
+// 历史记录智能补全, 未定义的变量
+func TestCompleteIntelligent3(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/complete/intelligent3"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "test_intelligent3.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+
+	var testCompleteList []TestCompleteInfo = []TestCompleteInfo{}
+	var oneComplete TestCompleteInfo
+
+	// 0)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcd"
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"abcdd"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 1)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"addd", "a", "eff", "dd()", "ccc"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 2)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd:dd()."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"dd1"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 3)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.addd()."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"ddd"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 4)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.addd().ddd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"a", "dd", "dddp"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 5)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.addd().ddd.dd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"ddd"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 6)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.ccc(one, one)."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"a"}
+		oneComplete.resolveList = []string{"table = {"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	// 6)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      15,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "abcdd.ccc(one, one).a."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"b"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	for index, oneComplete := range testCompleteList {
+		openParams := lsp.DidOpenTextDocumentParams{
+			TextDocument: lsp.TextDocumentItem{
+				URI:  lsp.DocumentURI(fileName),
+				Text: string(data),
+			},
+		}
+		err1 := lspServer.TextDocumentDidOpen(context, openParams)
+		if err1 != nil {
+			t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+		}
+
+		changParams := lsp.DidChangeTextDocumentParams{
+			TextDocument: lsp.VersionedTextDocumentIdentifier{
+				TextDocumentIdentifier: lsp.TextDocumentIdentifier{
+					URI: lsp.DocumentURI(fileName),
+				},
+			},
+			ContentChanges: []lsp.TextDocumentContentChangeEvent{
+				{
+					Range:       &oneComplete.changeRange,
+					RangeLength: 0,
+					Text:        oneComplete.changText,
+				},
+			},
+		}
+
+		lspServer.TextDocumentDidChange(context, changParams)
+
+		completionParams := lsp.CompletionParams{
+			TextDocumentPositionParams: lsp.TextDocumentPositionParams{
+				TextDocument: lsp.TextDocumentIdentifier{
+					URI: lsp.DocumentURI(fileName),
+				},
+				Position: oneComplete.compLoc,
+			},
+			Context: lsp.CompletionContext{
+				TriggerKind: lsp.CompletionTriggerKind(1),
+			},
+		}
+
+		completionReturn, err2 := lspServer.TextDocumentComplete(context, completionParams)
+		if err2 != nil {
+			t.Fatalf("complete file:%s err=%s", fileName, err2.Error())
+		}
+
+		completionListTmp, _ := completionReturn.(CompletionListTmp)
+		var oneItem CompletionItemTmp
+		for _, resultStr := range oneComplete.resultList {
+			findFlag := false
+			for _, oneCompReturn := range completionListTmp.Items {
+				if resultStr == oneCompReturn.Label {
+					findFlag = true
+					oneItem = oneCompReturn
+				}
+			}
+
+			if !findFlag {
+				t.Fatalf("not find complete index=%d, str=%s", index, resultStr)
+			}
+		}
+
+		var inputItem lsp.CompletionItem = lsp.CompletionItem{
+			Label: oneItem.Label,
+			Kind:  oneItem.Kind,
+			Data:  oneItem.Data,
+		}
+
+		resultItem, err3 := lspServer.TextDocumentCompleteResolve(context, inputItem)
+		if err3 != nil {
+			t.Fatalf("TextDocumentCompleteResolve err, index=%d", index)
+		}
+
+		if len(oneComplete.resolveList) == 0 {
+			continue
+		}
+
+		resolveFlag := false
+		for _, oneStr := range oneComplete.resolveList {
 			if strings.Contains(resultItem.Documentation.Value, oneStr) {
 				resolveFlag = true
 			}

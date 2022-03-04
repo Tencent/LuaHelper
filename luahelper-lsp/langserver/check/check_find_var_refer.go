@@ -119,34 +119,30 @@ func (a *AllProject) findLocReferSymbol(fileResult *results.FileResult, posLine 
 
 	// 1) 查找局部变量指向的函数信息
 	if !gFlag {
-		if locVarInfo, ok := minScope.FindLocVar(strName, loc); ok {
-			return a.createAnnotateSymbol(strName, locVarInfo)
+		if locVar, ok := minScope.FindLocVar(strName, loc); ok {
+			return a.createAnnotateSymbol(strName, locVar)
 		}
 	}
 
 	if comParam.secondProject != nil {
 		// 非底层的函数，需要查找全局的变量
-		findOk, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, "")
-		if findOk {
+		if ok, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, ""); ok {
 			return a.createAnnotateSymbol(strName, oneVar)
 		}
 
-		findOk, oneVar = comParam.secondProject.FindGlobalGInfo(strName, results.CheckTermFirst, "")
-		if findOk {
+		if ok, oneVar := comParam.secondProject.FindGlobalGInfo(strName, results.CheckTermFirst, ""); ok {
 			return a.createAnnotateSymbol(strName, oneVar)
 		}
 	}
 
 	if comParam.thirdStruct != nil {
 		// 非底层的函数，需要查找全局的变量
-		findOk, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, "")
-		if findOk {
+		if ok, oneVar := fileResult.FindGlobalVarInfo(strName, gFlag, ""); ok {
 			return a.createAnnotateSymbol(strName, oneVar)
 		}
 
 		// 查找所有的
-		findOk, oneVar = comParam.thirdStruct.FindThirdGlobalGInfo(gFlag, strName, "")
-		if findOk {
+		if ok, oneVar := comParam.thirdStruct.FindThirdGlobalGInfo(gFlag, strName, ""); ok {
 			return a.createAnnotateSymbol(strName, oneVar)
 		}
 	}
@@ -219,8 +215,7 @@ func (a *AllProject) getClassListSubMem(classList []*common.OneClassInfo, strKey
 // 获取注解系统的子成员信息
 // todo 这个函数的位置后面会搬迁
 func (a *AllProject) getClassInfoSubMem(classInfo *common.OneClassInfo, strKey string) (symbol *common.Symbol) {
-	fieldState, ok := classInfo.FieldMap[strKey]
-	if ok {
+	if fieldState, ok := classInfo.FieldMap[strKey]; ok {
 		// 匹配到了
 		symbol = &common.Symbol{
 			FileName:     classInfo.LuaFile,
@@ -238,8 +233,7 @@ func (a *AllProject) getClassInfoSubMem(classInfo *common.OneClassInfo, strKey s
 		// 附加判断下，这个变量类型是否关联变量，获取对应的VarInfo
 		if classInfo.RelateVar != nil {
 			// 自己的子项中，含有
-			subVar, flag := classInfo.RelateVar.SubMaps[strKey]
-			if flag {
+			if subVar, ok := classInfo.RelateVar.SubMaps[strKey]; ok {
 				symbol.VarInfo = subVar
 			}
 		}
@@ -249,8 +243,7 @@ func (a *AllProject) getClassInfoSubMem(classInfo *common.OneClassInfo, strKey s
 	// 注解里面没有直接含有，判断子成员是否有
 	if classInfo.RelateVar != nil {
 		// 自己的子项中，含有
-		subVar, flag := classInfo.RelateVar.SubMaps[strKey]
-		if flag {
+		if subVar, ok := classInfo.RelateVar.SubMaps[strKey]; ok {
 			symbol = a.createAnnotateSymbol(strKey, subVar)
 			return symbol
 		}
@@ -425,10 +418,9 @@ func (a *AllProject) symbolHasSubKey(oldSymbol *common.Symbol, strKey string,
 	// 简单的类型，先判断是否为子成员
 	if simpleStrFlag {
 		classList := a.getAllNormalAnnotateClass(oldSymbol.AnnotateType, oldSymbol.FileName, line)
-		varSubFile := a.getClassListSubMem(classList, strKey)
-		if varSubFile != nil {
+		if subSombol := a.getClassListSubMem(classList, strKey); subSombol != nil {
 			// 表示通过注解类型找到了子成员
-			symbol = varSubFile
+			symbol = subSombol
 			return
 		}
 	}
@@ -747,7 +739,7 @@ func (a *AllProject) getImportReferSymbol(luaInFile string, funcExp *ast.FuncCal
 	}
 
 	firstExp := funcExp.Args[0]
-	if _, flag := firstExp.(*ast.StringExp); !flag {
+	if _, ok := firstExp.(*ast.StringExp); !ok {
 		return nil
 	}
 
@@ -858,7 +850,7 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 	// local ActImageDownloader = KismetLibrary.New("/Script/Client.ActImageDownloader");
 	// 客户端的特殊的函数，绑定特定的注解, 例如下面的代码段，绑定的注解类型为ULobby_Food_Collect_UIBP
 	// ActivityFoodCollect.uiObj = GetUIObject(bp_activity_food_collect, "Lobby_Food_Collect_UIBP");
-	if flag, matchVarFile := a.getBindAnnotateSetType(luaInFile, strFuncName, node, findExpList); flag {
+	if ok, matchVarFile := a.getBindAnnotateSetType(luaInFile, strFuncName, node, findExpList); ok {
 		return matchVarFile
 	}
 
@@ -892,9 +884,8 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 			symList := a.FindDeepSymbolList(beforeSymbol.FileName, exp, comParam, findExpList, false,
 				beforeSymbol.VarInfo.VarIndex)
 			for _, oneSymbol := range symList {
-				varFileTmp := a.symbolHasSubKey(oneSymbol, strAfter, comParam, findExpList)
-				if varFileTmp != nil {
-					funcSymbol = varFileTmp
+				if subSym := a.symbolHasSubKey(oneSymbol, strAfter, comParam, findExpList); subSym != nil {
+					funcSymbol = subSym
 					subFindFlag = true
 					break
 				}
@@ -912,8 +903,7 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 	}
 
 	// 获取对应的函数注释返回值
-	flag, funcFile := a.getFuncIndexReturnSymbol(funcSymbol, varIndex, node, comParam, findExpList)
-	if flag {
+	if ok, funcFile := a.getFuncIndexReturnSymbol(funcSymbol, varIndex, node, comParam, findExpList); ok {
 		return funcFile
 	}
 
@@ -929,9 +919,8 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 			return
 		}
 
-		varTmp := extChangeVarInfo(expReturn, funcSymbol.FileName)
-		if varTmp != nil {
-			return varTmp
+		if symTmp := extChangeSymbol(expReturn, funcSymbol.FileName); symTmp != nil {
+			return symTmp
 		}
 
 		// 递归查找
@@ -976,8 +965,7 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 	for _, oneSymbol := range symList {
 		// 如果找到了，判断是否有注解类型
 		// 获取对应的函数注释返回值
-		flag, funcFile := a.getFuncIndexReturnSymbol(oneSymbol, varIndex, node, comParam, findExpList)
-		if flag {
+		if ok, funcFile := a.getFuncIndexReturnSymbol(oneSymbol, varIndex, node, comParam, findExpList); ok {
 			return funcFile
 		}
 
@@ -985,8 +973,8 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 			continue
 		}
 
-		flag, expReturn := oneSymbol.VarInfo.ReferFunc.GetReturnIndexExp(varIndex)
-		if !flag {
+		ok, expReturn := oneSymbol.VarInfo.ReferFunc.GetReturnIndexExp(varIndex)
+		if !ok {
 			// 没有找到
 			return
 		}

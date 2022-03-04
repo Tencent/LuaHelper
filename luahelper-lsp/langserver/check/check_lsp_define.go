@@ -8,7 +8,6 @@ import (
 	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/check/results"
 	"luahelper-lsp/langserver/log"
-	"strings"
 )
 
 // 查找全局的变量信息
@@ -40,8 +39,8 @@ func (a *AllProject) findGlobalVarDefineInfo(comParam *CommonFuncParam, strName 
 func (a *AllProject) findVarDefineInfo(comParam *CommonFuncParam, strName string, strProPre string) (
 	findVar *common.VarInfo) {
 	// 1) 局部变量找到了该变量
-	if locVarInfo, ok := comParam.scope.FindLocVar(strName, comParam.loc); ok {
-		return locVarInfo
+	if locVar, ok := comParam.scope.FindLocVar(strName, comParam.loc); ok {
+		return locVar
 	}
 
 	// 2) 局部变量没有找到，查找全局变量
@@ -112,10 +111,10 @@ func (a *AllProject) FindOpenFileDefine(strFile string, strOpenFile string) (def
 		return defineVecs
 	}
 
-	fileOpenStruct, _ := a.GetFirstFileStuct(strOpenFile)
-	if fileOpenStruct == nil {
+	if fileOpenStruct, _ := a.GetFirstFileStuct(strOpenFile); fileOpenStruct == nil {
 		return defineVecs
 	}
+
 	defineVecs = append(defineVecs, DefineStruct{
 		StrFile: strOpenFile,
 		Loc: lexer.Location{
@@ -147,20 +146,15 @@ func (a *AllProject) findMaxSecondProject(strFile string) (secondProject *result
 }
 
 // 变量查找引用时候，跟踪到变量import或require引入的关系
-func (a *AllProject) findLspReferenceVarDefine(comParam *CommonFuncParam, varStruct *common.DefineVarStruct) (findInFile string,
-	findLocVar *common.VarInfo) {
-	_, findLocVar = a.findOldDefineInfo(comParam, varStruct)
+func (a *AllProject) findLspReferenceVarDefine(comParam *CommonFuncParam, varStruct *common.DefineVarStruct) (string, *common.VarInfo) {
+	_, findLocVar := a.findOldDefineInfo(comParam, varStruct)
 	if findLocVar == nil {
 		// 直接返回
-		return "", findLocVar
+		return "", nil
 	}
 
 	findPreFile := findLocVar.FileName
-
-	var referInfo *common.ReferInfo
-	if findLocVar != nil {
-		referInfo = findLocVar.ReferInfo
-	}
+	referInfo := findLocVar.ReferInfo
 
 	// 判断是否有引用其他的信息
 	if referInfo == nil || len(varStruct.StrVec) <= 1 {
@@ -233,20 +227,22 @@ func (a *AllProject) FindReferenceVarDefine(strFile string, varStruct *common.De
 	}
 
 	isWhole = true
-	if findVar != nil {
-		lastDefine = findVar.Loc
-		oldVar := findVar
-		for i := 1; i < len(varStruct.StrVec); i++ {
-			strTemp := varStruct.StrVec[i]
-			if oldVar.SubMaps == nil {
-				isWhole = false
-				break
-			}
+	if findVar == nil {
+		return lastDefine, oldSymbol, isWhole
+	}
 
-			if subVarMem, ok := oldVar.SubMaps[strTemp]; ok {
-				lastDefine = subVarMem.Loc
-				oldVar = subVarMem
-			}
+	lastDefine = findVar.Loc
+	oldVar := findVar
+	for i := 1; i < len(varStruct.StrVec); i++ {
+		strTemp := varStruct.StrVec[i]
+		if oldVar.SubMaps == nil {
+			isWhole = false
+			break
+		}
+
+		if subVarMem, ok := oldVar.SubMaps[strTemp]; ok {
+			lastDefine = subVarMem.Loc
+			oldVar = subVarMem
 		}
 	}
 	return lastDefine, oldSymbol, isWhole
@@ -464,95 +460,6 @@ func (a *AllProject) AnnotateTypeDefine(strFile string, strLine string, line int
 		}
 
 		defineVecs = append(defineVecs, one)
-	}
-
-	return
-}
-
-// AnnotateTypeHover 注解类型代码补全
-func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, col int) (strLabel, strHover, strLuaFile string) {
-	l := annotatelexer.CreateAnnotateLexer(&strLine, 0, 0)
-
-	// 判断这行内容是否以-@开头，是否合法
-	if !l.CheckHeardValid() {
-		return
-	}
-
-	// 后面的内容进行词法解析
-	annotateState, parseErr := annotateparser.ParserLine(l)
-	_, flag := annotateState.(*annotateast.AnnotateNotValidState)
-	// 1) 判断是否为解析有效
-	if flag || parseErr.ErrType != annotatelexer.AErrorOk {
-		return
-	}
-
-	dirManager := common.GConfig.GetDirManager()
-
-	// 2) 遍历位置信息
-	typeStr, noticeStr, commentStr := annotateast.GetStateLocInfo(annotateState, col)
-
-	if typeStr == "" && noticeStr == "alias name" {
-		// 判断是否alias多个候选词
-		// ---@alias exitcode2 '"exit"' | '"signal"'
-		strCandidate := a.getAliasMultiCandidate(strWord, strFile, line)
-		noticeStr = noticeStr + strCandidate
-		strLabel = strWord + " : " + noticeStr
-		strHover = commentStr
-		return
-	}
-
-	if typeStr == "" && noticeStr == "class name" {
-		typeStr = strWord
-	}
-
-	if typeStr != "" {
-		createType := a.getAnnotateStrTypeInfo(typeStr, strFile, line)
-		if createType == nil {
-			return "", "not find annotate type", ""
-		}
-
-		if createType.AliasInfo != nil {
-			strComment := createType.AliasInfo.AliasState.Comment
-			strLabel = "alias " + createType.AliasInfo.AliasState.Name
-			strCandidate := a.getAliasMultiCandidate(typeStr, strFile, line)
-			strLabel = strLabel + strCandidate
-			if strComment != "" {
-				strHover = strComment
-			}
-
-			strLuaFile = dirManager.RemovePathDirPre(createType.AliasInfo.LuaFile)
-			return
-		}
-
-		if createType.ClassInfo != nil {
-			//str := a.expandTableHover(symbol)
-			strLabel = "class " + typeStr
-
-			if len(createType.ClassInfo.ClassState.ParentNameList) > 0 {
-				strLabel = strLabel + " : " + strings.Join(createType.ClassInfo.ClassState.ParentNameList, " , ")
-			} else {
-				strLabel = "class " + typeStr + a.getClassFieldStr(createType.ClassInfo)
-			}
-
-			strComment := createType.ClassInfo.ClassState.Comment
-			if strComment != "" {
-				strHover = strComment
-			}
-
-			strLuaFile = dirManager.RemovePathDirPre(createType.ClassInfo.LuaFile)
-			return
-		}
-	}
-
-	if noticeStr == "comment info" {
-		strHover = commentStr + " : " + noticeStr
-		return
-	}
-
-	if noticeStr != "" {
-		strLabel = strWord + " : " + noticeStr
-		strHover = commentStr
-		return
 	}
 
 	return

@@ -693,7 +693,7 @@ func StrToDefineVarStruct(str string) (defineVar common.DefineVarStruct) {
 }
 
 // 判断是否为默认的exp，转换成对应的注解的类型
-func extChangeVarInfo(exp ast.Exp, fileName string) (symbol *common.Symbol) {
+func extChangeSymbol(exp ast.Exp, fileName string) (symbol *common.Symbol) {
 	expType := common.GetSimpleExpType(exp)
 	if expType == common.LuaTypeAll || expType == common.LuaTypeRefer {
 		return nil
@@ -719,4 +719,46 @@ func extChangeVarInfo(exp ast.Exp, fileName string) (symbol *common.Symbol) {
 	}
 
 	return symbol
+}
+
+func (a *AllProject) getCommFunc(strFile string, line, ch int) (comParam *CommonFuncParam) {
+	// 1）先查找该文件是否存在
+	fileStruct := a.getVailidCacheFileStruct(strFile)
+	if fileStruct == nil {
+		log.Error("CodeComplete error, file not valid file=%s", strFile)
+		return
+	}
+
+	var secondProject *results.SingleProjectResult
+	var thirdStruct *results.AnalysisThird
+	if fileStruct.IsCommonFile {
+		// 2) 查找该文件属于第哪个第二阶段的指针
+		secondProject = a.findMaxSecondProject(strFile)
+		// 3) 文件属于的第三阶段的指针
+		thirdStruct = a.thirdStruct
+	}
+	minScope, minFunc := fileStruct.FileResult.FindASTNode(line, ch)
+	if minScope == nil || minFunc == nil {
+		log.Error("CodeComplete error, minScope or minFunc is nil file=%s", strFile)
+		return
+	}
+
+	loc := lexer.Location{
+		StartLine:   line,
+		StartColumn: ch,
+		EndLine:     line,
+		EndColumn:   ch,
+	}
+
+	// 5) 开始真正的代码补全
+	comParam = &CommonFuncParam{
+		fileResult:    fileStruct.FileResult,
+		fi:            minFunc,
+		scope:         minScope,
+		loc:           loc,
+		secondProject: secondProject,
+		thirdStruct:   thirdStruct,
+	}
+
+	return comParam
 }

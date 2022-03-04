@@ -139,8 +139,7 @@ func (a *AllProject) rebuidCreateTypeMap() {
 	// 遍历所有文件的注释类型，整合成一个整体
 	for _, fileStruct := range a.fileStructMap {
 		for strName, createTypeList := range fileStruct.AnnotateFile.CreateTypeMap {
-			typeList, ok := a.createTypeMap[strName]
-			if ok {
+			if typeList, ok := a.createTypeMap[strName]; ok {
 				typeList.List = append(typeList.List, createTypeList.List...)
 				a.createTypeMap[strName] = typeList
 			} else {

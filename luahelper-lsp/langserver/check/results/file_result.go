@@ -92,11 +92,11 @@ func (f *FileResult) InsertGlobalVar(name string, varInfo *common.VarInfo) {
 	}
 }
 
-// 在globalMaps中查找一个新的全局定义信息
+// 在globalMaps中查找一个新的全局定义信息, 带了限定条件
 // 找到了就返回true，否则返回false
 // gFlag 是否只查找_G的
-func (f *FileResult) FindGlobalVar(name string, funcLv int, scopeLv int, loc lexer.Location,
-	strProPre string, gFlag bool) (bool, *common.VarInfo) {
+func (f *FileResult) FindGlobalLimitVar(name string, funcLv int, scopeLv int, loc lexer.Location,
+	strProPre string, gFlag bool) (*common.VarInfo, bool) {
 	findMaps := f.GlobalMaps
 	if strProPre != "" {
 		findMaps = f.ProtocolMaps
@@ -105,12 +105,12 @@ func (f *FileResult) FindGlobalVar(name string, funcLv int, scopeLv int, loc lex
 	oneVar := findMaps[name]
 	for {
 		if oneVar == nil {
-			return false, nil
+			return nil, false
 		}
 
 		extraGlobal := oneVar.ExtraGlobal
 		// 判断是否要匹配_G的
-		if gFlag && extraGlobal.GFlag != true {
+		if gFlag && !extraGlobal.GFlag {
 			oneVar = extraGlobal.Prev
 			continue
 		}
@@ -121,28 +121,28 @@ func (f *FileResult) FindGlobalVar(name string, funcLv int, scopeLv int, loc lex
 		}
 
 		if extraGlobal.FuncLv > funcLv {
-			return false, nil
+			return nil, false
 		} else if extraGlobal.FuncLv < funcLv {
-			return true, oneVar
+			return oneVar, true
 		}
 
 		if extraGlobal.ScopeLv > scopeLv {
-			return false, nil
+			return nil, false
 		} else if extraGlobal.ScopeLv < scopeLv {
-			return true, oneVar
+			return oneVar, true
 		}
 
 		if oneVar.Loc.StartLine > loc.StartLine {
-			return false, nil
+			return nil, false
 		} else if oneVar.Loc.StartLine < loc.StartLine {
-			return true, oneVar
+			return oneVar, true
 		}
 
 		if oneVar.Loc.StartColumn > loc.StartColumn {
-			return false, nil
+			return nil, false
 		}
 
-		return true, oneVar
+		return oneVar, true
 	}
 }
 
@@ -352,7 +352,6 @@ func (f *FileResult) CheckReferFile(referInfo *common.ReferInfo, allFilesMap map
 
 	// 都没有找到
 	referInfo.Valid = false
-	return
 }
 
 // isHasErrorNoFile 判断文件是否包含引用错误
@@ -650,7 +649,7 @@ func (f *FileResult) GetFileLineComment(line int) *lexer.CommentInfo {
 		return nil
 	}
 
-	oneComment, _ := f.CommentMap[line]
+	oneComment := f.CommentMap[line]
 	return oneComment
 }
 

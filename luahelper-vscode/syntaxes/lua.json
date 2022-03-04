@@ -196,6 +196,20 @@
             ]
         },
         {
+            "begin": "\\b\\(\\)(\\s*:\\s*)\\b([a-zA-Z_][a-zA-Z0-9_\\.]*)\\b(?!\\s*\\()",
+            "beginCaptures": {
+                "2": {
+                    "name": "support.type.lua"
+                }
+            },
+            "end": "(?=\\n)",
+            "patterns": [
+                {
+                    "include": "#luadoc.type"
+                }
+            ]
+        },
+        {
             "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(?=\\s*(?:[({\"']|\\[\\[))",
             "name": "support.function.any-method.lua"
         },
