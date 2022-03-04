@@ -885,9 +885,8 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 			symList := a.FindDeepSymbolList(beforeSymbol.FileName, exp, comParam, findExpList, false,
 				beforeSymbol.VarInfo.VarIndex)
 			for _, oneSymbol := range symList {
-				varFileTmp := a.symbolHasSubKey(oneSymbol, strAfter, comParam, findExpList)
-				if varFileTmp != nil {
-					funcSymbol = varFileTmp
+				if subSym := a.symbolHasSubKey(oneSymbol, strAfter, comParam, findExpList); subSym != nil {
+					funcSymbol = subSym
 					subFindFlag = true
 					break
 				}
@@ -921,9 +920,8 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 			return
 		}
 
-		varTmp := extChangeVarInfo(expReturn, funcSymbol.FileName)
-		if varTmp != nil {
-			return varTmp
+		if symTmp := extChangeSymbol(expReturn, funcSymbol.FileName); symTmp != nil {
+			return symTmp
 		}
 
 		// 递归查找
