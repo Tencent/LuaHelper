@@ -359,8 +359,7 @@ func (a *AllProject) getFuncReturnCompleteExt(symbol *common.Symbol, colonFlag b
 
 	// 判断注解类型是否存在
 	// 首先获取变量是否直接注解为函数的返回
-	flag, _, typeList := a.getFuncReturnAnnotateTypeList(symbol)
-	if flag {
+	if ok, _, typeList := a.getFuncReturnAnnotateTypeList(symbol); ok {
 		if len(typeList) > 0 {
 			returnType := typeList[0]
 			line := symbol.VarInfo.Loc.StartLine - 1
@@ -408,7 +407,7 @@ func (a *AllProject) getFuncReturnCompleteExt(symbol *common.Symbol, colonFlag b
 	findExpList := []common.FindExpFile{}
 	// 这里也需要做判断，函数返回的变量逐层跟踪，目前只跟踪了一层
 	symList := a.FindDeepSymbolList(symbol.FileName, returnExp, comParam, &findExpList, true, 1)
-	for _, varFileTmp := range symList {
-		a.getVarInfoCompleteExt(varFileTmp, colonFlag)
+	for _, subSym := range symList {
+		a.getVarInfoCompleteExt(subSym, colonFlag)
 	}
 }

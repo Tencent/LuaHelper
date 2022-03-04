@@ -98,7 +98,7 @@ func (scope *ScopeInfo) InsertLocalVar(strName string, locVar *VarInfo) {
 }
 
 // FindLocVar 新的方式查找局部变量
-func (scope *ScopeInfo) FindLocVar(name string, loc lexer.Location) (locVarInfo *VarInfo, find bool) {
+func (scope *ScopeInfo) FindLocVar(name string, loc lexer.Location) (*VarInfo, bool) {
 	locInfoList := scope.LocVarMap[name]
 	if locInfoList == nil {
 		// 当前没有找到，判断上层是否有找的

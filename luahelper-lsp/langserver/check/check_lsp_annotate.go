@@ -1277,7 +1277,7 @@ func (a *AllProject) getVarInfoFuncHasKey(lastSymbol *common.Symbol, strKey stri
 		findExpList, false, lastSymbol.VarInfo.VarIndex)
 	for _, oneSymbol := range tmpList {
 		// 如果找到了，判断是否有注解类型
-		if flag, findSymbol := a.getAnnotateFunStrKey(oneSymbol, strKey, comParam, findExpList); flag {
+		if ok, findSymbol := a.getAnnotateFunStrKey(oneSymbol, strKey, comParam, findExpList); ok {
 			findFlag = 0
 			// 通过注解找到了信息
 			if findSymbol != nil {
@@ -1691,4 +1691,50 @@ func (a *AllProject) getAliasMultiCandidateMap(className string, fileName string
 
 		strMap[oneStr] = constType.Comment
 	}
+}
+
+func (a *AllProject) getSymbolAliasMultiCandidate(annotateType annotateast.Type, fileName string, line int) (str string) {
+	if annotateType == nil {
+		return
+	}
+
+	multiType, ok := annotateType.(*annotateast.MultiType)
+	if !ok {
+		return
+	}
+
+	for _, oneType := range multiType.TypeList {
+		// 判断是否在几个候选词中
+		if constType, ok := oneType.(*annotateast.ConstType); ok {
+			oneStr := ""
+			if constType.QuotesFlag {
+				oneStr = "\"" + constType.Name + "\""
+			} else {
+				oneStr = constType.Name
+			}
+
+			if str != "" {
+				str = str + " | " + oneStr
+			} else {
+				str = oneStr
+			}
+			continue
+		}
+
+		simpleType, ok := oneType.(*annotateast.NormalType)
+		if !ok {
+			continue
+		}
+
+		if isDefaultType(simpleType.StrName) {
+			continue
+		}
+
+		str = str + a.getAliasMultiCandidate(simpleType.StrName, fileName, line)
+		if str != "" {
+			return str
+		}
+	}
+
+	return str
 }

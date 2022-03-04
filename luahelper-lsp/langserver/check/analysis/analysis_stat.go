@@ -249,7 +249,7 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 
 			// if not a then 需要判断a是否为局部变量
 			for _, strName := range simpleNotValueArr {
-				locVarInfo, flag := scope.FindLocVar(strName, node.Loc)
+				locVar, flag := scope.FindLocVar(strName, node.Loc)
 				if !flag {
 					continue
 				}
@@ -276,7 +276,7 @@ func (a *Analysis) cgIfStat(node *ast.IfStat) {
 				}
 
 				notVal := common.NotValStruct{
-					Var:     locVarInfo,
+					Var:     locVar,
 					SetFlag: false,
 				}
 
@@ -600,15 +600,14 @@ func (a *Analysis) checkLeftAssign(valExp ast.Exp) (needDefine bool, flagG bool,
 		strName = nameExp.Name
 		loc = nameExp.Loc
 		// 先在局部变量中查找
-		if varTemp, flag := scope.FindLocVar(strName, loc); flag {
+		if findVar, ok := scope.FindLocVar(strName, loc); ok {
 			needDefine = false
-			varInfo = varTemp
+			varInfo = findVar
 			return
 		}
 
 		// 全局变量中查找
-		findFlag, findVar := fileResult.FindGlobalVar(strName, fi.FuncLv, fi.ScopeLv, loc, "", false)
-		if findFlag {
+		if findVar, ok := fileResult.FindGlobalLimitVar(strName, fi.FuncLv, fi.ScopeLv, loc, "", false); ok {
 			needDefine = false
 			varInfo = findVar
 		}
@@ -649,9 +648,7 @@ func (a *Analysis) checkLeftAssign(valExp ast.Exp) (needDefine bool, flagG bool,
 	if tabName == "!_G" {
 		strName = strKeyName
 		flagG = true
-		findFlag, findVar := fileResult.FindGlobalVar(strKeyName, fi.FuncLv, fi.ScopeLv, loc, "", false)
-		// 找到了，b的定义
-		if findFlag {
+		if findVar, ok := fileResult.FindGlobalLimitVar(strKeyName, fi.FuncLv, fi.ScopeLv, loc, "", false); ok {
 			needDefine = false
 			varInfo = findVar
 		}
@@ -681,9 +678,7 @@ func (a *Analysis) checkLeftAssign(valExp ast.Exp) (needDefine bool, flagG bool,
 	if splitArray[0] == "_G" {
 		strName = splitArray[1]
 		flagG = true
-		findFlag, findVar := fileResult.FindGlobalVar(strName, fi.FuncLv, fi.ScopeLv, loc, "", false)
-		// 找到了，b的定义
-		if findFlag {
+		if findVar, ok := fileResult.FindGlobalLimitVar(strName, fi.FuncLv, fi.ScopeLv, loc, "", false); ok {
 			varInfo = findVar
 		} else {
 			if findVar, ok := fileResult.NodefineMaps[strName]; ok {
@@ -706,12 +701,12 @@ func (a *Analysis) checkLeftAssign(valExp ast.Exp) (needDefine bool, flagG bool,
 		strVec = append(strVec, strKeyName)
 
 		strName = splitArray[0]
-		if varTemp, flag := scope.FindLocVar(strName, loc); flag {
+		if varTemp, ok := scope.FindLocVar(strName, loc); ok {
 			varInfo = varTemp
 			return
 		}
 
-		if flag, findVar := fileResult.FindGlobalVar(strName, fi.FuncLv, fi.ScopeLv, loc, "", false); flag {
+		if findVar, ok := fileResult.FindGlobalLimitVar(strName, fi.FuncLv, fi.ScopeLv, loc, "", false); ok {
 			varInfo = findVar
 			return
 		}

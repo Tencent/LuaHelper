@@ -36,7 +36,7 @@ func (fileMapCache *FileMapCache) SetFileContent(strFile string, contents []byte
 
 // DelFileContent 删除某一个文件的内存
 func (fileMapCache *FileMapCache) DelFileContent(strFile string) {
-	if _, ok := fileMapCache.m[strFile]; ok != true {
+	if _, ok := fileMapCache.m[strFile]; !ok {
 		log.Error("DelFileContent err, not find strFile=%s", strFile)
 	}
 	delete(fileMapCache.m, strFile)
@@ -60,7 +60,7 @@ func (fileMapCache *FileMapCache) GetFileContent(strFile string) (contents []byt
 //	Now use the high bit to determine how many bits the character occupies.
 func offsetForStartAndEnd(contents []byte, startPos lsp.Position, endPos lsp.Position) (startOffset,
 	endOffset int, err error) {
-	line  := uint32(0)
+	line := uint32(0)
 	col := uint32(0)
 	offset := 0
 	startFlag := false
