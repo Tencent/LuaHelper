@@ -1090,6 +1090,6 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 		}
 
 		//检查 是否给常量赋值
-		a.checkConstAssgin(&node.VarList[0])
+		a.checkConstAssgin(node.VarList[0])
 	}
 }
