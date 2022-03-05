@@ -36,10 +36,15 @@ func (a *AllProject) convertClassInfoToHovers(oneClass *common.OneClassInfo, exi
 		}
 
 		strFiled := annotateast.TypeConvertStr(fieldState.FiledType)
-		existMap[strName] = strName + ": " + strFiled + ","
+
+		if fieldState.Comment != "" {
+			existMap[strName] = strName + ": " + strFiled + ",  -- " + fieldState.Comment
+		} else {
+			existMap[strName] = strName + ": " + strFiled + ","
+		}
 	}
 
-	getVarInfoMapStr(oneClass.RelateVar, existMap)
+	a.getVarInfoMapStr(oneClass.RelateVar, existMap)
 }
 
 // 代码补全时，有注解类型的字段提示
@@ -214,7 +219,7 @@ func getVarInfoExpandStrHover(varInfo *common.VarInfo, inputVec []string, inputF
 	return
 }
 
-func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
+func (a *AllProject) getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
 	if varInfo == nil {
 		return
 	}
@@ -225,6 +230,12 @@ func getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
 			strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
 		}
 		newStr := key + ": " + strValueType + ","
+
+		strComment := a.GetLineComment(value.FileName, value.Loc.StartLine)
+		strComment = strings.TrimPrefix(strComment, " ")
+		if strComment != "" {
+			newStr = newStr + "  -- " + strComment
+		}
 		if oldStr, ok := existMap[key]; ok {
 			if needReplaceMapStr(oldStr, strValueType) {
 				existMap[key] = newStr
@@ -315,7 +326,7 @@ func (a *AllProject) expandTableHover(symbol *common.Symbol) (str string, existM
 		}
 	}
 
-	getVarInfoMapStr(symbol.VarInfo, existMap)
+	a.getVarInfoMapStr(symbol.VarInfo, existMap)
 	traverseMapInStringOrder(existMap, func(key string, value string) {
 		str = str + "\t" + value + "\n"
 	})
