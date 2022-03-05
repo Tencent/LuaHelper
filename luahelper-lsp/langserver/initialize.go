@@ -43,6 +43,7 @@ type InitializationOptions struct {
 	CheckSelfAssign                bool     `json:"CheckSelfAssign,omitempty"`
 	CheckFloatEq                   bool     `json:"CheckFloatEq,omitempty"`
 	CheckClassField                bool     `json:"CheckClassField,omitempty"`
+	CheckConstAssign               bool     `json:"CheckConstAssign,omitempty"`
 	IgnoreFileOrDir                []string `json:"IgnoreFileOrDir,omitempty"`
 	IgnoreFileOrDirError           []string `json:"IgnoreFileOrDirError,omitempty"`
 	RequirePathSeparator           string   `json:"RequirePathSeparator,omitempty"`
@@ -269,6 +270,7 @@ func getDefaultIntialOptions() (initOptions *InitializationOptions) {
 		CheckSelfAssign:                false,
 		CheckFloatEq:                   false,
 		CheckClassField:                false,
+		CheckConstAssign:               false,
 	}
 
 	return initOptions
@@ -301,6 +303,7 @@ func getCheckFlagList(initOptions *InitializationOptions) (checkFlagList []bool)
 		initOptions.CheckSelfAssign,
 		initOptions.CheckFloatEq,
 		initOptions.CheckClassField,
+		initOptions.CheckConstAssign,
 	}
 
 	return checkFlagList
