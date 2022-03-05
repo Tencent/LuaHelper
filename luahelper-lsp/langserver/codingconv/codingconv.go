@@ -1,7 +1,6 @@
 package codingconv
 
 import (
-	"fmt"
 	"luahelper-lsp/langserver/strbytesconv"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -26,14 +25,16 @@ func ConvertStrToUtf8(str string) string {
 }
 
 func preNUm(data byte) int {
-	str := fmt.Sprintf("%b", data)
 	var i int = 0
-	for i < len(str) {
-		if str[i] != '1' {
-			break
+	for data > 0 {
+		if data%2 == 0 {
+			i = 0
+		} else {
+			i++
 		}
-		i++
+		data /= 2
 	}
+
 	return i
 }
 

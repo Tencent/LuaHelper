@@ -17,10 +17,6 @@ import (
 )
 
 func main() {
-	go func() {
-		http.ListenAndServe("localhost:6060", nil)
-	}()
-	//debug.SetGCPercent(40)
 	modeFlag := flag.Int("mode", 0, "mode type, 0 is run cmd, 1 is local rpc, 2 is socket rpc")
 	logFlag := flag.Int("logflag", 0, "0 is not open log, 1 is open log")
 	localpath := flag.String("localpath", "", "local project path")
@@ -35,6 +31,13 @@ func main() {
 	// socket rpc时，默认开启日志，方便定位问题
 	if *modeFlag == 2 {
 		enableLog = true
+	}
+
+	// 开启日志时，才开启pprof
+	if enableLog {
+		go func() {
+			http.ListenAndServe("localhost:6060", nil)
+		}()
 	}
 
 	// 初始化为日志系统

@@ -191,6 +191,10 @@
             "end": "(?=\\n)",
             "patterns": [
                 {
+                    "match": "-- (.)*",
+                    "name": "comment.block.lua"
+                },
+                {
                     "include": "#luadoc.type"
                 }
             ]
@@ -204,6 +208,10 @@
             },
             "end": "(?=\\n)",
             "patterns": [
+                {
+                    "match": "-- (.)*",
+                    "name": "comment.block.lua"
+                },
                 {
                     "include": "#luadoc.type"
                 }

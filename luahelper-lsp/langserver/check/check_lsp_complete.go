@@ -873,11 +873,11 @@ func (a *AllProject) GetCompleteCacheIndexItem(index int) (item common.OneComple
 
 			luaFileStr = dirManager.RemovePathDirPre(typeOne.AliasInfo.LuaFile)
 		} else if typeOne.ClassInfo != nil {
-			item.Detail = "class " + typeOne.ClassInfo.ClassState.Name
+			item.Detail = typeOne.ClassInfo.ClassState.Name
 			if len(typeOne.ClassInfo.ClassState.ParentNameList) > 0 {
 				item.Detail = item.Detail + " : " + strings.Join(typeOne.ClassInfo.ClassState.ParentNameList, " , ")
 			} else {
-				item.Detail = "class " + typeOne.ClassInfo.ClassState.Name + a.getClassFieldStr(typeOne.ClassInfo)
+				item.Detail = item.Detail + a.getClassFieldStr(typeOne.ClassInfo)
 			}
 
 			strComment := typeOne.ClassInfo.ClassState.Comment

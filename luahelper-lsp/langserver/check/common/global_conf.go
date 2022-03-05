@@ -58,6 +58,8 @@ type GlobalConfig struct {
 	// 匹配的时候，包含文件名或go的正则
 	IgnoreFileErrTypesMap map[string](map[int]bool)
 
+	IgnoreFileErrTypesRegexp map[string]*regexp.Regexp
+
 	// 全局忽略错误类型, 配置读取，如果没有配置，会默认设置一些值
 	IgnoreErrorTypeMap map[CheckErrorType]bool
 
@@ -72,6 +74,8 @@ type GlobalConfig struct {
 
 	// 需要忽略告警的lua文件，包含文件名或go的正则
 	IgnoreErrorFileVec []string
+
+	IgnoreErrorFileOrFloderRegexp map[string]*regexp.Regexp
 
 	// 局部变量定义了，忽略这些
 	IgnoreLocalNoUseVarMap map[string]bool
@@ -534,15 +538,18 @@ func (g *GlobalConfig) handleNotJSONCheckFlag(checkFlagList []bool, ignoreFileOr
 	// 忽略告警的文件和文件夹
 	g.IgnoreErrorFloderVec = make([]string, 0, 2)
 	g.IgnoreErrorFileVec = make([]string, 0, 2)
+	g.IgnoreErrorFileOrFloderRegexp = map[string]*regexp.Regexp{}
 	for _, fileOrFloder := range ignoreFileOrDirErr {
 		if strings.HasSuffix(fileOrFloder, ".lua") {
 			g.IgnoreErrorFileVec = append(g.IgnoreErrorFileVec, fileOrFloder)
 		} else {
 			g.IgnoreErrorFloderVec = append(g.IgnoreErrorFloderVec, fileOrFloder)
 		}
+		g.IgnoreErrorFileOrFloderRegexp[fileOrFloder] = regexp.MustCompile(fileOrFloder)
 	}
 	// 忽略客户端额外的Lua文件夹告警
 	g.IgnoreErrorFloderVec = append(g.IgnoreErrorFloderVec, "server/meta")
+	g.IgnoreErrorFileOrFloderRegexp["server/meta"] = regexp.MustCompile("server/meta")
 
 	listLen := len(checkFlagList)
 	if listLen < 1 {
@@ -677,6 +684,7 @@ func (g *GlobalConfig) ReadConfig(strDir, configFileName string, checkFlagList [
 
 	// 忽略指定文件中的指定错误
 	g.IgnoreFileErrTypesMap = map[string](map[int]bool){}
+	g.IgnoreFileErrTypesRegexp = map[string]*regexp.Regexp{}
 	for _, ignoreTypeVars := range jsonConfig.IgnoreFileErrTypes {
 		fileTypesVars := map[int]bool{}
 		for _, typeError := range ignoreTypeVars.Types {
@@ -684,20 +692,24 @@ func (g *GlobalConfig) ReadConfig(strDir, configFileName string, checkFlagList [
 		}
 
 		g.IgnoreFileErrTypesMap[ignoreTypeVars.Name] = fileTypesVars
+		g.IgnoreFileErrTypesRegexp[ignoreTypeVars.Name] = regexp.MustCompile(ignoreTypeVars.Name)
 	}
 
 	// 忽略告警的文件和文件夹
 	g.IgnoreErrorFloderVec = make([]string, 0, 2)
 	g.IgnoreErrorFileVec = make([]string, 0, 2)
+	g.IgnoreErrorFileOrFloderRegexp = map[string]*regexp.Regexp{}
 	for _, fileOrFloder := range jsonConfig.IgnoreFileErr {
 		if strings.HasSuffix(fileOrFloder, ".lua") {
 			g.IgnoreErrorFileVec = append(g.IgnoreErrorFileVec, fileOrFloder)
 		} else {
 			g.IgnoreErrorFloderVec = append(g.IgnoreErrorFloderVec, fileOrFloder)
 		}
+		g.IgnoreErrorFileOrFloderRegexp[fileOrFloder] = regexp.MustCompile(fileOrFloder)
 	}
 	// 忽略客户端额外的Lua文件夹告警
 	g.IgnoreErrorFloderVec = append(g.IgnoreErrorFloderVec, "server/meta")
+	g.IgnoreErrorFileOrFloderRegexp["server/meta"] = regexp.MustCompile("server/meta")
 
 	// 局部变量定义了，未使用，忽略
 	g.IgnoreLocalNoUseVarMap = map[string]bool{}
@@ -852,10 +864,19 @@ func (g *GlobalConfig) IsIgnoreErrorFile(strFile string, errType CheckErrorType)
 			return true
 		}
 
-		if ok, _ := regexp.Match(floderStr, []byte(strFile)); ok {
+		oneRegex, ok := g.IgnoreErrorFileOrFloderRegexp[floderStr]
+		if !ok {
+			continue
+		}
+
+		if oneRegex.MatchString(strFile) {
 			log.Debug("path=%s is ignore handle floder err, mode=%s", floderStr, strFile)
 			return true
 		}
+		// if ok, _ := regexp.Match(floderStr, []byte(strFile)); ok {
+		// 	log.Debug("path=%s is ignore handle floder err, mode=%s", floderStr, strFile)
+		// 	return true
+		// }
 	}
 
 	for _, fileStr := range g.IgnoreErrorFileVec {
@@ -864,10 +885,19 @@ func (g *GlobalConfig) IsIgnoreErrorFile(strFile string, errType CheckErrorType)
 			return true
 		}
 
-		if ok, _ := regexp.Match(fileStr, []byte(strFile)); ok {
-			log.Debug("path=%s is ignore handle file err, mode=%s", fileStr, strFile)
+		oneRegex, ok := g.IgnoreErrorFileOrFloderRegexp[fileStr]
+		if !ok {
+			continue
+		}
+
+		if oneRegex.MatchString(strFile) {
+			log.Debug("path=%s is ignore handle floder err, mode=%s", fileStr, strFile)
 			return true
 		}
+		// if ok, _ := regexp.Match(fileStr, []byte(strFile)); ok {
+		// 	log.Debug("path=%s is ignore handle file err, mode=%s", fileStr, strFile)
+		// 	return true
+		// }
 	}
 
 	// 忽略指定文件中的指定类型错误, 第二层map为忽略的错误类型
@@ -879,13 +909,26 @@ func (g *GlobalConfig) IsIgnoreErrorFile(strFile string, errType CheckErrorType)
 			}
 		}
 
-		if ok, _ := regexp.Match(fileStr, []byte(strFile)); ok {
+		oneRegex, ok := g.IgnoreFileErrTypesRegexp[fileStr]
+		if !ok {
+			continue
+		}
+
+		if oneRegex.MatchString(strFile) {
 			_, ok3 := fileTypes[(int)(errType)]
 			if ok3 {
 				log.Debug("path=%s is ignore special err, errType=%d", strFile, errType)
 				return true
 			}
 		}
+
+		// if ok, _ := regexp.Match(fileStr, []byte(strFile)); ok {
+		// 	_, ok3 := fileTypes[(int)(errType)]
+		// 	if ok3 {
+		// 		log.Debug("path=%s is ignore special err, errType=%d", strFile, errType)
+		// 		return true
+		// 	}
+		// }
 	}
 
 	return false

@@ -66,12 +66,12 @@ func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, c
 
 		if createType.ClassInfo != nil {
 			//str := a.expandTableHover(symbol)
-			strLabel = "class " + typeStr
+			//strLabel = "class " + typeStr
 
 			if len(createType.ClassInfo.ClassState.ParentNameList) > 0 {
-				strLabel = strLabel + " : " + strings.Join(createType.ClassInfo.ClassState.ParentNameList, " , ")
+				strLabel = typeStr + " : " + strings.Join(createType.ClassInfo.ClassState.ParentNameList, " , ")
 			} else {
-				strLabel = "class " + typeStr + a.getClassFieldStr(createType.ClassInfo)
+				strLabel = typeStr + a.getClassFieldStr(createType.ClassInfo)
 			}
 
 			strComment := createType.ClassInfo.ClassState.Comment
@@ -197,6 +197,9 @@ func (a *AllProject) getNodefineMapVar(strFile string, varStruct *common.DefineV
 		return nil
 	}
 
+	if len(varStruct.StrVec) == 0 {
+		return nil
+	}
 	splitArray := varStruct.StrVec
 
 	if splitArray[0] == "_G" {
