@@ -61,6 +61,7 @@ type FragementParamInfo struct {
 // FragementReturnInfo 单个块对应的所有返回信息， 一个注释块，允许有多个 AnnotateReturnState
 type FragementReturnInfo struct {
 	ReturnTypeList []annotateast.Type // 每个AnnotateReturnState的ReturnTypeList拼接在这里面
+	CommentList    []string           // 每一个返回类型的comment
 }
 
 // FragementVarargInfo vararg信息
@@ -405,6 +406,7 @@ func (af *AnnotateFile) analysisAnnotateFragement(lastLine int, annotateFragment
 
 	returnInfo := FragementReturnInfo{
 		ReturnTypeList: []annotateast.Type{},
+		CommentList:    []string{},
 	}
 
 	genericInfo := FragementGenericInfo{
@@ -467,6 +469,10 @@ func (af *AnnotateFile) analysisAnnotateFragement(lastLine int, annotateFragment
 			}
 		case *annotateast.AnnotateReturnState:
 			returnInfo.ReturnTypeList = append(returnInfo.ReturnTypeList, state.ReturnTypeList...)
+			for i := 0; i < len(state.ReturnTypeList); i++ {
+				returnInfo.CommentList = append(returnInfo.CommentList, state.Comment)
+			}
+
 		case *annotateast.AnnotateGenericState:
 			for index, name := range state.NameList {
 				oneGenericInfo := OneGenericInfo{
