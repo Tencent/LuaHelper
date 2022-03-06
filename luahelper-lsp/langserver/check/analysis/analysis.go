@@ -564,8 +564,10 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		loc = exp.Loc
 		//case *ast.ParensExp:
 		//loc = exp
-		// case *ast.TableConstructorExp:
-		// 	name = exp.ValExps
+	case *ast.TableAccessExp:
+		strTable := common.GetExpName(exp.PrefixExp)
+		name = common.GetSimpleValue(strTable)
+		loc = common.GetTablePrefixLoc(exp)
 	}
 
 	if len(name) <= 0 {
