@@ -133,8 +133,13 @@ func isDefaultType(str string) bool {
 	return false
 }
 
-func needReplaceMapStr(oldStr string, strValueType string) bool {
-	if strValueType == "any" {
+func needReplaceMapStr(oldStr string, newType string, newStr string) bool {
+	if newType == "any" {
+		return false
+	}
+
+	if strings.Contains(oldStr, " -- ") {
+		// 如果旧的含有 -- 注释，不用替换
 		return false
 	}
 
@@ -194,7 +199,7 @@ func getVarInfoExpandStrHover(varInfo *common.VarInfo, inputVec []string, inputF
 		}
 		newStr := oneStr + ": " + strType + ","
 		if oldStr, ok := existMap[oneStr]; ok {
-			if needReplaceMapStr(oldStr, strType) {
+			if needReplaceMapStr(oldStr, strType, newStr) {
 				existMap[oneStr] = newStr
 			}
 		} else {
@@ -219,16 +224,55 @@ func getVarInfoExpandStrHover(varInfo *common.VarInfo, inputVec []string, inputF
 	return
 }
 
+// 查看varInfo详细的类型，递归查找
+func (a *AllProject) getVarRelateTypeStr(varInfo *common.VarInfo) (strType string) {
+	strType = varInfo.GetVarTypeDetail()
+	if strType != "any" {
+		return
+	}
+
+	if varInfo.ReferFunc != nil {
+		strType = varInfo.ReferFunc.GetFuncCompleteStr("function", true, false)
+		return
+	}
+
+	if varInfo.ReferExp == nil {
+		return
+	}
+
+	loc := varInfo.Loc
+	comParam := a.getCommFunc(varInfo.FileName, loc.StartLine, loc.StartColumn)
+	findExpList := &[]common.FindExpFile{}
+	symbol := a.FindVarReferSymbol(varInfo.FileName, varInfo.ReferExp, comParam, findExpList, 1)
+	if symbol == nil {
+		return
+	}
+
+	if symbol.AnnotateType != nil {
+		strType = annotateast.TypeConvertStr(symbol.AnnotateType)
+	} else {
+		if symbol.VarInfo != nil {
+			strTmp := getParamVarinfoType(symbol.VarInfo)
+			if strTmp != "any" {
+				strType = strTmp
+			}
+		}
+	}
+
+	return strType
+}
+
 func (a *AllProject) getVarInfoMapStr(varInfo *common.VarInfo, existMap map[string]string) {
 	if varInfo == nil {
 		return
 	}
 
 	for key, value := range varInfo.SubMaps {
-		strValueType := value.GetVarTypeDetail()
-		if value.ReferFunc != nil {
-			strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
-		}
+		// strValueType := value.GetVarTypeDetail()
+		// if value.ReferFunc != nil {
+		// 	strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
+		// }
+		strValueType := a.getVarRelateTypeStr(value)
 		newStr := key + ": " + strValueType + ","
 
 		strComment := a.GetLineComment(value.FileName, value.Loc.StartLine)
@@ -237,7 +281,7 @@ func (a *AllProject) getVarInfoMapStr(varInfo *common.VarInfo, existMap map[stri
 			newStr = newStr + "  -- " + strComment
 		}
 		if oldStr, ok := existMap[key]; ok {
-			if needReplaceMapStr(oldStr, strValueType) {
+			if needReplaceMapStr(oldStr, strValueType, newStr) {
 				existMap[key] = newStr
 			}
 		} else {
@@ -263,7 +307,7 @@ func (a *AllProject) getVarInfoMapStr(varInfo *common.VarInfo, existMap map[stri
 
 		newStr := oneStr + ": " + strType + ","
 		if oldStr, ok := existMap[oneStr]; ok {
-			if needReplaceMapStr(oldStr, strType) {
+			if needReplaceMapStr(oldStr, strType, newStr) {
 				existMap[oneStr] = newStr
 			}
 		} else {
@@ -580,6 +624,10 @@ func getParamVarinfoType(oneVar *common.VarInfo) string {
 // 获取函数一个return值的返回类型
 func (a *AllProject) getOneFuncReturnStr(fileName string, oneReturn common.ReturnItem) (strType string) {
 	strType = common.GetLuaTypeString(common.GetExpType(oneReturn.ReturnExp), oneReturn.ReturnExp)
+	if oneReturn.ReturnExp == nil {
+		return
+	}
+
 	loc := common.GetExpLoc(oneReturn.ReturnExp)
 	comParam := a.getCommFunc(fileName, loc.StartLine, loc.StartColumn)
 	findExpList := &[]common.FindExpFile{}
@@ -663,12 +711,15 @@ func (a *AllProject) getFuncShowStr(varInfo *common.VarInfo, funcName string, pa
 	// 2 获取返回值
 	// 2.1) 先获取注解的参数
 	oldSymbol := common.GetDefaultSymbol(varInfo.FileName, varInfo)
-	flag, _, typeList := a.getFuncReturnAnnotateTypeList(oldSymbol)
+	flag, _, typeList, commentList := a.getFuncReturnAnnotateTypeList(oldSymbol)
 	var resultList []string = []string{}
 
 	if flag {
-		for _, oneType := range typeList {
+		for i, oneType := range typeList {
 			oneStr := annotateast.TypeConvertStr(oneType)
+			if len(commentList) > i && commentList[i] != "" {
+				oneStr += "  -- " + commentList[i]
+			}
 			resultList = append(resultList, oneStr)
 		}
 	}

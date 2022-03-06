@@ -624,7 +624,7 @@ func (a *AllProject) getFuncReturnOneType(oldSymbol *common.Symbol, varIndex uin
 	comParam *CommonFuncParam, findExpList *[]common.FindExpFile) (flag bool, symbol *common.Symbol) {
 	// 判断注解类型是否存在
 	// 首先获取变量是否直接注解为函数的返回
-	flag, fragment, typeList := a.getFuncReturnAnnotateTypeList(oldSymbol)
+	flag, fragment, typeList, _ := a.getFuncReturnAnnotateTypeList(oldSymbol)
 	if !flag {
 		return
 	}
@@ -806,7 +806,7 @@ func (a *AllProject) getFuncTypeInfoList(strName string, fileName string, lastLi
 // flag 表示是否获取的为一个函数返回
 // astTypeList 为所有的函数返回字段列表，函数可能有多个返回参数
 func (a *AllProject) getFuncReturnAnnotateTypeList(symbol *common.Symbol) (flag bool,
-	fragment *common.FragementInfo, astTypeList []annotateast.Type) {
+	fragment *common.FragementInfo, astTypeList []annotateast.Type, commentList []string) {
 	if symbol == nil || symbol.VarInfo == nil {
 		return
 	}
@@ -829,7 +829,7 @@ func (a *AllProject) getFuncReturnAnnotateTypeList(symbol *common.Symbol) (flag 
 	// 3) 判断是否有函数返回信息
 	if fragmentInfo.ReturnInfo != nil {
 		flag = true
-		return flag, fragmentInfo, fragmentInfo.ReturnInfo.ReturnTypeList
+		return flag, fragmentInfo, fragmentInfo.ReturnInfo.ReturnTypeList, fragmentInfo.ReturnInfo.CommentList
 	}
 
 	return

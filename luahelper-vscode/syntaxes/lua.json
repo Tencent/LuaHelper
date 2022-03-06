@@ -140,20 +140,20 @@
             }
         },
         {
-            "begin": "^  ->[0-9]*\\. (.)*",
+            "begin": "(^  ->[0-9]*\\.)(\\s)\\b([a-zA-Z_][a-zA-Z0-9_\\.\\s,\\<\\|\\>]*)",
+            "beginCaptures": {
+                "0": {
+                    "name": "support.type.lua"
+                },
+                "1": {
+                    "name": "constant.numeric.integer.lua"
+                }
+            },
             "end": "(?=\\n)",
-            "beginCaptures": [
+            "patterns": [
                 {
-                    "patterns": [
-                        {
-                            "match": "\\b([a-zA-Z_\\*][a-zA-Z0-9_\\.\\*]*)",
-                            "name": "support.class.lua"
-                        },
-                        {
-                            "match": "->",
-                            "name": "keyword.operator.lua"
-                        }
-                    ]
+                    "match": "-- (.)*",
+                    "name": "comment.block.lua"
                 }
             ]
         },
