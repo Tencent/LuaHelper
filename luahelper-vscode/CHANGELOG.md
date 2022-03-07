@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.2.11 (Mar 7, 2022)
++ 注解功能增加了alias功能
++ 增加显示了函数的参数类型与返回值
++ 优化了基于历史记录的代码补全功能
++ 修复了外网的崩溃([issues:80](https://github.com/Tencent/LuaHelper/issues/80))
++ 正式环境移除了pprof性能监控([issues:82](https://github.com/Tencent/LuaHelper/issues/82))
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.10 (Dec 14, 2021)
 + 优化了多文件扩展全局table(感谢：ggshily的合入)
 + 增强了对原表的支持([issues:61](https://github.com/Tencent/LuaHelper/issues/61))
