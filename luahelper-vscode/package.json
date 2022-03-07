@@ -2,7 +2,7 @@
     "name": "luahelper",
     "displayName": "Lua",
     "description": "LuaHelper, Intellisense, Linting, Debugging, Code formatting, High-performance, and more.",
-    "version": "0.2.10",
+    "version": "0.2.11",
     "publisher": "yinfei",
     "author": {
         "name": "yinfei",
@@ -741,7 +741,7 @@
                     "description": "%luahelper.Warn.CheckSelfAssign%"
                 },
                 "luahelper.Warn.CheckFloatEq": {
-                    "default": true,
+                    "default": false,
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.Warn.CheckFloatEq%"
