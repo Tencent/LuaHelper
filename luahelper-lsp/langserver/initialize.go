@@ -47,6 +47,7 @@ type InitializationOptions struct {
 	IgnoreFileOrDir                []string `json:"IgnoreFileOrDir,omitempty"`
 	IgnoreFileOrDirError           []string `json:"IgnoreFileOrDirError,omitempty"`
 	RequirePathSeparator           string   `json:"RequirePathSeparator,omitempty"`
+	EnableReport                   bool     `json:"EnableReport,omitempty"`
 }
 
 // InitializeParams 初始化参数
@@ -95,6 +96,7 @@ func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.In
 
 	// 设置require其他lua文件的路径分割
 	common.GConfig.SetRequirePathSeparator(initOptions.RequirePathSeparator)
+	l.enableReport = initOptions.EnableReport
 
 	return lsp.InitializeResult{
 		Capabilities: lsp.ServerCapabilities{

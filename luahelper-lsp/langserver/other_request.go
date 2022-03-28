@@ -60,6 +60,7 @@ type BaseParams struct {
 	ReferenceMaxNum      int      `json:"ReferenceMaxNum,omitempty"`
 	ReferenceDefineFlag  bool     `json:"ReferenceIncudeDefine,omitempty"`
 	PreviewFieldsNum     int      `json:"PreviewFieldsNum,omitempty"`
+	EnableReport         bool     `json:"Report,omitempty"`
 }
 
 // WarnParams 引用的设置
@@ -152,6 +153,8 @@ func getAssociationList(associationData interface{}) (associalList []string) {
 func (l *LspServer) ChangeConfiguration(ctx context.Context, vs ChangeConfigurationParams) error {
 	base := vs.Settings.Luahelper.Base
 	setConfigSet(base.ReferenceMaxNum, base.ReferenceDefineFlag)
+	l.enableReport = base.EnableReport
+
 	// 设置预览table成员的数量
 	common.GConfig.SetPreviewFieldsNum(base.PreviewFieldsNum)
 	if !l.changeConfFlag {
