@@ -44,8 +44,7 @@
     "activationEvents": [
         "onLanguage:lua",
         "onWebviewPanel:luahelper-doc",
-        "onCommand:extension.luahelper.doc",
-        "onDebug"
+        "onCommand:extension.luahelper.doc"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -335,6 +334,11 @@
                     "default": "./",
                     "description": "%luahelper.source.rootdir%"
                 },
+                "luahelper.base.report": {
+                    "type": "boolean",
+                    "default": true,
+                    "markdownDescription": "%luahelper.base.enableReport%"
+                },
                 "luahelper.base.lsp": {
                     "type": "string",
                     "default": "cmd rpc",
@@ -404,7 +408,7 @@
                     "description": "%luahelper.reference.incudeDefine%"
                 },
                 "luahelper.base.showOnline": {
-                    "default": true,
+                    "default": false,
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.show.online%"

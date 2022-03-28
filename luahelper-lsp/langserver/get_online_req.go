@@ -25,14 +25,14 @@ type GetOnlineReturn struct {
 var onlinePeopleNum int = 0
 
 // GetOnlineReq 获取当前所有在线人数的接口
-func (l *LspServer)GetOnlineReq(ctx context.Context, vs GetOnlineParams) (onlineReturn GetOnlineReturn, err error) {
+func (l *LspServer) GetOnlineReq(ctx context.Context, vs GetOnlineParams) (onlineReturn GetOnlineReturn, err error) {
 	log.Debug("GetOnlineReq num=%d", onlinePeopleNum)
 	onlineReturn.Num = onlinePeopleNum
 	return
 }
 
 // UDPReportOnline 上报协程
-func (l *LspServer)UDPReportOnline() {
+func (l *LspServer) UDPReportOnline() {
 	log.Debug("UDPReportOnline \n")
 	conn, err := net.Dial("udp", "42.194.136.76:7778") //打开监听端口
 	if err != nil {
@@ -47,16 +47,18 @@ func (l *LspServer)UDPReportOnline() {
 	l.SetReportOtherInfo()
 
 	for {
-		user := l.GetOnlineReportData()
-		info, err := json.Marshal(user)
-		if err != nil {
-			log.Error("report Data err=%s", err.Error())
-		} else {
-			conn.Write(info)
+		if l.enableReport {
+			user := l.GetOnlineReportData()
+			info, err := json.Marshal(user)
+			if err != nil {
+				log.Error("report Data err=%s", err.Error())
+			} else {
+				conn.Write(info)
+			}
+			l.SetFirstReportFlag(0)
 		}
-		l.SetFirstReportFlag(0)
 
-		// 每90秒上报一次
+		// 每120秒上报一次
 		time.Sleep(time.Second * 120)
 	}
 }

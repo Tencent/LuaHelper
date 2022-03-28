@@ -188,6 +188,12 @@ async function doStartServer() {
         lspLogFlag = <boolean><any>lspLogConfig;
     }
 
+    let enableReportConfig = vscode.workspace.getConfiguration("luahelper.base", null).get("report");
+    var enableReportFlag = false;
+    if (enableReportConfig !== undefined) {
+        enableReportFlag = <boolean><any>enableReportConfig;
+    }
+
     // 定义所有的监控文件后缀的关联
     var filesWatchers: vscode.FileSystemWatcher[] = new Array<vscode.FileSystemWatcher>();
     filesWatchers.push(vscode.workspace.createFileSystemWatcher("**/*.lua"));
@@ -246,6 +252,7 @@ async function doStartServer() {
             IgnoreFileOrDir: ignoreFileOrDirArr,
             IgnoreFileOrDirError: ignoreFileOrDirErrArr,
             RequirePathSeparator: requirePathSeparator,
+            EnableReport: enableReportFlag,
         },
         markdown: {
             isTrusted: true,
