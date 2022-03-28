@@ -256,6 +256,10 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 
 	fi := a.curFunc
 	firstFile := a.getFirstFileResult(fileResult.Name)
+	if firstFile == nil {
+		return
+	}
+
 	preShowStr := ""
 	if callGflag {
 		preShowStr = "_G."
@@ -501,10 +505,12 @@ func (a *Analysis) findThreeLevelCall(node ast.Exp, nameExp ast.Exp) {
 
 		// 查找全局中是否有该变量
 		firstFile := a.getFirstFileResult(fileResult.Name)
-		if ok, findVar := firstFile.FindGlobalVarInfo(strTwo, true, strProPre); ok {
-			// 判断是否是自己所要的引用关系
-			a.ReferenceResult.MatchVarInfo(a, strTwo, firstFile.Name, findVar, fi, strPreExp, nameExp, false)
-			return
+		if firstFile != nil {
+			if ok, findVar := firstFile.FindGlobalVarInfo(strTwo, true, strProPre); ok {
+				// 判断是否是自己所要的引用关系
+				a.ReferenceResult.MatchVarInfo(a, strTwo, firstFile.Name, findVar, fi, strPreExp, nameExp, false)
+				return
+			}
 		}
 
 		// 所有工程的文件
@@ -978,11 +984,13 @@ func (a *Analysis) findFuncColon(prefixExp ast.Exp, nameExp ast.Exp, nodeLoc lex
 		if a.isFourTerm() && referInfo == nil {
 			// 查找全局中是否有该变量
 			firstFile := a.getFirstFileResult(fileResult.Name)
-			// find self globalInfo
-			if ok, findVar := firstFile.FindGlobalVarInfo(strName, false, ""); ok {
-				// 判断是否是自己所要的引用关系
-				a.ReferenceResult.MatchVarInfo(a, strName, firstFile.Name, findVar, fi, strTable, nameExp, false)
-				return
+			if firstFile != nil {
+				// find self globalInfo
+				if ok, findVar := firstFile.FindGlobalVarInfo(strName, false, ""); ok {
+					// 判断是否是自己所要的引用关系
+					a.ReferenceResult.MatchVarInfo(a, strName, firstFile.Name, findVar, fi, strTable, nameExp, false)
+					return
+				}
 			}
 
 			// 所有工程的文件
@@ -1127,8 +1135,8 @@ func (a *Analysis) getAsignSelfReferName() string {
 	return ""
 }
 
+// ChangeSelfToReferVar 增加前缀
 // strTable 值为self，转换为对应的变量
-// 增加的前缀
 func (a *Analysis) ChangeSelfToReferVar(strTable string, prefixStr string) (str string) {
 	fi := a.curFunc
 	str = strTable
@@ -1269,11 +1277,13 @@ func (a *Analysis) findTableDefine(node *ast.TableAccessExp) {
 		if a.isFourTerm() && referInfo == nil {
 			// 查找全局中是否有该变量
 			firstFile := a.getFirstFileResult(fileResult.Name)
-			// find self globalInfo
-			if ok, oneVar := firstFile.FindGlobalVarInfo(strName, false, ""); ok {
-				// 判断是否是自己所要的引用关系
-				a.ReferenceResult.MatchVarInfo(a, strName, firstFile.Name, oneVar, fi, strName, node.KeyExp, false)
-				return
+			if firstFile != nil {
+				// find self globalInfo
+				if ok, oneVar := firstFile.FindGlobalVarInfo(strName, false, ""); ok {
+					// 判断是否是自己所要的引用关系
+					a.ReferenceResult.MatchVarInfo(a, strName, firstFile.Name, oneVar, fi, strName, node.KeyExp, false)
+					return
+				}
 			}
 
 			// 所有工程的文件
