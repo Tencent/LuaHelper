@@ -241,7 +241,7 @@ func (a *Analysis) isExistSecondProjectAnalysis(strFile string) bool {
 	return fileResult != nil
 }
 
-// 第一轮遍历AST的处理
+// HandleFirstTraverseAST 第一轮遍历AST的处理
 func (a *Analysis) HandleFirstTraverseAST(fileResult *results.FileResult) {
 	a.curResult = fileResult
 	a.curFunc = fileResult.MainFunc
@@ -413,11 +413,12 @@ func (a *Analysis) HandleTermTraverseAST(checkTerm results.CheckTerm, firstFile 
 	a.exitScope()
 }
 
+// SetRealTimeFlag set real time flag
 func (a *Analysis) SetRealTimeFlag(flag bool) {
 	a.realTimeFlag = flag
 }
 
-// 根据注解判断table成员合法性 在 t={f1=1,f1=2,} 时使用
+// CheckTableDecl 根据注解判断table成员合法性 在 t={f1=1,f1=2,} 时使用
 func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string, nodeLoc *lexer.Location, node *ast.TableConstructorExp) {
 	if !a.isNeedCheck() || a.realTimeFlag {
 		return
@@ -454,6 +455,7 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 	}
 }
 
+// FindVarDefineForCheck 查找检查
 func (a *Analysis) FindVarDefineForCheck(varName string, loc lexer.Location) (find bool, varInfo *common.VarInfo) {
 	find = false
 	//先尝试找local变量
