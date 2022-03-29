@@ -49,6 +49,11 @@ func GetExpType(node ast.Exp) LuaType {
 		return LuaTypeTable
 
 	case *ast.BinopExp:
+		if exp.Op == lexer.TkOpEq || exp.Op == lexer.TkOpNe || exp.Op == lexer.TkOpLt || exp.Op == lexer.TkOpLe ||
+			exp.Op == lexer.TkOpGt || exp.Op == lexer.TkOpGe {
+			return LuaTypeBool
+		}
+
 		oneType := GetExpType(exp.Exp1)
 		if oneType != LuaTypeAll && oneType != LuaTypeRefer {
 			return oneType
@@ -74,6 +79,10 @@ func GetExpType(node ast.Exp) LuaType {
 		return LuaTypeRefer
 
 	case *ast.UnopExp:
+		if exp.Op == lexer.TkOpNot {
+			return LuaTypeBool
+		}
+
 		oneType := GetExpType(exp.Exp)
 		if oneType != LuaTypeAll {
 			return oneType
@@ -83,9 +92,6 @@ func GetExpType(node ast.Exp) LuaType {
 			return LuaTypeInter
 		}
 
-		if exp.Op == lexer.TkOpNot {
-			return LuaTypeBool
-		}
 	case *ast.NameExp:
 		return LuaTypeRefer
 	case *ast.ParensExp:
@@ -138,7 +144,7 @@ func GetLuaTypeString(luaType LuaType, referExp ast.Exp) string {
 	case LuaTypeNil:
 		return "any"
 	case LuaTypeBool:
-		return "bool"
+		return "boolean"
 	case LuaTypeInter:
 		if sufStr == "" {
 			return "number"
