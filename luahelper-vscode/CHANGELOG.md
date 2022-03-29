@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.2.12 (Mar 29, 2022)
++ 后台二进制采用go1.18版本编译
++ 优化了部分推导的类型
++ 增加了一个设置开关
++ 修复了外网的崩溃([issues:88](https://github.com/Tencent/LuaHelper/issues/88))
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.11 (Mar 7, 2022)
 + 注解功能增加了alias功能
 + 增加显示了函数的参数类型与返回值
