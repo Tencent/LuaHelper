@@ -5,6 +5,7 @@
 + 优化了部分推导的类型
 + 增加了一个设置开关
 + 修复了外网的崩溃([issues:88](https://github.com/Tencent/LuaHelper/issues/88))
++ 优化了插件被激活的情况([issues:89](https://github.com/Tencent/LuaHelper/issues/89))
 + [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
 
 ## 0.2.11 (Mar 7, 2022)
