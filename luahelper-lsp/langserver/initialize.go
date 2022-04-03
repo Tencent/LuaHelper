@@ -187,6 +187,8 @@ func (l *LspServer) initialCheckProject(ctx context.Context, checkFlagList []boo
 		dirManager.PushOneSubDir(folderPath)
 	}
 
+	dirManager.InitOtherDir()
+
 	mainDir := dirManager.GetMainDir()
 
 	var checkList []string
