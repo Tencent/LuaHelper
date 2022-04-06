@@ -37,7 +37,9 @@ func (l *LspServer) UDPReportOnline() {
 	conn, err := net.Dial("udp", "42.194.136.76:7778") //打开监听端口
 	if err != nil {
 		log.Error("conn fail...")
+		return
 	}
+	
 	defer conn.Close()
 	log.Debug("client connect server successed \n")
 
