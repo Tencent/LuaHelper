@@ -227,12 +227,15 @@ func getVarInfoExpandStrHover(varInfo *common.VarInfo, inputVec []string, inputF
 // 查看varInfo详细的类型，递归查找
 func (a *AllProject) getVarRelateTypeStr(varInfo *common.VarInfo) (strType string) {
 	strType = varInfo.GetVarTypeDetail()
-	if strType != "any" {
+
+	if varInfo.ReferFunc != nil {
+		//strType = varInfo.ReferFunc.GetFuncCompleteStr("function", true, false)
+		strType = a.getFuncShowStr(varInfo, "function", true, false, true)
+
 		return
 	}
 
-	if varInfo.ReferFunc != nil {
-		strType = varInfo.ReferFunc.GetFuncCompleteStr("function", true, false)
+	if strType != "any" {
 		return
 	}
 
@@ -278,7 +281,19 @@ func (a *AllProject) getVarInfoMapStr(varInfo *common.VarInfo, existMap map[stri
 		strComment := a.GetLineComment(value.FileName, value.Loc.StartLine)
 		strComment = strings.TrimPrefix(strComment, " ")
 		if strComment != "" {
-			newStr = newStr + "  -- " + strComment
+			// 只提取一行注释
+			strVec := strings.Split(strComment, "\n")
+			if len(strVec) > 0 {
+				strComment = strVec[0]
+			}
+		}
+		if strComment != "" {
+			if strings.HasPrefix(strComment, "-") {
+				newStr = newStr + "  --" + strComment
+			} else {
+				newStr = newStr + "  -- " + strComment
+			}
+
 		}
 		if oldStr, ok := existMap[key]; ok {
 			if needReplaceMapStr(oldStr, strValueType, newStr) {
