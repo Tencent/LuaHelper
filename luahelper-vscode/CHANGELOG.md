@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.2.13 (Apr 6, 2022)
+## 0.2.14 (Apr 6, 2022)
 + 修复了外网一处崩溃
 + 对table的hover展示进行了优化
 + [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
