@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.13 (Apr 6, 2022)
++ 修复了外网一处崩溃
++ 对table的hover展示进行了优化
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.12 (Mar 29, 2022)
 + 后台二进制采用go1.18版本编译
 + 优化了部分推导的类型
