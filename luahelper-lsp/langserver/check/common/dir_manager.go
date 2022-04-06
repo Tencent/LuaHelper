@@ -113,6 +113,37 @@ func (d *DirManager) InitMainDir() {
 	d.mainDir = strMainDir
 }
 
+// 是否要设置额外的目录
+func (d *DirManager) InitOtherDir() {
+	if GConfig.OtherDir == "" {
+		return
+	}
+
+	strDir := ""
+	if strings.HasPrefix(GConfig.OtherDir, ".") {
+		// 如果是前缀. 为相对路径
+		strDir = d.vSRootDir + GConfig.OtherDir
+	} else {
+		strDir = GConfig.OtherDir
+	}
+
+	log.Debug("strDir=%s", strDir)
+	absDir, err1 := filepath.Abs(strDir)
+	if err1 != nil {
+		log.Debug("strDir=%s absDir err", strDir)
+		return
+	}
+
+	log.Debug("strDir=%s, absDir=%s", strDir, absDir)
+
+	if !filefolder.IsDirExist(absDir) {
+		log.Debug("strDir=%s, absDir=%s not exist", strDir, absDir)
+		return
+	}
+
+	d.PushOneSubDir(absDir)
+}
+
 // SetSubDirs set sub dir vec
 func (d *DirManager) SetSubDirs(subList []string) {
 	d.subDirVec = subList

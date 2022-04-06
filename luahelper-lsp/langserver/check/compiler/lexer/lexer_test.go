@@ -225,3 +225,83 @@ func BenchmarkLexerTestSpecial(b *testing.B) {
 		l.testSpecial()
 	}
 }
+
+type SplitStruct struct {
+	LastLine    int      // 这块Type所在定义的最后行数
+	TypeList    []int    //
+	CommentList []string // 所有的类型的注释
+	ConstList   []bool   // 是否标记常量
+}
+
+type InnerStruct struct {
+	TypeList    int    //
+	CommentList string // 所有的类型的注释
+	ConstList   bool   // 是否标记常量
+}
+type CombineStruct struct {
+	LastLine int // 这块Type所在定义的最后行数
+	ArrList  []InnerStruct
+}
+
+// BenchmarkSplitTest1 测试分开的结构
+func BenchmarkSplitTest1(b *testing.B) {
+
+	splitArray := []SplitStruct{}
+	for i := 0; i < b.N; i++ {
+		splitOne := SplitStruct{}
+		splitOne.CommentList = append(splitOne.CommentList, "one")
+		splitOne.TypeList = append(splitOne.TypeList, 1)
+		splitOne.ConstList = append(splitOne.ConstList, false)
+
+		splitOne.CommentList = append(splitOne.CommentList, "one1")
+		splitOne.TypeList = append(splitOne.TypeList, 2)
+		splitOne.ConstList = append(splitOne.ConstList, false)
+
+		splitOne.CommentList = append(splitOne.CommentList, "one2")
+		splitOne.TypeList = append(splitOne.TypeList, 3)
+		splitOne.ConstList = append(splitOne.ConstList, false)
+
+		splitOne.CommentList = append(splitOne.CommentList, "one3")
+		splitOne.TypeList = append(splitOne.TypeList, 3)
+		splitOne.ConstList = append(splitOne.ConstList, false)
+
+		splitArray = append(splitArray, splitOne)
+	}
+
+	b.Logf("len=%d", len(splitArray))
+}
+
+func BenchmarkCombineTest1(b *testing.B) {
+
+	combineArray := []CombineStruct{}
+	for i := 0; i < b.N; i++ {
+		combineOne := CombineStruct{}
+		combineOne.ArrList = append(combineOne.ArrList, InnerStruct{
+			TypeList:    1,
+			CommentList: "one",
+			ConstList:   false,
+		})
+
+		combineOne.ArrList = append(combineOne.ArrList, InnerStruct{
+			TypeList:    2,
+			CommentList: "one1",
+			ConstList:   false,
+		})
+
+		combineOne.ArrList = append(combineOne.ArrList, InnerStruct{
+			TypeList:    3,
+			CommentList: "one2",
+			ConstList:   false,
+		})
+
+		combineOne.ArrList = append(combineOne.ArrList, InnerStruct{
+			TypeList:    3,
+			CommentList: "one3",
+			ConstList:   false,
+		})
+
+		combineArray = append(combineArray, combineOne)
+	}
+
+	b.Logf("len=%d", len(combineArray))
+}

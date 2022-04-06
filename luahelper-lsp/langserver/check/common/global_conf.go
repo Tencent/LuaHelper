@@ -123,6 +123,9 @@ type GlobalConfig struct {
 	// 项目中引入其他文件，路径分隔符，默认为. 例如require("one.b") 表示引入one/b.lua 文件
 	PathSeparator string
 
+	// 引入另外一个目录，可以用于设置引入额外LuaHelper注解格式文件夹
+	OtherDir string
+
 	// 所有后缀文件关联到lua类型, 例如有的.txt后缀文件，会当成lua文件处理
 	AssocialList []string
 
@@ -176,6 +179,7 @@ func createDefaultGlobalConfig() {
 		PathSeparator:          ".",
 		anntotateSets:          []AnntotateSet{},
 		dirManager:             createDirManager(),
+		OtherDir:               "",
 	}
 }
 
@@ -259,6 +263,7 @@ type (
 		ReferFrameFiles       []referFrameFile    `json:"ReferFrameFiles"`       // 项目中引用其他的框架文件
 		PathSeparator         string              `json:"PathSeparator"`         // 项目中引入其他文件，路径分隔符，默认为. 例如require("one.b") 表示引入one/b.lua 文件
 		AnntotateSets         []AnntotateSet      `json:"AnntotateSets"`         // 自动推导的注解方式
+		OtherDir              string              `json:"OtherDir"`              // 引入另外一个目录，可以用于设置引入额外LuaHelper注解格式文件夹
 	}
 )
 
@@ -516,6 +521,7 @@ func (g *GlobalConfig) IntialGlobalVar() {
 func (g *GlobalConfig) handleNotJSONCheckFlag(checkFlagList []bool, ignoreFileOrDir []string, ignoreFileOrDirErr []string) {
 	// 没有读取到了json文件
 	g.ReadJSONFlag = false
+	g.OtherDir = ""
 
 	// 添加引入文件的方式
 	for _, oneReferFrame := range jsonConfig.ReferFrameFiles {
@@ -622,6 +628,7 @@ func (g *GlobalConfig) ReadConfig(strDir, configFileName string, checkFlagList [
 		jsonConfig.BaseDir = "./"
 	}
 
+	g.OtherDir = jsonConfig.OtherDir
 	g.dirManager.setConfigRelativeDir(jsonConfig.BaseDir)
 
 	g.ProjectFiles = jsonConfig.ProjectFiles
