@@ -741,6 +741,7 @@ func (l *Lexer) scanLongString() string {
 	longBracket := l.matchLongStringBacket()
 	if longBracket == "" {
 		l.errorPrint(l.GetHeardTokenLoc(), "invalid long string delimiter near '%s'", l.chunk[0:2])
+		l.next(2)
 		return ""
 	}
 

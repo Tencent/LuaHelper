@@ -230,8 +230,7 @@ func (a *AllProject) getVarRelateTypeStr(varInfo *common.VarInfo) (strType strin
 
 	if varInfo.ReferFunc != nil {
 		//strType = varInfo.ReferFunc.GetFuncCompleteStr("function", true, false)
-		strType = a.getFuncShowStr(varInfo, "function", true, false, true)
-
+		strType = a.getFuncShowStr(varInfo, "function", true, false, false)
 		return
 	}
 
