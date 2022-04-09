@@ -2,88 +2,13 @@ package check
 
 import (
 	"fmt"
-	"luahelper-lsp/langserver/check/analysis"
 	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/check/results"
 	"luahelper-lsp/langserver/log"
-	"luahelper-lsp/langserver/pathpre"
 	"strings"
-	"time"
 )
-
-// 代码提示高级功能，例如前面出现了ss.data , 当输入ss.时候，自动代码提示data
-// valFileName 为变量所在的文件
-// fileName 为对哪个文件进行展开查找
-func (a *AllProject) completeExtension(valFileName string, fileName string,
-	varInfo *common.VarInfo, strName string, sufVec []string, posLine int,
-	posCh int) (strMap map[string]bool) {
-
-	a.setCheckTerm(results.CheckTermFive)
-
-	// 高级功能，会再次完整的遍历下AST
-	analysisFive := results.CreateAnalysisFiveFile(fileName)
-	analysisFive.FileName = valFileName
-	analysisFive.FindVar = varInfo
-	analysisFive.StrName = strName
-	analysisFive.SufVec = sufVec
-	analysisFive.PosLine = posLine
-	analysisFive.PosCh = posCh
-	a.handleCompleteName(analysisFive)
-
-	strSuf := strings.Join(sufVec, ".")
-	if strSuf == "." {
-		strSuf = ""
-	}
-
-	// 所有提示的字符串
-	tipMap := map[string]bool{}
-	// 遍历所有的对table的访问
-	for oneStr := range analysisFive.FindContentMap {
-		if strSuf == "" {
-			// 如果为空，获取第一个字符串
-			oneVec := strings.Split(oneStr, ".")
-			tipMap[oneVec[0]] = true
-			continue
-		}
-
-		// 不为空
-		strPre := strSuf + "."
-		if !strings.HasPrefix(oneStr, strPre) {
-			continue
-		}
-
-		oneStr = strings.TrimPrefix(oneStr, strPre)
-		oneVec := strings.Split(oneStr, ".")
-		tipMap[oneVec[0]] = true
-	}
-
-	return tipMap
-}
-
-func (a *AllProject) handleCompleteName(c *results.CompleteFileResult) {
-	log.Debug("fivefile=%s", c.StrFile)
-	strFile := pathpre.GetRemovePreStr(c.StrFile)
-	// 获取缓存中的文件
-	fileStruct := a.getVailidCacheFileStruct(strFile)
-	if fileStruct == nil {
-		log.Error("handleOneFile luafile:%s file not valid", strFile)
-		return
-	}
-
-	fileResult := fileStruct.FileResult
-
-	// 创建第五轮遍历的包裹对象
-	time1 := time.Now()
-	analysis := analysis.CreateAnalysis(results.CheckTermFive, c.StrFile)
-	analysis.CompleteResult = c
-	analysis.Projects = a
-	analysis.HandleTermTraverseAST(results.CheckTermFive, fileResult, nil)
-
-	ftime := time.Since(time1).Milliseconds()
-	log.Debug("handleCompleteName handleOneFile %s, cost time=%d(ms)", strFile, ftime)
-}
 
 // CodeCompleteFile 提示输入所有的lua文件或是库
 func (a *AllProject) CodeCompleteFile(strFile string, referNameStr string, referType common.ReferType,
@@ -353,88 +278,6 @@ func (a *AllProject) gPreComplete(comParam *CommonFuncParam, completeVar *common
 	a.varInfoDeepComplete(oldSymbol, symList, varStruct, completeVar, comParam)
 }
 
-// CompleteResultCh 结构的协程封装
-type CompleteResultCh struct {
-	strMap map[string]bool
-}
-
-// CompleteGoParam 告警展开，协程的参数
-type CompleteGoParam struct {
-	a            *AllProject
-	luaInFile    string // 变量所在的文件
-	fileName     string // fileName 为对哪个文件进行展开查找
-	strFind      string
-	comParam     *CommonFuncParam
-	completeVar  *common.CompleteVarStruct
-	localVarInfo *common.VarInfo
-	sufStrVec    []string
-}
-
-// 其中一个展开的协程
-func goCompleteExtension(copleteParam CompleteGoParam, retCompleteResultCh chan<- CompleteResultCh) {
-	strMap := copleteParam.a.completeExtension(copleteParam.luaInFile, copleteParam.fileName,
-		copleteParam.localVarInfo, copleteParam.strFind, copleteParam.sufStrVec,
-		copleteParam.completeVar.PosLine+1, copleteParam.completeVar.PosCh)
-	completeResultCh := CompleteResultCh{
-		strMap: strMap,
-	}
-
-	retCompleteResultCh <- completeResultCh
-}
-
-// 对一个文件协程分析处理的结果，插入到补全缓存中
-func (a *AllProject) insertFileCacheStrMap(tipMap map[string]bool) {
-	for strOne := range tipMap {
-		if a.completeCache.ExistStr(strOne) || a.completeCache.IsExcludeStr(strOne) {
-			continue
-		}
-
-		a.completeCache.InsertCompleteNormal(strOne, "", "", common.IKVariable)
-	}
-}
-
-// 对指定的文件，开始进行展开功能，获取代码的提示
-// luaInFile 为变量所在的文件
-// strFind 为对变量进行引用的文件
-func (a *AllProject) getFileCompleteExt(luaInFile string, strFind string, comParam *CommonFuncParam,
-	completeVar *common.CompleteVarStruct, varInfo *common.VarInfo, sufStrVec []string) {
-	// 1）如果变量所在的文件，和变量的定义在同一个文件，只需要对一个文件进行展开
-	if luaInFile == comParam.fileResult.Name {
-		tipMap1 := a.completeExtension(luaInFile, comParam.fileResult.Name, varInfo, strFind, sufStrVec,
-			completeVar.PosLine+1, completeVar.PosCh)
-		a.insertFileCacheStrMap(tipMap1)
-		return
-	}
-
-	// 2) 如果两个不相等，需要启动两个协程来解决
-	retCompleteResultCh := make(chan CompleteResultCh, 2)
-	copleteParam := CompleteGoParam{
-		a:            a,
-		luaInFile:    luaInFile,
-		fileName:     luaInFile,
-		strFind:      strFind,
-		comParam:     comParam,
-		completeVar:  completeVar,
-		localVarInfo: varInfo,
-		sufStrVec:    sufStrVec,
-	}
-
-	// 1) 开启第一个协程
-	go goCompleteExtension(copleteParam, retCompleteResultCh)
-
-	// 2) 开启第一个协程
-	copleteParam.fileName = comParam.fileResult.Name
-	go goCompleteExtension(copleteParam, retCompleteResultCh)
-
-	// 3) 接收一个协程的数据
-	resultch1 := <-retCompleteResultCh
-	a.insertFileCacheStrMap(resultch1.strMap)
-
-	// 4) 接收另外一个协程的数据
-	resultch2 := <-retCompleteResultCh
-	a.insertFileCacheStrMap(resultch2.strMap)
-}
-
 // import文件的所有成员放入进来
 func (a *AllProject) getImportFileComlete(referFile *results.FileResult) {
 	// 补全引用的那个文件所有的全局符号
@@ -460,12 +303,6 @@ func (a *AllProject) varInfoDeepComplete(symbol *common.Symbol, symList []*commo
 	// 1) 没有追踪到最后的子项
 	if len(symList) == 0 {
 		a.expandNodefineMapComplete(fileName, strFind, comParam, completeVar, symbol.VarInfo)
-
-		// 只在当前文件做代码提示高级功能
-		//sufThreeStrVec := completeVar.StrVec[1:]
-
-		// 尝试用协程进行高级功能展开
-		//a.getFileCompleteExt(fileName, strFind, comParam, completeVar, symbol.VarInfo, sufThreeStrVec)
 		return
 	}
 
@@ -529,11 +366,6 @@ func (a *AllProject) varInfoDeepComplete(symbol *common.Symbol, symList []*commo
 	// 冒号语法不做高级提示功能
 	if explanFlag {
 		a.expandNodefineMapComplete(fileName, strFind, comParam, completeVar, symbol.VarInfo)
-
-		// 只在当前文件做代码提示高级功能
-		//sufThreeStrVec := completeVar.StrVec[1:]
-		// 尝试用协程进行高级功能展开
-		//a.getFileCompleteExt(fileName, strFind, comParam, completeVar, symbol.VarInfo, sufThreeStrVec)
 	}
 }
 
@@ -600,10 +432,6 @@ func (a *AllProject) otherPreComplete(comParam *CommonFuncParam, completeVar *co
 			// 对NodefineMap内的变量进行展开代码补全
 			a.expandNodefineMapComplete(comParam.fileResult.Name, strName, comParam, completeVar, findVar)
 		}
-
-		// 遍历AST树，构造想要的代码补全数据
-		//sufThreeStrVec := completeVar.StrVec[1:]
-		//a.getFileCompleteExt(comParam.fileResult.Name, strName, comParam, completeVar, findVar, sufThreeStrVec)
 		return
 	}
 
