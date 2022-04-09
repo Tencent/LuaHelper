@@ -57,7 +57,7 @@ func (a *AllProject) SignaturehelpFunc(strFile string, varStruct *common.DefineV
 	lastLine := referFunc.Loc.StartLine
 
 	strName := varStruct.StrVec[len(varStruct.StrVec)-1]
-	funAllStr := a.getFuncShowStr(lastSymbol.VarInfo, strName, true, varStruct.ColonFlag, false)
+	funAllStr := a.getFuncShowStr(lastSymbol.VarInfo, strName, true, varStruct.ColonFlag, false, false)
 	sinatureInfo.Label = funAllStr
 	strDocumentation := getFinalStrComment(a.GetLineComment(inLuaFile, lastLine), false)
 

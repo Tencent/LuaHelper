@@ -803,7 +803,7 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 				}
 
 				if symbolTmp.VarInfo.ReferFunc != nil {
-					strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true)
+					strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true, true)
 					item.Detail = "function " + strFunc
 				}
 
@@ -816,7 +816,7 @@ func (a *AllProject) getVarCompleteData(varInfo *common.VarInfo, item *common.On
 	}
 
 	if varInfo.ReferFunc != nil {
-		strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true)
+		strFunc := a.getFuncShowStr(symbol.VarInfo, item.Label, true, colonFlag, true, true)
 		item.Detail = "function " + strFunc
 	}
 
