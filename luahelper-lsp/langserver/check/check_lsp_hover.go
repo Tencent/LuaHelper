@@ -256,7 +256,7 @@ func (a *AllProject) getVarHoverInfo(strFile string, symbol *common.Symbol, varS
 			if symbol.VarInfo.ExtraGlobal == nil && !symbol.VarInfo.IsMemFlag {
 				strPre = "local "
 			}
-			strFunc := a.getFuncShowStr(symbol.VarInfo, varStruct.StrVec[len(varStruct.StrVec)-1], true, false, true)
+			strFunc := a.getFuncShowStr(symbol.VarInfo, varStruct.StrVec[len(varStruct.StrVec)-1], true, false, true, true)
 			strType = "function " + strFunc
 		}
 	}
