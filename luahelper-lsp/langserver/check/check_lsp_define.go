@@ -192,8 +192,8 @@ func (a *AllProject) findLspReferenceVarDefine(comParam *CommonFuncParam, varStr
 	}
 
 	findExpList := []common.FindExpFile{}
-	locInfoFile := a.FindVarReferSymbol(referFile.Name, returnExp, comParam, &findExpList, 1)
-	if locInfoFile == nil {
+	symbol := a.FindVarReferSymbol(referFile.Name, returnExp, comParam, &findExpList, 1)
+	if symbol == nil {
 		log.Error("findLspDefineInfo find val err=%s", referInfo.ReferTypeStr)
 		return findPreFile, nil
 	}
@@ -205,11 +205,11 @@ func (a *AllProject) findLspReferenceVarDefine(comParam *CommonFuncParam, varStr
 		varStruct.StrVec = append([]string{returnExpStr}, varStruct.StrVec...)
 	}
 
-	subVar := common.GetVarSubGlobalVar(locInfoFile.VarInfo, strModeMem)
+	subVar := common.GetVarSubGlobalVar(symbol.VarInfo, strModeMem)
 	if subVar == nil {
 		return findPreFile, nil
 	}
-	return referFile.Name, locInfoFile.VarInfo
+	return referFile.Name, symbol.VarInfo
 }
 
 // FindReferenceVarDefine 查找引用时候变量的定义
