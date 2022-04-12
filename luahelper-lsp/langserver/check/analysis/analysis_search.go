@@ -139,10 +139,8 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 			return nil, strName
 		}
 
-		checkTerm := a.getChangeCheckTerm()
-		referFile := a.GetReferFileResult(referInfo, checkTerm)
+		referFile := a.Projects.GetFirstReferFileResult(referInfo)
 		if referFile == nil {
-			// 没有加载引用的文件，可能是so文件
 			return nil, strName
 		}
 
@@ -150,6 +148,34 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 		referLuaFile := referInfo.ReferStr
 		if common.GConfig.IsIgnoreFileDefineVar(referLuaFile, strKeyName) {
 			return nil, strName
+		}
+
+		if referInfo.ReferType == common.ReferTypeRequire {
+			find, returnExp := referFile.MainFunc.GetLastOneReturnExp()
+			if !find {
+				return nil, strName
+			}
+
+			subExp := returnExp.(*ast.NameExp)
+			if subExp == nil {
+				return nil, strName
+			}
+
+			varInfo, ok := referFile.MainFunc.MainScope.FindLocVar(subExp.Name, subExp.Loc)
+			if !ok {
+				_, varInfo = referFile.FindGlobalVarInfo(subExp.Name, false, "")
+			}
+
+			if varInfo == nil {
+				return nil, strName
+			}
+
+			subVar := common.GetVarSubGlobalVar(varInfo, strKeyName)
+			if subVar == nil {
+				return nil, strName
+			}
+
+			return subVar.ReferFunc, strKeyName
 		}
 
 		if ok, oneVar := referFile.FindGlobalVarInfo(strKeyName, false, ""); ok {
