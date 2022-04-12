@@ -56,10 +56,10 @@ func (a *AllProject) handleFindVarColor(color *results.ColorFileResult) {
 	time1 := time.Now()
 
 	// 创建第三轮遍历的包裹对象
-	analysis := analysis.CreateAnalysis(results.CheckTermSix, color.StrFile)
+	analysis := analysis.CreateAnalysis(results.CheckTermFive, color.StrFile)
 	analysis.ColorResult = color
 	analysis.Projects = a
-	analysis.HandleTermTraverseAST(results.CheckTermSix, fileResult, nil)
+	analysis.HandleTermTraverseAST(results.CheckTermFive, fileResult, nil)
 
 	ftime := time.Since(time1).Milliseconds()
 	log.Debug("handleFindVarColor handleOneFile %s, cost time=%d(ms)", strFile, ftime)

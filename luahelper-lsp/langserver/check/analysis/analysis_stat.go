@@ -954,7 +954,7 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 
 		// 是否定义了变量
 		defineVarFlag := needDefineFlag
-		if !defineVarFlag && (a.isFourTerm() || a.isSixTerm()) {
+		if !defineVarFlag && (a.isFourTerm() || a.isFiveTerm()) {
 			if nameExp, ok := valExp.(*ast.NameExp); ok {
 				// 第四轮，变量赋值的引用查找
 				a.findNameStr(nameExp, nil)
@@ -962,13 +962,6 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 
 			if taExp, ok := valExp.(*ast.TableAccessExp); ok {
 				// 第四轮，table的关键key值的赋值，查找引用, 定义出需要去重
-				a.findTableDefine(taExp)
-			}
-		}
-
-		if !defineVarFlag && a.isFiveTerm() {
-			if taExp, ok := valExp.(*ast.TableAccessExp); ok {
-				// 第五轮，table的关键key值的赋值，查找table的调用
 				a.findTableDefine(taExp)
 			}
 		}

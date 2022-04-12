@@ -26,11 +26,8 @@ const (
 	// CheckTermFour 第四轮, 查找变量的引用
 	CheckTermFour CheckTerm = 4
 
-	// CheckTermFive 第五轮，构造变量的所有层级调用，例如ss.data,方便做代码提示
-	CheckTermFive CheckTerm = 5
-
-	// CheckTermSix 第六轮，获取全局变量或函数的位置，告诉客户端渲染特定的颜色
-	CheckTermSix CheckTerm = 6
+	// CheckTermFive 第五轮，获取全局变量或函数的位置，告诉客户端渲染特定的颜色
+	CheckTermFive CheckTerm = 6
 )
 
 // FileResult 单个lua文件分析的结果
