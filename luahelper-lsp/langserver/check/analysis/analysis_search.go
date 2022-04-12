@@ -156,8 +156,8 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 				return nil, strName
 			}
 
-			subExp := returnExp.(*ast.NameExp)
-			if subExp == nil {
+			subExp, ok := returnExp.(*ast.NameExp)
+			if !ok {
 				return nil, strName
 			}
 
