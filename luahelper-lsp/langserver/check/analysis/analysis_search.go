@@ -637,9 +637,6 @@ func (a *Analysis) expandVarStrMap(node *ast.TableAccessExp) {
 			// 如果是以!开头，表示为变量，进行替换处理
 			preVec[i] = "!var"
 		}
-		// if !common.JudgeSimpleStr(preVec[i]) {
-		// 	return
-		// }
 	}
 
 	strOne := preVec[0]
