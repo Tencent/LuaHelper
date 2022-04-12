@@ -61,11 +61,6 @@ func (a *Analysis) cgNameExp(node *ast.NameExp, binParentExp *ast.BinopExp) {
 		return
 	}
 
-	// 第一轮，不查找引用; 第五轮分析也不用
-	if a.isFiveTerm() {
-		return
-	}
-
 	a.findNameStr(node, binParentExp)
 }
 
@@ -206,7 +201,7 @@ func (a *Analysis) cgTableConstructorExp(node *ast.TableConstructorExp, parentVa
 
 // r[a] := op exp
 func (a *Analysis) cgUnopExp(node *ast.UnopExp) {
-	if node.Op == lexer.TkOpNot && !a.isFirstTerm() && !a.isFourTerm() && !a.isSixTerm() &&
+	if node.Op == lexer.TkOpNot && !a.isFirstTerm() && !a.isFourTerm() && !a.isFiveTerm() &&
 		a.ignoreInfo.inif {
 		strExpName := common.GetExpName(node.Exp)
 		strSubKey := common.GetExpSubKey(strExpName)
@@ -223,7 +218,7 @@ func (a *Analysis) cgUnopExp(node *ast.UnopExp) {
 // r[a] := exp1 op exp2
 func (a *Analysis) cgBinopExp(node *ast.BinopExp, parentVar *common.VarInfo) {
 	if node.Op == lexer.TkOpEq && a.ignoreInfo.inif && !a.isFirstTerm() && !a.isFourTerm() &&
-		!a.isSixTerm() {
+		!a.isFiveTerm() {
 		if _, ok := node.Exp2.(*ast.NilExp); ok {
 			strExpName := common.GetExpName(node.Exp1)
 			strSubKey := common.GetExpSubKey(strExpName)
@@ -235,7 +230,7 @@ func (a *Analysis) cgBinopExp(node *ast.BinopExp, parentVar *common.VarInfo) {
 	}
 
 	if node.Op == lexer.TkOpOr && !a.ignoreInfo.inif && !a.isFirstTerm() && !a.isFourTerm() &&
-		!a.isSixTerm() &&
+		!a.isFiveTerm() &&
 		a.ignoreInfo.assignName != "" {
 		strExpName := common.GetExpName(node.Exp1)
 		strSubKey := common.GetExpSubKey(strExpName)
