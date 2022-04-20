@@ -553,12 +553,10 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 	case *ast.NameExp:
 		name = exp.Name
 		loc = exp.Loc
-		//case *ast.ParensExp:
-		//loc = exp
 	case *ast.TableAccessExp:
-		strTable := common.GetExpName(exp.PrefixExp)
+		strTable := ""
+		strTable, loc = common.GetTableNameInfo(exp)
 		name = common.GetSimpleValue(strTable)
-		loc = common.GetTablePrefixLoc(exp)
 	}
 
 	if len(name) <= 0 {
@@ -571,6 +569,10 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 
 	ok, varInfo := a.FindVarDefineForCheck(name, loc)
 	if !ok {
+		return
+	}
+	if varInfo.Loc == loc {
+		//定义处不检查
 		return
 	}
 
