@@ -16,7 +16,7 @@ func GetTableAccessName(tabExp *ast.TableAccessExp) string {
 	return strPre + "." + strKey
 }
 
-// GetTableNameInfo 获取表表达式的表名
+// GetTableNameInfo 获取表表达式的表名 例如table.a.b.c 取table
 func GetTableNameInfo(tabExp *ast.TableAccessExp) (string, lexer.Location) {
 	for {
 		subExp, ok := tabExp.PrefixExp.(*ast.TableAccessExp)
