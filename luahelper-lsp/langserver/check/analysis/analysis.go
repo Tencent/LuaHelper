@@ -554,9 +554,7 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		name = exp.Name
 		loc = exp.Loc
 	case *ast.TableAccessExp:
-		strTable := ""
-		strTable, loc = common.GetTableNameInfo(exp)
-		name = common.GetSimpleValue(strTable)
+		name, loc = common.GetTableNameInfo(exp)
 	}
 
 	if len(name) <= 0 {

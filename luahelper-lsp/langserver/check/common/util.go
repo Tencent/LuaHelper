@@ -16,7 +16,9 @@ func GetTableAccessName(tabExp *ast.TableAccessExp) string {
 	return strPre + "." + strKey
 }
 
-// GetTableNameInfo 获取表表达式的表名 例如table.a.b.c 取table
+// GetTableNameInfo 获取表表达式的表名
+// 例如table.a.b.c 取table
+// _G.table.a.b取table
 func GetTableNameInfo(tabExp *ast.TableAccessExp) (string, lexer.Location) {
 	for {
 		subExp, ok := tabExp.PrefixExp.(*ast.TableAccessExp)
@@ -25,7 +27,20 @@ func GetTableNameInfo(tabExp *ast.TableAccessExp) (string, lexer.Location) {
 		}
 		tabExp = subExp
 	}
-	return GetExpName(tabExp.PrefixExp), GetExpLoc(tabExp.PrefixExp)
+
+	keyName := GetExpName(tabExp.KeyExp)
+	if keyName == "tableB" {
+		keyName = "tableB"
+	}
+
+	//return GetExpName(tabExp.PrefixExp), GetExpLoc(tabExp.PrefixExp)
+	preName := GetExpName(tabExp.PrefixExp)
+	if preName == "!_G" {
+		return keyName, GetExpLoc(tabExp.KeyExp)
+	} else {
+		return GetSimpleValue(preName), GetExpLoc(tabExp.PrefixExp)
+	}
+
 }
 
 // GetExpType 获取exp的类型
