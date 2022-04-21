@@ -992,21 +992,21 @@ func GetExpLoc(node ast.Exp) (loc lexer.Location) {
 // function a:test1()
 //	 self.b = 3  -- 传人的为self.b
 // end
-func ChangeFuncSelfToReferVar(fi *FuncInfo, varStruct *DefineVarStruct) {
+func ChangeFuncSelfToReferVar(fi *FuncInfo, varStruct *DefineVarStruct) bool {
 	firstColonFunc := fi.FindFirstColonFunc()
 	if firstColonFunc == nil {
-		return
+		return false
 	}
 	if !firstColonFunc.IsColon {
-		return
+		return false
 	}
 
 	if firstColonFunc.RelateVar == nil {
-		return
+		return false
 	}
 
 	if len(varStruct.StrVec) < 1 {
-		return
+		return false
 	}
 
 	if varStruct.StrVec[0] == "self" {
@@ -1019,7 +1019,9 @@ func ChangeFuncSelfToReferVar(fi *FuncInfo, varStruct *DefineVarStruct) {
 			strArray = append(strArray, varStruct.StrVec[1:]...)
 			varStruct.StrVec = strArray
 		}
+		return true
 	}
+	return false
 }
 
 // ChangeSelfToVarComplete 冒号 函数，self语法进行转换
