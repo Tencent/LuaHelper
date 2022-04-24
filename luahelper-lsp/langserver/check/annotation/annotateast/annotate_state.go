@@ -66,6 +66,7 @@ type AnnotateParamState struct {
 	ParamType  Type           // 成员对应属性
 	Comment    string         // 其他所有的注释内容
 	IsOptional bool           // 这个参数是否为可选的。例如 ---@param one? number ; 参数后面跟？表示参数是可选的
+	IsConst    bool           // 这个参数是否const。例如 ---@param cosnt one number
 	CommentLoc lexer.Location // 注释内容的位置信息
 }
 

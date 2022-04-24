@@ -574,7 +574,7 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		return
 	}
 
-	if a.Projects.IsAnnotateTypeConst(varInfo) {
+	if a.Projects.IsAnnotateTypeConst(name, varInfo) {
 		//标记了常量，却赋值
 		errStr := fmt.Sprintf("(%s) is const, can not assgin", name)
 		a.curResult.InsertError(common.CheckErrorConstAssign, errStr, loc)
