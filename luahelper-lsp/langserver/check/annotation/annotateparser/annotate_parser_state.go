@@ -185,12 +185,20 @@ func parserFieldState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState 
 }
 
 // 解析@param
-// ---@param param_name MY_TYPE[|other_type] [@comment]
+// ---@param [const] param_name MY_TYPE[|other_type] [@comment]
 func parserParamState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState {
 	// skip param token
 	l.NextTokenOfKind(annotatelexer.ATokenKwParam)
 
 	paramState := &annotateast.AnnotateParamState{}
+
+	//解析const
+	if l.LookAheadKind() == annotatelexer.ATokenKwConst {
+		paramState.IsConst = true
+		l.NextTokenOfKind(annotatelexer.ATokenKwConst)
+	} else {
+		paramState.IsConst = false
+	}
 
 	// 获取参数的名字
 	paramState.Name = l.NextParamName()

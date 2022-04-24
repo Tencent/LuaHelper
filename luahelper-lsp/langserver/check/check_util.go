@@ -424,7 +424,7 @@ func (a *AllProject) IsMemberOfAnnotateClassByLoc(strFile string, strFieldNameli
 }
 
 // 获取注解 ---type
-func (a *AllProject) IsAnnotateTypeConst(varInfo *common.VarInfo) (isConst bool) {
+func (a *AllProject) IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool) {
 	isConst = false
 
 	// 1) 获取文件对应的annotateFile
@@ -436,10 +436,29 @@ func (a *AllProject) IsAnnotateTypeConst(varInfo *common.VarInfo) (isConst bool)
 
 	fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
 
+	//作为变量的const
 	if fragmentInfo != nil &&
 		fragmentInfo.TypeInfo != nil &&
 		len(fragmentInfo.TypeInfo.ConstList) > 0 {
 		return fragmentInfo.TypeInfo.ConstList[0]
+	}
+
+	//作为函数参数的const
+	if fragmentInfo != nil &&
+		fragmentInfo.ParamInfo != nil &&
+		len(fragmentInfo.ParamInfo.ParamList) > 0 {
+		// 这里判断是否为函数参数的注解
+		// 函数参数的注解，会额外的用下面的注解类型
+		// ---@param one class
+
+		for i := 0; i < len(fragmentInfo.ParamInfo.ParamList); i++ {
+			paramLine := fragmentInfo.ParamInfo.ParamList[i]
+
+			//找到对应的那行---@param one class 再获取class
+			if paramLine.Name == name {
+				return paramLine.IsConst
+			}
+		}
 	}
 
 	//没找到返回空的

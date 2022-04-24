@@ -31,5 +31,5 @@ type Projects interface {
 
 	IsMemberOfAnnotateClassByLoc(strFile string, strFieldNamelist []string, lineForGetAnnotate int) (isStrict bool, isMemberMap map[string]bool, className string)
 
-	IsAnnotateTypeConst(varInfo *common.VarInfo) (isConst bool)
+	IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool)
 }
