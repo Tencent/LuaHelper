@@ -272,6 +272,28 @@ func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, para
 	return paramDefaultNum
 }
 
+// 获取参数类型
+func (a *AllProject) GetFuncParamType(fileName string, lastLine int) (retMap map[string]annotateast.Type) {
+	retMap = map[string]annotateast.Type{}
+	annotateParamInfo := a.GetFuncParamInfo(fileName, lastLine)
+	if annotateParamInfo == nil {
+		return retMap
+	}
+	for _, oneParam := range annotateParamInfo.ParamList {
+		switch subAst := oneParam.ParamType.(type) {
+		case *annotateast.MultiType:
+			if len(subAst.TypeList) == 0 {
+				return
+			}
+			retMap[oneParam.Name] = subAst.TypeList[0]
+		case *annotateast.NormalType:
+			retMap[oneParam.Name] = oneParam.ParamType
+		}
+
+	}
+	return retMap
+}
+
 //
 func (a *AllProject) GetAnnotateClassAllFieldOfStrict(astType annotateast.Type, fileName string,
 	lastLine int) (isStrict bool, retMap map[string]bool, className string) {

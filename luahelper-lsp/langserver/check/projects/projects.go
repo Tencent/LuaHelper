@@ -1,6 +1,7 @@
 package projects
 
 import (
+	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/check/results"
 )
@@ -32,4 +33,6 @@ type Projects interface {
 	IsMemberOfAnnotateClassByLoc(strFile string, strFieldNamelist []string, lineForGetAnnotate int) (isStrict bool, isMemberMap map[string]bool, className string)
 
 	IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool)
+
+	GetFuncParamType(fileName string, lastLine int) (retMap map[string]annotateast.Type)
 }
