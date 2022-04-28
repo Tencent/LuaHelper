@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"fmt"
+	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/check/compiler/ast"
 	"luahelper-lsp/langserver/check/compiler/lexer"
@@ -65,7 +66,6 @@ func (a *Analysis) cgFuncCallStat(node *ast.FuncCallStat) {
 }
 
 // 检查调用函数匹配的参数
-// 第二轮或第三轮检查参数个数是否匹配
 func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 	// 第二轮或第三轮函数参数check
 	if !a.isNeedCheck() {
@@ -120,6 +120,28 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 			return
 		}
 	}
+
+	//到此参数个数正常，继续检查参数类型匹配
+	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
+	for i, argExp := range node.Args {
+		//函数调用处的参数类型
+		argType := common.GetExpTypeToAnnType(argExp)
+		if argType == "any" {
+			continue
+		}
+
+		//函数注解处的参数类型
+		paramType := annotateast.GetAstTypeName(paramTypeMap[referFunc.ParamList[i]])
+		if paramType == "any" || paramType == argType {
+			continue
+		}
+
+		//类型不一致，报警
+		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", paramType, argType)
+		fileResult.InsertError(common.CheckErrorCallParam, errorStr, node.Loc)
+
+	}
+
 }
 
 func (a *Analysis) cgBreakStat(node *ast.BreakStat) {

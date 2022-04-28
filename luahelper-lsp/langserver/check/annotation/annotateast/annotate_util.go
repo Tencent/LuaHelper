@@ -218,6 +218,18 @@ func GetAstTypeLoc(astType Type) lexer.Location {
 	return lexer.Location{}
 }
 
+func GetAstTypeName(astType Type) string {
+	switch subAst := astType.(type) {
+
+	case *NormalType:
+		return subAst.StrName
+	case *TableType:
+		return "Table"
+	}
+
+	return ""
+}
+
 // GetTypeColorLocVec 获取所有Type产生的着色位置信息
 func GetTypeColorLocVec(astType Type) (locVec []lexer.Location) {
 	switch subAst := astType.(type) {

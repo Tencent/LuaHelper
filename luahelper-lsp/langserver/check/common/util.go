@@ -120,6 +120,23 @@ func GetExpType(node ast.Exp) LuaType {
 	return LuaTypeAll
 }
 
+// 把ast.Exp转换成annotateast.type的字符串
+func GetExpTypeToAnnType(referExp ast.Exp) string {
+
+	switch (referExp).(type) {
+	case *ast.IntegerExp, *ast.LuajitNum, *ast.FloatExp:
+		return "number"
+	case *ast.StringExp:
+		return "string"
+	case *ast.BinopExp:
+		return "boolean"
+	case *ast.TableConstructorExp:
+		return "table"
+	}
+
+	return "any"
+}
+
 // GetExpTypeString 获取ext的类型字符串
 func GetExpTypeString(referExp ast.Exp) string {
 	luaType := LuaTypeNil
