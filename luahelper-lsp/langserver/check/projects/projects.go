@@ -34,5 +34,7 @@ type Projects interface {
 
 	IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool)
 
+	GetAnnotateTypeString(varInfo *common.VarInfo) string
+
 	GetFuncParamType(fileName string, lastLine int) (retMap map[string]annotateast.Type)
 }

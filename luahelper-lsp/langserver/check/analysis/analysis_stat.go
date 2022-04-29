@@ -124,16 +124,64 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 	//到此参数个数正常，继续检查参数类型匹配
 	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
 	for i, argExp := range node.Args {
-		//函数调用处的参数类型
-		argType := common.GetExpTypeToAnnType(argExp)
-		if argType == "any" {
+		//函数定义处注解的参数类型
+		paramType := annotateast.GetAstTypeName(paramTypeMap[referFunc.ParamList[i]])
+		if paramType == "any" {
 			continue
 		}
 
-		//函数注解处的参数类型
-		paramType := annotateast.GetAstTypeName(paramTypeMap[referFunc.ParamList[i]])
-		if paramType == "any" || paramType == argType {
+		//函数调用处的参数类型
+		argType := common.GetAnnTypeFromExp(argExp)
+		if argType == "any" {
 			continue
+		} else if argType == "LuaTypeRefer" {
+			//若是引用，则继续查找定义
+
+			name := ""
+			loc := lexer.Location{}
+			switch exp := argExp.(type) {
+			case *ast.NameExp:
+				name = exp.Name
+				loc = exp.Loc
+				// //case *ast.ParensExp:
+				// //case *ast.TableAccessExp:
+				// 	//name, loc = common.GetTableNameInfo(exp)
+				// // case *ast.FuncCallExp:
+				// // 	name = exp.NameExp.Str
+			}
+
+			if len(name) <= 0 {
+				continue
+			}
+
+			ok, varInfo := a.FindVarDefineForCheck(name, loc)
+			if !ok {
+				continue
+			}
+
+			//定义处若有注解 取注解的类型
+			argAnnType := a.Projects.GetAnnotateTypeString(varInfo)
+
+			//定义处表达式推导的类型
+			argType = common.GetAnnTypeFromLuaType(varInfo.VarType)
+
+			//若有注解类型则先比较
+			if len(argAnnType) > 0 && paramType == argAnnType {
+				continue
+			}
+
+			if paramType == argType {
+				//例如：参数类型要求table
+				//---@type classA
+				//local tableA = {}
+				//argType是table, argAnnType是classA, 在这里通过
+				continue
+			}
+
+			if argType == "any" || argType == "LuaTypeRefer" {
+				//若仍是LuaTypeRefer 不再递归推导 否则影响插件效率
+				continue
+			}
 		}
 
 		//类型不一致，报警
