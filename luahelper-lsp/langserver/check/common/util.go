@@ -122,15 +122,19 @@ func GetExpType(node ast.Exp) LuaType {
 
 // 把ast.Exp转换成annotateast.type的字符串
 func GetExpTypeToAnnType(referExp ast.Exp) string {
-
-	switch (referExp).(type) {
-	case *ast.IntegerExp, *ast.LuajitNum, *ast.FloatExp:
+	expType := GetExpType(referExp)
+	switch expType {
+	case LuaTypeInter, LuaTypeFloat:
 		return "number"
-	case *ast.StringExp:
+	case LuaTypeString:
 		return "string"
-	case *ast.BinopExp:
+	case LuaTypeBool:
 		return "boolean"
-	case *ast.TableConstructorExp:
+	case LuaTypeNil:
+		return "nil"
+	case LuaTypeFunc:
+		return "function"
+	case LuaTypeTable:
 		return "table"
 	}
 
