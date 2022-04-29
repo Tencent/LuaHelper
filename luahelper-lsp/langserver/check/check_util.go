@@ -487,6 +487,41 @@ func (a *AllProject) IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (
 	return isConst
 }
 
+// 获取注解中的类型
+func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo) string {
+
+	// 1) 获取文件对应的annotateFile
+	annotateFile := a.getAnnotateFile(varInfo.FileName)
+	if annotateFile == nil {
+		log.Error("GetAnnotateType annotateFile is nil, file=%s", varInfo.FileName)
+		return ""
+	}
+
+	fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
+
+	//作为变量的const
+	if fragmentInfo != nil &&
+		fragmentInfo.TypeInfo != nil &&
+		len(fragmentInfo.TypeInfo.TypeList) > 0 {
+
+		switch subType := fragmentInfo.TypeInfo.TypeList[0].(type) {
+		case *annotateast.MultiType:
+			if len(subType.TypeList) == 0 {
+				return ""
+			}
+			switch subSubType := subType.TypeList[0].(type) {
+			case *annotateast.NormalType:
+				return subSubType.StrName
+			}
+		case *annotateast.NormalType:
+			return subType.StrName
+
+		}
+	}
+
+	return ""
+}
+
 // GetFirstFileStuct 获取第一阶段文件处理的结果
 func (a *AllProject) GetFirstFileStuct(strFile string) (*results.FileStruct, bool) {
 	if a.checkTerm == results.CheckTermFirst {
