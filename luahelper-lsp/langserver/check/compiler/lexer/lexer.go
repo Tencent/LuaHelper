@@ -621,7 +621,8 @@ func (l *Lexer) skipComment() (shortFlag bool, strComment string) {
 
 	// long comment ?
 	if l.test("[") {
-		if l.matchLongStringBacket() != "" {
+		str, _ := l.matchLongStringBacket()
+		if str != "" {
 			shortFlag = false
 			strComment = l.scanLongString()
 			return
@@ -738,10 +739,15 @@ func (l *Lexer) scanNumber() string {
 
 // scanLongString 扫描长字符串
 func (l *Lexer) scanLongString() string {
-	longBracket := l.matchLongStringBacket()
+	longBracket, count := l.matchLongStringBacket()
 	if longBracket == "" {
-		l.errorPrint(l.GetHeardTokenLoc(), "invalid long string delimiter near '%s'", l.chunk[0:2])
-		l.next(2)
+		l.errorPrint(Location{
+			StartLine:   l.line,
+			StartColumn: l.currentPos,
+			EndLine:     l.line,
+			EndColumn:   l.currentPos + count,
+		}, "invalid long string delimiter near '%s'", l.chunk[0:2])
+		l.next(count)
 		return ""
 	}
 
@@ -779,25 +785,27 @@ func (l *Lexer) scanLongString() string {
 }
 
 // 获取长字符串的前缀
-func (l *Lexer) matchLongStringBacket() string {
+func (l *Lexer) matchLongStringBacket() (string, int) {
 	if !l.test("[") {
-		return ""
+		return "", 0
 	}
 
 	if l.test("[[") {
-		return "[["
+		return "[[", 0
 	}
 
+	var count int = 0
 	for index := 1; index < len(l.chunk); index++ {
 		if l.chunk[index] == '=' {
+			count++
 			continue
 		}
 		if l.chunk[index] != '[' {
 			break
 		}
-		return l.chunk[:index+1]
+		return l.chunk[:index+1], count + 2
 	}
-	return ""
+	return "", count + 2
 }
 
 // isNewWhiteSpace 判断是否空白
