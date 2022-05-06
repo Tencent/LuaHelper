@@ -277,7 +277,7 @@ func (a *AllProject) GetFuncParamType(fileName string, lastLine int) (retMap map
 	retMap = map[string]annotateast.Type{}
 	annotateParamInfo := a.GetFuncParamInfo(fileName, lastLine)
 	if annotateParamInfo == nil {
-		return retMap
+		return
 	}
 	for _, oneParam := range annotateParamInfo.ParamList {
 		switch subAst := oneParam.ParamType.(type) {
@@ -292,6 +292,26 @@ func (a *AllProject) GetFuncParamType(fileName string, lastLine int) (retMap map
 
 	}
 	return retMap
+}
+
+// 获取返回值类型 返回一个二维数组 如---@return number,string|number 对应[[number],[string,number]]
+func (a *AllProject) GetFuncReturnType(fileName string, lastLine int) (retVec [][]annotateast.Type) {
+
+	annotatePeturnInfo := a.GetFuncReturnInfo(fileName, lastLine)
+	if annotatePeturnInfo == nil {
+		return
+	}
+	for _, oneReturn := range annotatePeturnInfo.ReturnTypeList {
+		oneRetVec := []annotateast.Type{}
+		switch subAst := oneReturn.(type) {
+		case *annotateast.MultiType:
+			for _, oneType := range subAst.TypeList {
+				oneRetVec = append(oneRetVec, oneType)
+			}
+		}
+		retVec = append(retVec, oneRetVec)
+	}
+	return retVec
 }
 
 //

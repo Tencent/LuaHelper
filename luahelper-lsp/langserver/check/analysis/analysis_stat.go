@@ -125,16 +125,12 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
 	for i, argExp := range node.Args {
 		//函数定义处注解的参数类型
-		paramType := annotateast.GetAstTypeName(paramTypeMap[referFunc.ParamList[i]])
-		if paramType == "any" {
-			continue
-		}
+		annType := annotateast.GetAstTypeName(paramTypeMap[referFunc.ParamList[i]])
 
 		//函数调用处的参数类型
 		argType := common.GetAnnTypeFromExp(argExp)
-		if argType == "any" {
-			continue
-		} else if argType == "LuaTypeRefer" {
+
+		if argType == "LuaTypeRefer" {
 			//若是引用，则继续查找定义
 
 			name := ""
@@ -159,37 +155,33 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 				continue
 			}
 
-			//定义处若有注解 取注解的类型
-			argAnnType := a.Projects.GetAnnotateTypeString(varInfo)
+			//取注解的类型
+			annType = a.Projects.GetAnnotateTypeString(varInfo)
 
 			//定义处表达式推导的类型
 			argType = common.GetAnnTypeFromLuaType(varInfo.VarType)
 
-			//若有注解类型则先比较
-			if len(argAnnType) > 0 && paramType == argAnnType {
-				continue
-			}
+			//例如：
+			//---@type classA
+			//local tableA = {}
+			//argType是table, argAnnType是classA,
+			//tableA作为参数，参数类型要求table 在这里通过
 
-			if paramType == argType {
-				//例如：参数类型要求table
-				//---@type classA
-				//local tableA = {}
-				//argType是table, argAnnType是classA, 在这里通过
-				continue
-			}
-
-			if argType == "any" || argType == "LuaTypeRefer" {
-				//若仍是LuaTypeRefer 不再递归推导 否则影响插件效率
+			if argType == "LuaTypeRefer" {
+				//若仍是LuaTypeRefer 暂不再递归推导 否则影响插件效率
 				continue
 			}
 		}
 
+		if common.CompAnnTypeAndCodeType(annType, argType) {
+			continue
+		}
+
 		//类型不一致，报警
-		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", paramType, argType)
+		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", annType, argType)
 		fileResult.InsertError(common.CheckErrorCallParam, errorStr, node.Loc)
 
 	}
-
 }
 
 func (a *Analysis) cgBreakStat(node *ast.BreakStat) {
