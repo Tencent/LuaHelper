@@ -49,19 +49,19 @@ type VarargExp struct {
 // IntegerExp 整数
 type IntegerExp struct {
 	Val int64
-	//Loc lexer.LocInfo
+	Loc lexer.Location
 }
 
 // FloatExp 浮点数
 type FloatExp struct {
 	Val float64
-	//Loc lexer.LocInfo
+	Loc lexer.Location
 }
 
 // Luajit 整数
 type LuajitNum struct {
 	Val int64
-	//Loc lexer.LocInfo
+	Loc lexer.Location
 }
 
 // StringExp 字符串

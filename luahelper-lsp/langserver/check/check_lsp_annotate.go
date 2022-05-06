@@ -225,6 +225,23 @@ func (a *AllProject) GetFuncParamInfo(fileName string, lastLine int) (paramInfo 
 	return fragmentInfo.ParamInfo
 }
 
+//  获取前面注释行的所有返回值
+func (a *AllProject) GetFuncReturnInfo(fileName string, lastLine int) (paramInfo *common.FragementReturnInfo) {
+	annotateFile := a.getAnnotateFile(fileName)
+	if annotateFile == nil {
+		return
+	}
+
+	// 2) 获取注解文件指定行号的注释块信息
+	fragmentInfo := annotateFile.GetLineFragementInfo(lastLine)
+	if fragmentInfo == nil {
+		return
+	}
+
+	// 3) 判断是否有函数返回信息
+	return fragmentInfo.ReturnInfo
+}
+
 // GetAstTypeFuncType 获取注解astType具体的指向的注解函数
 func (a *AllProject) GetAstTypeFuncType(astType annotateast.Type, fileName string,
 	lastLine int) (funcType *annotateast.FuncType) {

@@ -120,6 +120,26 @@ func GetExpType(node ast.Exp) LuaType {
 	return LuaTypeAll
 }
 
+// 比较注解类型和参数/返回值类型
+func CompAnnTypeAndCodeType(annType string, codeType string) bool {
+	if annType == codeType || annType == "any" ||
+		codeType == "any" || codeType == "nil" {
+		return true
+	}
+
+	//如果注解是class类型 暂时不做比较
+	if annType != "number" &&
+		annType != "string" &&
+		annType != "boolean" &&
+		annType != "function" &&
+		annType != "table" &&
+		annType != "LuaTypeRefer" {
+		return true
+	}
+
+	return false
+}
+
 // 把ast.Exp转换成annotateast.type的字符串
 func GetAnnTypeFromExp(referExp ast.Exp) string {
 	expType := GetExpType(referExp)
@@ -1007,9 +1027,9 @@ func GetExpLoc(node ast.Exp) (loc lexer.Location) {
 	case *ast.FalseExp:
 		loc = exp.Loc
 	case *ast.FloatExp:
-		//loc = exp.Loc
+		loc = exp.Loc
 	case *ast.IntegerExp:
-		//loc = exp.Loc
+		loc = exp.Loc
 	}
 
 	return loc
