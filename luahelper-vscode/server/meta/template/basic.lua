@@ -325,7 +325,7 @@ function setmetatable(table, metatable) end
 --- represents 10, 'B' represents 11, and so forth, with 'Z' representing 35. If
 --- the string `e` is not a valid numeral in the given base, the function
 --- returns **nil**.
----@param e string
+---@param e string|number
 ---@param base? number
 ---@return any
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-tonumber)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-tonumber"])
