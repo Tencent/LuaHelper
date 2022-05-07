@@ -83,10 +83,18 @@ func (a *Analysis) cgFuncReturnCheck(retInfo *common.ReturnInfo) {
 			allTypeStr = fmt.Sprintf("%s%s", allTypeStr, typeOne)
 		}
 
-		//实际的返回值类型
+		loc := common.GetExpLoc(oneReturn.ReturnExp)
+
+		//获取代码处的返回值类型
 		retType := common.GetAnnTypeFromLuaType(oneReturn.VarType)
-		if retType == "any" || retType == "LuaTypeRefer" {
-			continue
+
+		if retType == "LuaTypeRefer" {
+
+			retType = a.GetAnnTypeStrForRefer(oneReturn.ReturnExp)
+			//retType := common.GetAnnTypeFromLuaType(oneReturn.VarType)
+			if retType == "any" || retType == "LuaTypeRefer" {
+				continue
+			}
 		}
 
 		hasMatch := false
@@ -106,7 +114,6 @@ func (a *Analysis) cgFuncReturnCheck(retInfo *common.ReturnInfo) {
 			//类型不一致，报警
 			errorStr := fmt.Sprintf("Return value is expected to be '%s', '%s' returned", allTypeStr, retType)
 
-			loc := common.GetExpLoc(oneReturn.ReturnExp)
 			a.curResult.InsertError(common.CheckErrorCallParam, errorStr, loc)
 		}
 	}

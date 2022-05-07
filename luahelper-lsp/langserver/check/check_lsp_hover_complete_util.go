@@ -225,7 +225,7 @@ func getVarInfoExpandStrHover(varInfo *common.VarInfo, inputVec []string, inputF
 }
 
 // 查看varInfo详细的类型，递归查找
-func (a *AllProject) getVarRelateTypeStr(varInfo *common.VarInfo) (strType string) {
+func (a *AllProject) GetVarRelateTypeStr(varInfo *common.VarInfo) (strType string) {
 	strType = varInfo.GetVarTypeDetail()
 
 	if varInfo.ReferFunc != nil {
@@ -274,7 +274,7 @@ func (a *AllProject) getVarInfoMapStr(varInfo *common.VarInfo, existMap map[stri
 		// if value.ReferFunc != nil {
 		// 	strValueType = value.ReferFunc.GetFuncCompleteStr("function", true, false)
 		// }
-		strValueType := a.getVarRelateTypeStr(value)
+		strValueType := a.GetVarRelateTypeStr(value)
 		newStr := key + ": " + strValueType + ","
 
 		strComment := a.GetLineComment(value.FileName, value.Loc.StartLine)
