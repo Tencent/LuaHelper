@@ -127,13 +127,20 @@ func CompAnnTypeAndCodeType(annType string, codeType string) bool {
 		return true
 	}
 
-	//如果注解是class类型 暂时不做比较
-	if annType != "number" &&
-		annType != "string" &&
-		annType != "boolean" &&
-		annType != "function" &&
-		annType != "table" &&
-		annType != "LuaTypeRefer" {
+	if codeType == "LuaTypeRefer" {
+		return true
+	}
+
+	commonType := map[string]bool{
+		"number":  true,
+		"string":  true,
+		"boolean": true,
+		"table":   true,
+	}
+
+	//认为class类型与table类型相等
+	if (!commonType[annType] && codeType == "table") ||
+		(!commonType[codeType] && annType == "table") {
 		return true
 	}
 

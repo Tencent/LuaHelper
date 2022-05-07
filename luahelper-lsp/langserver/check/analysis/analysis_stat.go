@@ -128,60 +128,73 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 		annType := annotateast.GetAstTypeName(paramTypeMap[referFunc.ParamList[i]])
 
 		//函数调用处的参数类型
-		argType := common.GetAnnTypeFromExp(argExp)
-
-		if argType == "LuaTypeRefer" {
-			//若是引用，则继续查找定义
-
-			name := ""
-			loc := lexer.Location{}
-			switch exp := argExp.(type) {
-			case *ast.NameExp:
-				name = exp.Name
-				loc = exp.Loc
-				// //case *ast.ParensExp:
-				// //case *ast.TableAccessExp:
-				// 	//name, loc = common.GetTableNameInfo(exp)
-				// // case *ast.FuncCallExp:
-				// // 	name = exp.NameExp.Str
-			}
-
-			if len(name) <= 0 {
-				continue
-			}
-
-			ok, varInfo := a.FindVarDefineForCheck(name, loc)
-			if !ok {
-				continue
-			}
-
-			//取注解的类型
-			annType = a.Projects.GetAnnotateTypeString(varInfo)
-
-			//定义处表达式推导的类型
-			argType = common.GetAnnTypeFromLuaType(varInfo.VarType)
-
-			//例如：
-			//---@type classA
-			//local tableA = {}
-			//argType是table, argAnnType是classA,
-			//tableA作为参数，参数类型要求table 在这里通过
-
-			if argType == "LuaTypeRefer" {
-				//若仍是LuaTypeRefer 暂不再递归推导 否则影响插件效率
-				continue
-			}
-		}
+		argType := a.GetAnnTypeStrForRefer(argExp)
 
 		if common.CompAnnTypeAndCodeType(annType, argType) {
 			continue
 		}
 
+		loc := common.GetExpLoc(argExp)
+
 		//类型不一致，报警
 		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", annType, argType)
-		fileResult.InsertError(common.CheckErrorCallParam, errorStr, node.Loc)
+		fileResult.InsertError(common.CheckErrorCallParam, errorStr, loc)
 
 	}
+}
+
+//获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
+func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp) string {
+	argType := common.GetAnnTypeFromExp(referExp)
+	if argType != "LuaTypeRefer" {
+		return argType
+	}
+
+	//若是引用，则继续查找定义
+	name := ""
+	loc := lexer.Location{}
+	switch exp := referExp.(type) {
+	case *ast.NameExp:
+		name = exp.Name
+		loc = exp.Loc
+		// //case *ast.ParensExp:
+		// //case *ast.TableAccessExp:
+		// 	//name, loc = common.GetTableNameInfo(exp)
+		// // case *ast.FuncCallExp:
+		// // 	name = exp.NameExp.Str
+	}
+
+	if len(name) <= 0 {
+		return argType
+	}
+
+	ok, varInfo := a.FindVarDefineForCheck(name, loc)
+	if !ok {
+		return argType
+	}
+
+	//优先取变量定义处的注解类型
+	defAnnType := a.Projects.GetAnnotateTypeString(varInfo)
+	if len(defAnnType) > 0 {
+		return defAnnType
+	}
+
+	//若无注解，则取变量定义处表达式推导的类型
+	argType = common.GetAnnTypeFromLuaType(varInfo.VarType)
+
+	//例如：
+	//---@type classA
+	//local tableA = {}
+	//argType是table, defAnnType是classA,
+	//当tableA作为参数时，table或者classA都可以匹配
+
+	if argType == "LuaTypeRefer" {
+		//若仍是LuaTypeRefer 递归推导
+		return a.GetAnnTypeStrForRefer(varInfo.ReferExp)
+	} else {
+		return argType
+	}
+
 }
 
 func (a *Analysis) cgBreakStat(node *ast.BreakStat) {
