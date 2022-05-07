@@ -36,7 +36,7 @@ type Projects interface {
 
 	GetAnnotateTypeString(varInfo *common.VarInfo) string
 
-	GetFuncParamType(fileName string, lastLine int) (retMap map[string]annotateast.Type)
+	GetFuncParamType(fileName string, lastLine int) (retMap map[string][]annotateast.Type)
 
 	GetFuncReturnInfo(fileName string, lastLine int) (paramInfo *common.FragementReturnInfo)
 

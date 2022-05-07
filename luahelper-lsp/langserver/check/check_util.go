@@ -273,8 +273,8 @@ func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, para
 }
 
 // 获取参数类型
-func (a *AllProject) GetFuncParamType(fileName string, lastLine int) (retMap map[string]annotateast.Type) {
-	retMap = map[string]annotateast.Type{}
+func (a *AllProject) GetFuncParamType(fileName string, lastLine int) (retMap map[string][]annotateast.Type) {
+	retMap = map[string][]annotateast.Type{}
 	annotateParamInfo := a.GetFuncParamInfo(fileName, lastLine)
 	if annotateParamInfo == nil {
 		return
@@ -283,11 +283,11 @@ func (a *AllProject) GetFuncParamType(fileName string, lastLine int) (retMap map
 		switch subAst := oneParam.ParamType.(type) {
 		case *annotateast.MultiType:
 			if len(subAst.TypeList) == 0 {
-				return
+				continue
 			}
-			retMap[oneParam.Name] = subAst.TypeList[0]
+			retMap[oneParam.Name] = subAst.TypeList
 		case *annotateast.NormalType:
-			retMap[oneParam.Name] = oneParam.ParamType
+			retMap[oneParam.Name] = []annotateast.Type{oneParam.ParamType}
 		}
 
 	}

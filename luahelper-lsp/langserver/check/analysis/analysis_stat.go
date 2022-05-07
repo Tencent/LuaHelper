@@ -123,21 +123,49 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 
 	//到此参数个数正常，继续检查参数类型匹配
 	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
+	if len(paramTypeMap) == 0 {
+		//函数没有写注解
+		return
+	}
+
 	for i, argExp := range node.Args {
-		//函数定义处注解的参数类型
-		annType := annotateast.GetAstTypeName(paramTypeMap[referFunc.ParamList[i]])
+		if _, ok := paramTypeMap[referFunc.ParamList[i]]; !ok {
+			//该参数没写注解
+			continue
+		}
+
+		annTypeVec := paramTypeMap[referFunc.ParamList[i]]
+		allTypeStr := ""
+		for _, annTypeOne := range annTypeVec {
+			typeOne := annotateast.GetAstTypeName(annTypeOne)
+			if len(allTypeStr) > 0 {
+				allTypeStr = fmt.Sprintf("%s|", allTypeStr)
+			}
+			allTypeStr = fmt.Sprintf("%s%s", allTypeStr, typeOne)
+		}
 
 		//函数调用处的参数类型
 		argType := a.GetAnnTypeStrForRefer(argExp)
 
-		if common.CompAnnTypeAndCodeType(annType, argType) {
+		hasMatch := false
+		for _, annTypeOne := range annTypeVec {
+			//函数定义处注解的参数类型
+			annType := annotateast.GetAstTypeName(annTypeOne)
+
+			if common.CompAnnTypeAndCodeType(annType, argType) {
+				hasMatch = true
+				break
+			}
+		}
+
+		if hasMatch {
 			continue
 		}
 
 		loc := common.GetExpLoc(argExp)
 
 		//类型不一致，报警
-		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", annType, argType)
+		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", allTypeStr, argType)
 		fileResult.InsertError(common.CheckErrorCallParam, errorStr, loc)
 
 	}
