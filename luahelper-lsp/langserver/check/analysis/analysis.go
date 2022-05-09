@@ -581,3 +581,47 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		//a.curResult.InsertError(common.CheckErrorConstAssign, errStr, loc)
 	}
 }
+
+// 比较注解类型和参数/返回值类型
+func (a *Analysis) CompAnnTypeAndCodeType(annType string, codeType string) bool {
+	if annType == codeType || annType == "any" ||
+		codeType == "any" || codeType == "nil" {
+		return true
+	}
+
+	if codeType == "LuaTypeRefer" {
+		return true
+	}
+
+	commonType := map[string]bool{
+		"number":  true,
+		"string":  true,
+		"boolean": true,
+		"table":   true,
+	}
+
+	//认为class类型与table类型相等
+	if (!commonType[annType] && codeType == "table") ||
+		(!commonType[codeType] && annType == "table") {
+		return true
+	}
+
+	if !commonType[annType] {
+
+		annTypeInfo := a.Projects.GetAnnClassInfo(annType)
+		if annTypeInfo == nil {
+			return true
+		}
+
+		if annTypeInfo.AliasInfo != nil {
+			//别名先不判断
+			return true
+		}
+		// } else if annTypeInfo.ClassInfo != nil {
+		// 	//class先不判断
+		// 	return true
+		// }
+	}
+
+	return false
+}

@@ -465,6 +465,16 @@ func (a *AllProject) IsMemberOfAnnotateClassByLoc(strFile string, strFieldNameli
 	return isStrict, isMemberMap, className
 }
 
+//3 根据className 查找注解的class信息
+func (a *AllProject) GetAnnClassInfo(className string) *common.CreateTypeInfo {
+	createTypeList, flag := a.createTypeMap[className]
+	if !flag || len(createTypeList.List) == 0 {
+		return nil
+	}
+	//只取第一个，如果有多个，后续会报警
+	return createTypeList.List[0]
+}
+
 // 获取注解 ---type
 func (a *AllProject) IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool) {
 	isConst = false
