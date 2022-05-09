@@ -51,7 +51,7 @@ function assert(v, message) end
 --- **"isrunning"**: returns a boolean that tells whether the collector is
 --- running (i.e., not stopped).
 ---@param opt? cgopt
----@param arg? string
+---@param arg? number
 ---@return any
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-collectgarbage)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-collectgarbage"])
 function collectgarbage(opt, arg) end
