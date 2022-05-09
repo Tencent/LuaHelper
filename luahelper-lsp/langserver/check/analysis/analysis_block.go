@@ -103,7 +103,7 @@ func (a *Analysis) cgFuncReturnCheck(retInfo *common.ReturnInfo) {
 		for _, annRetTypeOne := range annRetVec[i] {
 			annType := annotateast.GetAstTypeName(annRetTypeOne)
 
-			if common.CompAnnTypeAndCodeType(annType, retType) {
+			if a.CompAnnTypeAndCodeType(annType, retType) {
 				hasMatch = true
 				break
 			}

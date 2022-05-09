@@ -41,4 +41,6 @@ type Projects interface {
 	GetFuncReturnInfo(fileName string, lastLine int) (paramInfo *common.FragementReturnInfo)
 
 	GetFuncReturnType(fileName string, lastLine int) (retVec [][]annotateast.Type)
+
+	GetAnnClassInfo(className string) *common.CreateTypeInfo
 }

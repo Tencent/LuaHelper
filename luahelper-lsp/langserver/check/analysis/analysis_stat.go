@@ -152,7 +152,7 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 			//函数定义处注解的参数类型
 			annType := annotateast.GetAstTypeName(annTypeOne)
 
-			if common.CompAnnTypeAndCodeType(annType, argType) {
+			if a.CompAnnTypeAndCodeType(annType, argType) {
 				hasMatch = true
 				break
 			}

@@ -120,33 +120,6 @@ func GetExpType(node ast.Exp) LuaType {
 	return LuaTypeAll
 }
 
-// 比较注解类型和参数/返回值类型
-func CompAnnTypeAndCodeType(annType string, codeType string) bool {
-	if annType == codeType || annType == "any" ||
-		codeType == "any" || codeType == "nil" {
-		return true
-	}
-
-	if codeType == "LuaTypeRefer" {
-		return true
-	}
-
-	commonType := map[string]bool{
-		"number":  true,
-		"string":  true,
-		"boolean": true,
-		"table":   true,
-	}
-
-	//认为class类型与table类型相等
-	if (!commonType[annType] && codeType == "table") ||
-		(!commonType[codeType] && annType == "table") {
-		return true
-	}
-
-	return false
-}
-
 // 把ast.Exp转换成annotateast.type的字符串
 func GetAnnTypeFromExp(referExp ast.Exp) string {
 	expType := GetExpType(referExp)
