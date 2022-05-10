@@ -761,6 +761,18 @@
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.Warn.CheckConstAssign%"
+                },
+                "luahelper.Warn.CheckFuncParamType": {
+                    "default": false,
+                    "scope": "resource",
+                    "type": "boolean",
+                    "description": "%luahelper.Warn.CheckFuncParamType%"
+                },
+                "luahelper.Warn.CheckFuncReturnType": {
+                    "default": false,
+                    "scope": "resource",
+                    "type": "boolean",
+                    "description": "%luahelper.Warn.CheckFuncReturnType%"
                 }
             }
         },

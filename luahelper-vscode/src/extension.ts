@@ -249,6 +249,8 @@ async function doStartServer() {
             CheckFloatEq: getWarnCheckFlag("CheckFloatEq"),
             CheckClassField: getWarnCheckFlag("CheckClassField"),
             CheckConstAssign: getWarnCheckFlag("CheckConstAssign"),
+            CheckFuncParamType: getWarnCheckFlag("CheckFuncParamType"),
+            CheckFuncReturnType: getWarnCheckFlag("CheckFuncReturnType"),
             IgnoreFileOrDir: ignoreFileOrDirArr,
             IgnoreFileOrDirError: ignoreFileOrDirErrArr,
             RequirePathSeparator: requirePathSeparator,

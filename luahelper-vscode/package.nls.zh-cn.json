@@ -44,6 +44,8 @@
     "luahelper.Warn.CheckFloatEq": "[Warn Type:21], 是否开启浮点数做等于或不等于判断的检查",
     "luahelper.Warn.CheckClassField": "[Warn Type:22], 是否检查类成员",
     "luahelper.Warn.CheckConstAssign": "[Warn Type:23], 是否检查对常量的赋值",
+    "luahelper.Warn.CheckFuncParamType": "[Warn Type:24], 是否检查函数参数类型",
+    "luahelper.Warn.CheckFuncReturnType": "[Warn Type:25], 是否检查函数返回值类型",
     "luahelper.workspace.IgnoreFileOrDir": "忽略分析指定的文件或文件夹。例如：one11.lua表示忽略分析文件；.vscode/ 表示忽略分析文件夹",
     "luahelper.workspace.IgnoreFileOrDirErrors": "忽略指定的文件或文件夹的检查错误（文件或文件会被分析，但不会报错）。例如：one11.lua表示忽略文件错误；.vscode/ 表示忽略文件夹错误",
     "luahelper.format.allReadMe": "阅读所有格式化参数请参考 [这里](https://github.com/Koihik/LuaFormatter/blob/master/docs/Style-Config.md).\n",
