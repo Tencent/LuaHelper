@@ -513,10 +513,6 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	if strTableName == "tableB" {
-		strTableName = "tableB"
-	}
-
 	strKey := common.GetExpName(node.KeyExp)
 	// 如果不是简单字符，退出
 	if !common.JudgeSimpleStr(strKey) || strKey == "" {
@@ -561,10 +557,6 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		return
 	}
 
-	if name == "tableB" {
-		name = "tableB"
-	}
-
 	ok, varInfo := a.FindVarDefineForCheck(name, loc)
 	if !ok {
 		return
@@ -578,7 +570,6 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		//标记了常量，却赋值
 		errStr := fmt.Sprintf("(%s) is const, can not assgin", name)
 		a.curResult.InsertError(common.CheckErrorConstAssign, errStr, loc)
-		//a.curResult.InsertError(common.CheckErrorConstAssign, errStr, loc)
 	}
 }
 

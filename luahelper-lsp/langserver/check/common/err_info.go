@@ -75,6 +75,12 @@ const (
 	// CheckErrorConstAssign 给常量赋值
 	CheckErrorConstAssign = 23
 
+	// 函数调用参数类型出错
+	CheckErrorCallParamType = 24
+
+	// 函数返回值类型出错
+	CheckErrorFuncRetErr = 25
+
 	// CheckErrorMax
-	CheckErrorMax = 24
+	CheckErrorMax = 26
 )

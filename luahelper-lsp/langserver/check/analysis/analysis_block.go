@@ -56,7 +56,7 @@ func (a *Analysis) cgFuncReturnCheck(retInfo *common.ReturnInfo) {
 	}
 
 	// 判断是否开启了函数调用参数个数不匹配的校验
-	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorCallParam) {
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorFuncRetErr) {
 		return
 	}
 

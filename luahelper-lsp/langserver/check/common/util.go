@@ -29,9 +29,6 @@ func GetTableNameInfo(tabExp *ast.TableAccessExp) (string, lexer.Location) {
 	}
 
 	keyName := GetExpName(tabExp.KeyExp)
-	if keyName == "tableB" {
-		keyName = "tableB"
-	}
 
 	//return GetExpName(tabExp.PrefixExp), GetExpLoc(tabExp.PrefixExp)
 	preName := GetExpName(tabExp.PrefixExp)
