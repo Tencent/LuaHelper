@@ -121,6 +121,23 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 		}
 	}
 
+	//参数个数正确之后再判断参数类型匹配
+	a.funcCallParamTypeCheck(node, referFunc)
+}
+
+func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *common.FuncInfo) {
+
+	// 第二轮或第三轮函数参数check
+	if !a.isNeedCheck() {
+		return
+	}
+
+	// 判断是否开启了函数调用参数个数不匹配的校验
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorCallParamType) {
+		return
+	}
+
+	fileResult := a.curResult
 	//到此参数个数正常，继续检查参数类型匹配
 	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
 	if len(paramTypeMap) == 0 {
