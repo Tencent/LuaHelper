@@ -183,7 +183,7 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 
 		//类型不一致，报警
 		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", allTypeStr, argType)
-		fileResult.InsertError(common.CheckErrorCallParam, errorStr, loc)
+		fileResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
 
 	}
 }

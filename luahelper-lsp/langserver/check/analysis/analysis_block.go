@@ -114,7 +114,7 @@ func (a *Analysis) cgFuncReturnCheck(retInfo *common.ReturnInfo) {
 			//类型不一致，报警
 			errorStr := fmt.Sprintf("Return value is expected to be '%s', '%s' returned", allTypeStr, retType)
 
-			a.curResult.InsertError(common.CheckErrorCallParam, errorStr, loc)
+			a.curResult.InsertError(common.CheckErrorFuncRetErr, errorStr, loc)
 		}
 	}
 }
