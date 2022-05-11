@@ -205,8 +205,11 @@ func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp) string {
 		// //case *ast.ParensExp:
 		// //case *ast.TableAccessExp:
 		// 	//name, loc = common.GetTableNameInfo(exp)
-		// // case *ast.FuncCallExp:
-		// // 	name = exp.NameExp.Str
+	case *ast.FuncCallExp:
+		if nameExp, ok := exp.PrefixExp.(*ast.NameExp); ok && exp.NameExp == nil {
+			name = nameExp.Name
+			loc = nameExp.Loc
+		}
 	}
 
 	if len(name) <= 0 {
