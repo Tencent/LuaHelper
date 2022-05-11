@@ -206,10 +206,11 @@ func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp) string {
 		// //case *ast.TableAccessExp:
 		// 	//name, loc = common.GetTableNameInfo(exp)
 	case *ast.FuncCallExp:
-		if nameExp, ok := exp.PrefixExp.(*ast.NameExp); ok && exp.NameExp == nil {
-			name = nameExp.Name
-			loc = nameExp.Loc
-		}
+		// if nameExp, ok := exp.PrefixExp.(*ast.NameExp); ok && exp.NameExp == nil {
+		// 	name = nameExp.Name
+		// 	loc = nameExp.Loc
+		// }
+		// 如果函数有多个返回值，如何确定取哪个返回值类型呢
 	}
 
 	if len(name) <= 0 {
