@@ -528,10 +528,35 @@ func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo) string {
 	}
 
 	fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
+	if fragmentInfo == nil {
+		return ""
+	}
 
-	//作为变量的const
-	if fragmentInfo != nil &&
-		fragmentInfo.TypeInfo != nil &&
+	//如果是函数 取返回值
+	if varInfo.ReferFunc != nil {
+
+		if fragmentInfo.ReturnInfo != nil &&
+			len(fragmentInfo.ReturnInfo.ReturnTypeList) > 0 {
+
+			switch subType := fragmentInfo.ReturnInfo.ReturnTypeList[0].(type) {
+			case *annotateast.MultiType:
+				if len(subType.TypeList) == 0 {
+					return ""
+				}
+				switch subSubType := subType.TypeList[0].(type) {
+				case *annotateast.NormalType:
+					return subSubType.StrName
+				}
+			case *annotateast.NormalType:
+				return subType.StrName
+
+			}
+		}
+
+		return ""
+	}
+
+	if fragmentInfo.TypeInfo != nil &&
 		len(fragmentInfo.TypeInfo.TypeList) > 0 {
 
 		switch subType := fragmentInfo.TypeInfo.TypeList[0].(type) {
