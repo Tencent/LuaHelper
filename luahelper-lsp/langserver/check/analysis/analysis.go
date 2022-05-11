@@ -580,7 +580,7 @@ func (a *Analysis) CompAnnTypeAndCodeType(annType string, codeType string) bool 
 		return true
 	}
 
-	if codeType == "LuaTypeRefer" {
+	if codeType == "LuaTypeRefer" || codeType == "function" {
 		return true
 	}
 
