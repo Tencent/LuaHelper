@@ -576,7 +576,8 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 // 比较注解类型和参数/返回值类型
 func (a *Analysis) CompAnnTypeAndCodeType(annType string, codeType string) bool {
 	if annType == codeType || annType == "any" ||
-		codeType == "any" || codeType == "nil" {
+		codeType == "any" || codeType == "nil" ||
+		codeType == "" {
 		return true
 	}
 
