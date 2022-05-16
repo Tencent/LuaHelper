@@ -517,64 +517,66 @@ func (a *AllProject) IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (
 	return isConst
 }
 
-// 获取注解中的类型
-func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo) string {
+// 获取注解中的类型 可以指定取第几个 如函数有多个返回值时候
+func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo, idx int) (retVec []string) {
 
+	retVec = []string{}
 	// 1) 获取文件对应的annotateFile
 	annotateFile := a.getAnnotateFile(varInfo.FileName)
 	if annotateFile == nil {
 		log.Error("GetAnnotateType annotateFile is nil, file=%s", varInfo.FileName)
-		return ""
+		return
 	}
 
 	fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
 	if fragmentInfo == nil {
-		return ""
+		return
 	}
 
 	//如果是函数 取返回值
 	if varInfo.ReferFunc != nil {
 
-		if fragmentInfo.ReturnInfo != nil &&
-			len(fragmentInfo.ReturnInfo.ReturnTypeList) > 0 {
-
-			switch subType := fragmentInfo.ReturnInfo.ReturnTypeList[0].(type) {
-			case *annotateast.MultiType:
-				if len(subType.TypeList) == 0 {
-					return ""
-				}
-				switch subSubType := subType.TypeList[0].(type) {
-				case *annotateast.NormalType:
-					return subSubType.StrName
-				}
-			case *annotateast.NormalType:
-				return subType.StrName
-
-			}
+		if fragmentInfo.ReturnInfo == nil ||
+			len(fragmentInfo.ReturnInfo.ReturnTypeList) < idx {
+			return
 		}
 
-		return ""
+		switch retType := fragmentInfo.ReturnInfo.ReturnTypeList[idx-1].(type) {
+		case *annotateast.MultiType:
+			for _, oneRetType := range retType.TypeList {
+				switch oneType := oneRetType.(type) {
+				case *annotateast.NormalType:
+					retVec = append(retVec, oneType.StrName)
+				}
+			}
+		case *annotateast.NormalType:
+			retVec = append(retVec, retType.StrName)
+
+		}
+
+		return retVec
 	}
 
 	if fragmentInfo.TypeInfo != nil &&
-		len(fragmentInfo.TypeInfo.TypeList) > 0 {
+		len(fragmentInfo.TypeInfo.TypeList) >= idx {
 
-		switch subType := fragmentInfo.TypeInfo.TypeList[0].(type) {
+		switch typeInfo := fragmentInfo.TypeInfo.TypeList[idx-1].(type) {
 		case *annotateast.MultiType:
-			if len(subType.TypeList) == 0 {
-				return ""
+			for _, oneTypeInfo := range typeInfo.TypeList {
+				switch oneType := oneTypeInfo.(type) {
+				case *annotateast.NormalType:
+					retVec = append(retVec, oneType.StrName)
+				}
 			}
-			switch subSubType := subType.TypeList[0].(type) {
-			case *annotateast.NormalType:
-				return subSubType.StrName
-			}
-		case *annotateast.NormalType:
-			return subType.StrName
 
+		case *annotateast.NormalType:
+			retVec = append(retVec, typeInfo.StrName)
 		}
+
+		return retVec
 	}
 
-	return ""
+	return
 }
 
 // GetFirstFileStuct 获取第一阶段文件处理的结果

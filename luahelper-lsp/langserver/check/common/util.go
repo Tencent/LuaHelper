@@ -67,7 +67,13 @@ func GetExpType(node ast.Exp) LuaType {
 		}
 
 		if exp.Op == lexer.TkOpOr {
-			return GetExpType(exp.Exp1)
+
+			oneType := GetExpType(exp.Exp1)
+			if oneType != LuaTypeAll && oneType != LuaTypeRefer {
+				return oneType
+			} else {
+				return GetExpType(exp.Exp2)
+			}
 		} else if exp.Op == lexer.TkOpAnd {
 			return GetExpType(exp.Exp2)
 		}

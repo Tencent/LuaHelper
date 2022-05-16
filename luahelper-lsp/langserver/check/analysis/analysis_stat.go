@@ -162,15 +162,33 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 		}
 
 		//函数调用处的参数类型
-		argType := a.GetAnnTypeStrForRefer(argExp)
+		argTypeVec := a.GetAnnTypeStrForRefer(argExp, -1)
+		if len(argTypeVec) == 0 {
+			// 取不到参数类型
+			continue
+		}
+
+		allArgTypeStr := ""
+		for _, argTypeOne := range argTypeVec {
+			if len(allArgTypeStr) > 0 {
+				allArgTypeStr = fmt.Sprintf("%s|", allArgTypeStr)
+			}
+			allArgTypeStr = fmt.Sprintf("%s%s", allArgTypeStr, argTypeOne)
+		}
 
 		hasMatch := false
 		for _, annTypeOne := range annTypeVec {
 			//函数定义处注解的参数类型
 			annType := annotateast.GetAstTypeName(annTypeOne)
 
-			if a.CompAnnTypeAndCodeType(annType, argType) {
-				hasMatch = true
+			for _, argTypeOne := range argTypeVec {
+				if a.CompAnnTypeAndCodeType(annType, argTypeOne) {
+					hasMatch = true
+					break
+				}
+			}
+
+			if hasMatch {
 				break
 			}
 		}
@@ -182,17 +200,19 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 		loc := common.GetExpLoc(argExp)
 
 		//类型不一致，报警
-		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", allTypeStr, argType)
+		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", allTypeStr, allArgTypeStr)
 		fileResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
 
 	}
 }
 
 //获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
-func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp) string {
+func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp, idx int) (retVec []string) {
+	retVec = []string{}
 	argType := common.GetAnnTypeFromExp(referExp)
 	if argType != "LuaTypeRefer" {
-		return argType
+		retVec = append(retVec, argType)
+		return retVec
 	}
 
 	//若是引用，则继续查找定义
@@ -206,26 +226,30 @@ func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp) string {
 		// //case *ast.TableAccessExp:
 		// 	//name, loc = common.GetTableNameInfo(exp)
 	case *ast.FuncCallExp:
-		// if nameExp, ok := exp.PrefixExp.(*ast.NameExp); ok && exp.NameExp == nil {
-		// 	name = nameExp.Name
-		// 	loc = nameExp.Loc
-		// }
-		// 如果函数有多个返回值，如何确定取哪个返回值类型呢
+		if nameExp, ok := exp.PrefixExp.(*ast.NameExp); ok && exp.NameExp == nil {
+			name = nameExp.Name
+			loc = nameExp.Loc
+		}
 	}
 
 	if len(name) <= 0 {
-		return argType
+		return
 	}
 
 	ok, varInfo := a.FindVarDefineForCheck(name, loc)
 	if !ok {
-		return argType
+		return
+	}
+
+	varIdx := int(varInfo.VarIndex)
+	if idx > 0 {
+		varIdx = idx
 	}
 
 	//优先取变量定义处的注解类型
-	defAnnType := a.Projects.GetAnnotateTypeString(varInfo)
-	if len(defAnnType) > 0 {
-		return defAnnType
+	defAnnTypeVec := a.Projects.GetAnnotateTypeString(varInfo, varIdx)
+	if len(defAnnTypeVec) > 0 {
+		return defAnnTypeVec
 	}
 
 	//若无注解，则取变量定义处表达式推导的类型
@@ -239,11 +263,11 @@ func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp) string {
 
 	if argType == "LuaTypeRefer" {
 		//若仍是LuaTypeRefer 递归推导
-		return a.GetAnnTypeStrForRefer(varInfo.ReferExp)
+		return a.GetAnnTypeStrForRefer(varInfo.ReferExp, varIdx)
 	} else {
-		return argType
+		retVec = append(retVec, argType)
+		return retVec
 	}
-
 }
 
 func (a *Analysis) cgBreakStat(node *ast.BreakStat) {
