@@ -89,6 +89,8 @@ type WarnParams struct {
 	CheckFloatEq                   bool `json:"CheckFloatEq,omitempty"`
 	CheckClassField                bool `json:"CheckClassField,omitempty"`
 	CheckConstAssign               bool `json:"CheckConstAssign,omitempty"`
+	CheckFuncParamType             bool `json:"CheckFuncParamType,omitempty"`
+	CheckFuncReturnType            bool `json:"CheckFuncReturnType,omitempty"`
 }
 
 // LuahelperParams 整体的设置
@@ -271,6 +273,8 @@ func getWarnCheckList(warnParam *WarnParams) (checkFlagList []bool) {
 		warnParam.CheckFloatEq,
 		warnParam.CheckClassField,
 		warnParam.CheckConstAssign,
+		warnParam.CheckFuncParamType,
+		warnParam.CheckFuncReturnType,
 	}
 
 	return checkFlagList
