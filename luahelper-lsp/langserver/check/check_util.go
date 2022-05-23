@@ -518,7 +518,7 @@ func (a *AllProject) IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (
 }
 
 // 获取注解中的类型 可以指定取第几个 如函数有多个返回值时候
-func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo, idx int) (retVec []string) {
+func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo, name string, idx int) (retVec []string) {
 
 	retVec = []string{}
 	// 1) 获取文件对应的annotateFile
@@ -554,6 +554,38 @@ func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo, idx int) (re
 
 		}
 
+		return retVec
+	}
+
+	//如果是函数参数
+	if fragmentInfo.ParamInfo != nil &&
+		len(fragmentInfo.ParamInfo.ParamList) >= idx {
+
+		//需要用参数名称匹配
+		matchIdx := -1
+		for i, paramState := range fragmentInfo.ParamInfo.ParamList {
+			if paramState.Name == name {
+				matchIdx = i
+				break
+			}
+		}
+
+		if matchIdx < 0 || matchIdx >= len(fragmentInfo.ParamInfo.ParamList) {
+			return
+		}
+
+		switch typeInfo := fragmentInfo.ParamInfo.ParamList[matchIdx].ParamType.(type) {
+		case *annotateast.MultiType:
+			for _, oneTypeInfo := range typeInfo.TypeList {
+				switch oneType := oneTypeInfo.(type) {
+				case *annotateast.NormalType:
+					retVec = append(retVec, oneType.StrName)
+				}
+			}
+
+		case *annotateast.NormalType:
+			retVec = append(retVec, typeInfo.StrName)
+		}
 		return retVec
 	}
 
