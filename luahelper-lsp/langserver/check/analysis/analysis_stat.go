@@ -247,7 +247,7 @@ func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp, idx int) (retVec []st
 	}
 
 	//优先取变量定义处的注解类型
-	defAnnTypeVec := a.Projects.GetAnnotateTypeString(varInfo, varIdx)
+	defAnnTypeVec := a.Projects.GetAnnotateTypeString(varInfo, name, varIdx)
 	if len(defAnnTypeVec) > 0 {
 		return defAnnTypeVec
 	}
