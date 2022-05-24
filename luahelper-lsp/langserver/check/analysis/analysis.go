@@ -580,7 +580,7 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 
 	if a.Projects.IsAnnotateTypeConst(name, varInfo) {
 		//标记了常量，却赋值
-		errStr := fmt.Sprintf("(%s) is const, can not assgin", name)
+		errStr := fmt.Sprintf("'%s' is constant and not assignable", name)
 		a.curResult.InsertError(common.CheckErrorConstAssign, errStr, loc)
 	}
 }
