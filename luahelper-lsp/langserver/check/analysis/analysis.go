@@ -417,12 +417,16 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 		return
 	}
 
+	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorClassField]; !ok {
+		return
+	}
+
 	if strTableName == "" || len(strFieldNamelist) == 0 || nodeLoc == nil || node == nil {
 		return
 	}
 
-	isStrict, isMemberMap, className := a.Projects.IsMemberOfAnnotateClassByLoc(a.curResult.Name, strFieldNamelist, nodeLoc.StartLine-1)
-	if !isStrict || len(isMemberMap) == 0 {
+	isMemberMap, className := a.Projects.IsMemberOfAnnotateClassByLoc(a.curResult.Name, strFieldNamelist, nodeLoc.StartLine-1)
+	if len(isMemberMap) == 0 || len(className) == 0 || (className) == "any" {
 		return
 	}
 
@@ -437,7 +441,7 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 			ok, keyLoc := common.GetTableConstructorExpKeyStrLoc(*node, strFieldName)
 
 			if ok {
-				errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strFieldName, className)
+				errStr := fmt.Sprintf("Property '%s' not found in '%s'", strFieldName, className)
 				a.curResult.InsertError(common.CheckErrorClassField, errStr, keyLoc)
 			}
 		}
@@ -507,6 +511,10 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
+	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorClassField]; !ok {
+		return
+	}
+
 	strTable := common.GetExpName(node.PrefixExp)
 	strTableName := common.GetSimpleValue(strTable)
 	if strTableName == "" {
@@ -524,12 +532,12 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	isStrict, isMember, className := a.Projects.IsMemberOfAnnotateClassByVar(strKey, strTableName, varInfo)
-	if !isStrict || isMember {
+	isMember, className := a.Projects.IsMemberOfAnnotateClassByVar(strKey, strTableName, varInfo)
+	if isMember || len(className) == 0 || (className) == "any" {
 		return
 	}
 
-	errStr := fmt.Sprintf("the field (%s), is not a member of (%s)", strKey, className)
+	errStr := fmt.Sprintf("Property '%s' not found in '%s'", strKey, className)
 	a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
 }
 
@@ -540,6 +548,10 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 	}
 
 	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorConstAssign) {
+		return
+	}
+
+	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorConstAssign]; !ok {
 		return
 	}
 
