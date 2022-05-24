@@ -749,30 +749,6 @@
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.Warn.CheckFloatEq%"
-                },
-                "luahelper.Warn.CheckClassField": {
-                    "default": false,
-                    "scope": "resource",
-                    "type": "boolean",
-                    "description": "%luahelper.Warn.CheckClassField%"
-                },
-                "luahelper.Warn.CheckConstAssign": {
-                    "default": false,
-                    "scope": "resource",
-                    "type": "boolean",
-                    "description": "%luahelper.Warn.CheckConstAssign%"
-                },
-                "luahelper.Warn.CheckFuncParamType": {
-                    "default": false,
-                    "scope": "resource",
-                    "type": "boolean",
-                    "description": "%luahelper.Warn.CheckFuncParamType%"
-                },
-                "luahelper.Warn.CheckFuncReturnType": {
-                    "default": false,
-                    "scope": "resource",
-                    "type": "boolean",
-                    "description": "%luahelper.Warn.CheckFuncReturnType%"
                 }
             }
         },
