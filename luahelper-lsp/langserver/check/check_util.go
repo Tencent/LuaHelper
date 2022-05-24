@@ -1,6 +1,7 @@
 package check
 
 import (
+	"fmt"
 	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/check/compiler/ast"
@@ -332,27 +333,21 @@ func (a *AllProject) IsMemberOfAnnotateClassByVar(strMemName string, strVarName 
 
 	fragmentInfo := annotateFile.GetLineFragementInfo(varInfo.Loc.StartLine - 1)
 
+	classNameVec := []string{}
 	//2 取出class name
 	if varInfo.IsParam || varInfo.IsForParam {
 		// 这里判断是否为函数参数的注解
 		// 函数参数的注解，会额外的用下面的注解类型
 		// ---@param one class
 		if fragmentInfo != nil &&
-			fragmentInfo.ParamInfo != nil &&
-			len(fragmentInfo.ParamInfo.ParamList) > 0 {
+			fragmentInfo.ParamInfo != nil {
 
 			for i := 0; i < len(fragmentInfo.ParamInfo.ParamList); i++ {
 				paramLine := fragmentInfo.ParamInfo.ParamList[i]
 
 				//找到对应的那行---@param one class 再获取class
 				if paramLine.Name == strVarName {
-
-					strSimpleList := annotateast.GetAllNormalStrList(paramLine.ParamType)
-					if len(strSimpleList) == 0 {
-						return
-					}
-
-					className = strSimpleList[0]
+					classNameVec = annotateast.GetAllNormalStrList(paramLine.ParamType)
 					break
 				}
 			}
@@ -360,34 +355,44 @@ func (a *AllProject) IsMemberOfAnnotateClassByVar(strMemName string, strVarName 
 	} else {
 		// 非函数参数 一般是 ---@type
 		if fragmentInfo != nil &&
-			fragmentInfo.TypeInfo != nil &&
-			len(fragmentInfo.TypeInfo.TypeList) > 0 &&
-			fragmentInfo.TypeInfo.TypeList[0] != nil {
+			fragmentInfo.TypeInfo != nil {
 
-			strSimpleList := annotateast.GetAllNormalStrList(fragmentInfo.TypeInfo.TypeList[0])
-			if len(strSimpleList) == 0 {
-				return
+			for i := 0; i < len(fragmentInfo.TypeInfo.TypeList); i++ {
+				typeOne := fragmentInfo.TypeInfo.TypeList[i]
+				retVec := annotateast.GetAllNormalStrList(typeOne)
+				classNameVec = append(classNameVec, retVec...)
 			}
-
-			className = strSimpleList[0]
 		}
 	}
 
-	if len(className) <= 0 {
+	if len(classNameVec) == 0 {
 		return
 	}
 
-	//3 根据className 查找注解的class信息
-	createTypeList, flag := a.createTypeMap[className]
-	if !flag || len(createTypeList.List) == 0 ||
-		createTypeList.List[0].ClassInfo == nil ||
-		createTypeList.List[0].ClassInfo.ClassState == nil {
-		return
+	for _, classNameOne := range classNameVec {
+		if len(className) > 0 {
+			className = fmt.Sprintf("%s|", className)
+		}
+		className = fmt.Sprintf("%s%s", className, classNameOne)
 	}
 
-	//只取第一个，如果有多个，后续会报警
-	_, isMember = createTypeList.List[0].ClassInfo.FieldMap[strMemName]
-	return isMember, className
+	//3 根据className 查找注解的class信息 只取第一个，如果有多个，后续会报警
+	for _, classNameOne := range classNameVec {
+		createTypeList, flag := a.createTypeMap[classNameOne]
+		if !flag || len(createTypeList.List) == 0 ||
+			createTypeList.List[0].ClassInfo == nil ||
+			createTypeList.List[0].ClassInfo.ClassState == nil {
+			continue
+		}
+
+		//只取第一个，如果有多个，后续会报警
+		_, isMember = createTypeList.List[0].ClassInfo.FieldMap[strMemName]
+		if isMember {
+			return isMember, className
+		}
+	}
+
+	return false, className
 }
 
 // 获取注解class
@@ -402,36 +407,40 @@ func (a *AllProject) IsMemberOfAnnotateClassByLoc(strFile string, strFieldNameli
 		return
 	}
 
+	classNameVec := []string{}
 	fragmentInfo := annotateFile.GetLineFragementInfo(lineForGetAnnotate)
 	if fragmentInfo != nil &&
-		fragmentInfo.TypeInfo != nil &&
-		len(fragmentInfo.TypeInfo.TypeList) > 0 &&
-		fragmentInfo.TypeInfo.TypeList[0] != nil {
+		fragmentInfo.TypeInfo != nil {
+		for i := 0; i < len(fragmentInfo.TypeInfo.TypeList); i++ {
+			typeOne := fragmentInfo.TypeInfo.TypeList[i]
+			retVec := annotateast.GetAllNormalStrList(typeOne)
+			classNameVec = append(classNameVec, retVec...)
+		}
+	}
 
-		strSimpleList := annotateast.GetAllNormalStrList(fragmentInfo.TypeInfo.TypeList[0])
-		if len(strSimpleList) == 0 {
-			return
+	if len(classNameVec) <= 0 {
+		return
+	}
+
+	for _, classNameOne := range classNameVec {
+		if len(className) > 0 {
+			className = fmt.Sprintf("%s|", className)
+		}
+		className = fmt.Sprintf("%s%s", className, classNameOne)
+	}
+
+	//3 根据className 查找注解的class信息 只取第一个，如果有多个，后续会报警
+	for _, classNameOne := range classNameVec {
+		createTypeList, flag := a.createTypeMap[classNameOne]
+		if !flag || len(createTypeList.List) == 0 ||
+			createTypeList.List[0].ClassInfo == nil ||
+			createTypeList.List[0].ClassInfo.ClassState == nil {
+			continue
 		}
 
-		className = strSimpleList[0]
-	}
-
-	if len(className) <= 0 {
-		return
-	}
-
-	//3 根据className 查找注解的class信息
-	createTypeList, flag := a.createTypeMap[className]
-	if !flag || len(createTypeList.List) == 0 ||
-		createTypeList.List[0].ClassInfo == nil ||
-		createTypeList.List[0].ClassInfo.ClassState == nil {
-		return
-	}
-
-	//只取第一个，如果有多个，后续会报警
-
-	for _, strMemName := range strFieldNamelist {
-		_, isMemberMap[strMemName] = createTypeList.List[0].ClassInfo.FieldMap[strMemName]
+		for _, strMemName := range strFieldNamelist {
+			_, isMemberMap[strMemName] = createTypeList.List[0].ClassInfo.FieldMap[strMemName]
+		}
 	}
 
 	return isMemberMap, className
