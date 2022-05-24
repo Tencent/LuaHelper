@@ -43,7 +43,6 @@ type AnnotateClassState struct {
 	ParentLocList  []lexer.Location // 可能存在的多个父的对象的位置信息
 	Comment        string           // 其他所有的注释内容
 	CommentLoc     lexer.Location   // 注释内容的位置信息
-	IsStrict       bool             //是否限定成员
 }
 
 // AnnotateFieldState 定义的成员结构

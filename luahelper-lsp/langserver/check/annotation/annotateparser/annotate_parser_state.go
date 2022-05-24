@@ -86,12 +86,6 @@ func parserClassState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState 
 
 	classState := &annotateast.AnnotateClassState{}
 
-	// 是否限定成员
-	if l.LookAheadKind() == annotatelexer.ATokenKwStrict {
-		classState.IsStrict = true
-		l.NextToken()
-	}
-
 	// 解析class的名称
 	classState.Name = l.NextFieldName()
 	classState.NameLoc = l.GetNowLoc()

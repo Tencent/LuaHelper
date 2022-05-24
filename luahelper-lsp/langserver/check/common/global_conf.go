@@ -63,6 +63,9 @@ type GlobalConfig struct {
 	// 全局忽略错误类型, 配置读取，如果没有配置，会默认设置一些值
 	IgnoreErrorTypeMap map[CheckErrorType]bool
 
+	// 开启的检查类型, 配置读取，用于灰度测试
+	OpenErrorTypeMap map[CheckErrorType]bool
+
 	// 需要忽略分析的lua文件夹， 配置文件读取，包含文件名或go的正则
 	IgnoreHandleFolderVec []string
 
@@ -264,6 +267,7 @@ type (
 		PathSeparator         string              `json:"PathSeparator"`         // 项目中引入其他文件，路径分隔符，默认为. 例如require("one.b") 表示引入one/b.lua 文件
 		AnntotateSets         []AnntotateSet      `json:"AnntotateSets"`         // 自动推导的注解方式
 		OtherDir              string              `json:"OtherDir"`              // 引入另外一个目录，可以用于设置引入额外LuaHelper注解格式文件夹
+		OpenErrorTypes        []int               `json:"OpenErrorTypes"`        // 开启的告警项
 	}
 )
 
@@ -292,6 +296,7 @@ func createDefaultJSONCfig() {
 		ReferFrameFiles:       []referFrameFile{{Name: "import", Type: 0, SuffixFlag: 1}},
 		PathSeparator:         ".",
 		AnntotateSets:         []AnntotateSet{},
+		OpenErrorTypes:        []int{},
 	}
 }
 
@@ -393,6 +398,7 @@ func (g *GlobalConfig) IntialGlobalVar() {
 	}
 
 	g.IgnoreErrorTypeMap = map[CheckErrorType]bool{}
+	g.OpenErrorTypeMap = map[CheckErrorType]bool{}
 
 	g.FileExistCacheMap = map[string]bool{}
 	g.CompKeyMap = map[string]bool{}
@@ -675,8 +681,12 @@ func (g *GlobalConfig) ReadConfig(strDir, configFileName string, checkFlagList [
 	for _, errorType := range jsonConfig.IgnoreErrorTypes {
 		g.IgnoreErrorTypeMap[(CheckErrorType)(errorType)] = true
 	}
-	// g.IgnoreErrorTypeMap[CheckErrorClassField] = true
-	// g.IgnoreErrorTypeMap[CheckErrorConstAssign] = true
+
+	// 开启指定类型的告警检查
+	g.OpenErrorTypeMap = map[CheckErrorType]bool{}
+	for _, errorType := range jsonConfig.OpenErrorTypes {
+		g.OpenErrorTypeMap[(CheckErrorType)(errorType)] = true
+	}
 
 	// 忽略对某些文件或文件夹进行check分析， 包含go语言的正则
 	g.IgnoreHandleFolderVec = make([]string, 0, 2)

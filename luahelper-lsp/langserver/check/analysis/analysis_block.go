@@ -60,6 +60,10 @@ func (a *Analysis) cgFuncReturnCheck(retInfo *common.ReturnInfo) {
 		return
 	}
 
+	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorFuncRetErr]; !ok {
+		return
+	}
+
 	if retInfo == nil || a.curFunc == nil {
 		return
 	}

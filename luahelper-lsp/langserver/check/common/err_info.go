@@ -69,10 +69,10 @@ const (
 	// CheckErrorFloatEq 浮点数做等于或不等于判断
 	CheckErrorFloatEq = 21
 
-	// CheckErrorClassField 错误的成员变量
+	// 错误的成员变量
 	CheckErrorClassField = 22
 
-	// CheckErrorConstAssign 给常量赋值
+	// 给常量赋值
 	CheckErrorConstAssign = 23
 
 	// 函数调用参数类型出错

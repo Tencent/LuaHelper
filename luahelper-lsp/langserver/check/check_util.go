@@ -314,33 +314,8 @@ func (a *AllProject) GetFuncReturnType(fileName string, lastLine int) (retVec []
 	return retVec
 }
 
-//
-func (a *AllProject) GetAnnotateClassAllFieldOfStrict(astType annotateast.Type, fileName string,
-	lastLine int) (isStrict bool, retMap map[string]bool, className string) {
-
-	isStrict = false
-	retMap = map[string]bool{}
-	className = ""
-
-	classInfoList := a.getAllNormalAnnotateClass(astType, fileName, lastLine)
-
-	//暂不处理多个class情况
-	if len(classInfoList) == 1 {
-		isStrict = classInfoList[0].ClassState.IsStrict
-		for k := range classInfoList[0].FieldMap {
-			retMap[k] = true
-		}
-		className = classInfoList[0].ClassState.Name
-		return isStrict, retMap, className
-	}
-
-	return isStrict, retMap, className
-
-}
-
 // 获取注解class
-func (a *AllProject) IsMemberOfAnnotateClassByVar(strMemName string, strVarName string, varInfo *common.VarInfo) (isStrict bool, isMember bool, className string) {
-	isStrict = false
+func (a *AllProject) IsMemberOfAnnotateClassByVar(strMemName string, strVarName string, varInfo *common.VarInfo) (isMember bool, className string) {
 	isMember = false
 	className = ""
 
@@ -411,14 +386,12 @@ func (a *AllProject) IsMemberOfAnnotateClassByVar(strMemName string, strVarName 
 	}
 
 	//只取第一个，如果有多个，后续会报警
-	isStrict = createTypeList.List[0].ClassInfo.ClassState.IsStrict
 	_, isMember = createTypeList.List[0].ClassInfo.FieldMap[strMemName]
-	return isStrict, isMember, className
+	return isMember, className
 }
 
 // 获取注解class
-func (a *AllProject) IsMemberOfAnnotateClassByLoc(strFile string, strFieldNamelist []string, lineForGetAnnotate int) (isStrict bool, isMemberMap map[string]bool, className string) {
-	isStrict = false
+func (a *AllProject) IsMemberOfAnnotateClassByLoc(strFile string, strFieldNamelist []string, lineForGetAnnotate int) (isMemberMap map[string]bool, className string) {
 	isMemberMap = map[string]bool{}
 	className = ""
 
@@ -456,13 +429,12 @@ func (a *AllProject) IsMemberOfAnnotateClassByLoc(strFile string, strFieldNameli
 	}
 
 	//只取第一个，如果有多个，后续会报警
-	isStrict = createTypeList.List[0].ClassInfo.ClassState.IsStrict
 
 	for _, strMemName := range strFieldNamelist {
 		_, isMemberMap[strMemName] = createTypeList.List[0].ClassInfo.FieldMap[strMemName]
 	}
 
-	return isStrict, isMemberMap, className
+	return isMemberMap, className
 }
 
 //3 根据className 查找注解的class信息

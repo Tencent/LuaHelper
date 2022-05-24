@@ -28,9 +28,9 @@ type Projects interface {
 	// GetFuncDefaultParamInfo 在函数注解中获取默认参数标记
 	GetFuncDefaultParamInfo(fileName string, lastLine int, paramNameList []string) (paramDefaultNum int)
 
-	IsMemberOfAnnotateClassByVar(strMemName string, strVarName string, varInfo *common.VarInfo) (isStrict bool, isMember bool, className string)
+	IsMemberOfAnnotateClassByVar(strMemName string, strVarName string, varInfo *common.VarInfo) (isMember bool, className string)
 
-	IsMemberOfAnnotateClassByLoc(strFile string, strFieldNamelist []string, lineForGetAnnotate int) (isStrict bool, isMemberMap map[string]bool, className string)
+	IsMemberOfAnnotateClassByLoc(strFile string, strFieldNamelist []string, lineForGetAnnotate int) (isMemberMap map[string]bool, className string)
 
 	IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool)
 

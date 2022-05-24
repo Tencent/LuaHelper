@@ -137,6 +137,11 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 		return
 	}
 
+	// 判断是否开启了函数调用参数个数不匹配的校验
+	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorCallParamType]; !ok {
+		return
+	}
+
 	fileResult := a.curResult
 	//到此参数个数正常，继续检查参数类型匹配
 	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
