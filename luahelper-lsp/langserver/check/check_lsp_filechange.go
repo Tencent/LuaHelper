@@ -101,6 +101,8 @@ func (a *AllProject) HandleFileEventChanges(fileEventVec []FileEventStruct) (cha
 				a.RemoveCacheContent(strFile)
 			}
 		}
+
+		a.rebuidCreateTypeMap()
 	}
 
 	time2 := time.Now()
