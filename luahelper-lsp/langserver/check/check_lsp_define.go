@@ -303,7 +303,11 @@ func (a *AllProject) getVarCommonFuncParam(strFile string, varStruct *common.Def
 	}
 
 	// 5)冒号 函数，self语法进行转换
-	common.ChangeFuncSelfToReferVar(minFunc, varStruct)
+	if common.ChangeFuncSelfToReferVar(minFunc, varStruct) {
+		minFunc = minFunc.GetParent()
+		varStruct.PosLine = minFunc.Loc.StartLine
+		varStruct.PosCh = minFunc.Loc.StartColumn
+	}
 
 	// 6) 判断是否找的在table的定义处, 如果是不缺前面的定义
 	if len(varStruct.StrVec) == 1 && !varStruct.BracketsFlag {
