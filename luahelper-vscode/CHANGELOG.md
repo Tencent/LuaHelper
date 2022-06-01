@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.16 (June 1, 2022)
++ 增加了试验的类型告警项
++ 优化了self的推导([issues:96](https://github.com/Tencent/LuaHelper/issues/96))
++ 修复了外网一处字符串崩溃([issues:102](https://github.com/Tencent/LuaHelper/issues/102))
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.15 (Apr 9, 2022)
 + 对table的hover继续进行了优化
 + 修复了外网一处死循环崩溃
