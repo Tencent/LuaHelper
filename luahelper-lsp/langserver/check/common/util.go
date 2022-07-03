@@ -1030,21 +1030,21 @@ func GetExpLoc(node ast.Exp) (loc lexer.Location) {
 // function a:test1()
 //	 self.b = 3  -- 传人的为self.b
 // end
-func ChangeFuncSelfToReferVar(fi *FuncInfo, varStruct *DefineVarStruct) bool {
+func ChangeFuncSelfToReferVar(fi *FuncInfo, varStruct *DefineVarStruct) {
 	firstColonFunc := fi.FindFirstColonFunc()
 	if firstColonFunc == nil {
-		return false
+		return
 	}
 	if !firstColonFunc.IsColon {
-		return false
+		return
 	}
 
 	if firstColonFunc.RelateVar == nil {
-		return false
+		return
 	}
 
 	if len(varStruct.StrVec) < 1 {
-		return false
+		return
 	}
 
 	if varStruct.StrVec[0] == "self" {
@@ -1057,9 +1057,13 @@ func ChangeFuncSelfToReferVar(fi *FuncInfo, varStruct *DefineVarStruct) bool {
 			strArray = append(strArray, varStruct.StrVec[1:]...)
 			varStruct.StrVec = strArray
 		}
-		return true
+		// 通过 scope 寻找 table name 定义的位置，肯定在 ':' 函数之前
+		relateVar, _ := firstColonFunc.MainScope.FindLocVar(varStruct.StrVec[0], firstColonFunc.Loc)
+		if relateVar != nil {
+			varStruct.PosLine = relateVar.Loc.StartLine
+			varStruct.PosCh = relateVar.Loc.StartColumn
+		}
 	}
-	return false
 }
 
 // ChangeSelfToVarComplete 冒号 函数，self语法进行转换
