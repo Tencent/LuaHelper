@@ -104,7 +104,7 @@ func (a *AllProject) FindOpenFileDefine(strFile string, strOpenFile string) (def
 	}
 
 	// 1) 文件匹配的完整路径
-	strOpenFile = common.GetBestMatchReferFile(strFile, strOpenFile, a.allFilesMap)
+	strOpenFile = common.GetBestMatchReferFile(strFile, strOpenFile, a.allFilesMap, a.fileIndexInfo)
 
 	// 2) 判断是否为直接打开某一个文件
 	if strOpenFile == "" {

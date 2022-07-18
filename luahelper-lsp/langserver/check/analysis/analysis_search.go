@@ -1307,7 +1307,7 @@ func (a *Analysis) GetImportReferByCallExp(funcExp *ast.FuncCallExp) *common.Ref
 	}
 
 	// 先查找该引用是否有效
-	fileResult.CheckReferFile(oneRefer, a.Projects.GetAllFilesMap())
+	fileResult.CheckReferFile(oneRefer, a.Projects.GetAllFilesMap(), a.Projects.GetFileIndexInfo())
 
 	// 全局的引用文件里面增加一个引用对象
 	// if fileResult.ReferVec == nil {
