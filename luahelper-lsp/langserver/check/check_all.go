@@ -12,8 +12,11 @@ import (
 
 // AllProject 所有工程包含的内容
 type AllProject struct {
-	// 所有需要分析的文件map
-	allFilesMap map[string]struct{}
+	// 所有需要分析的文件map。key值为前缀，截取前面.部分的字符串, 例如 test.lua, 返回test。
+	allFilesMap map[string]string
+
+	// 文件名的缓存信息
+	fileIndexInfo *common.FileIndexInfo
 
 	// entryFile string
 	// 所有的工程入口分析文件
@@ -49,7 +52,7 @@ type AllProject struct {
 func CreateAllProject(allFilesList []string, entryFileArr []string, clientExpPathList []string) *AllProject {
 	// 第一阶段（生成AST，第一次遍历AST），用多协程分析所有的扫描出来的文件
 	allProject := &AllProject{
-		allFilesMap:       map[string]struct{}{},
+		allFilesMap:       map[string]string{},
 		entryFilesList:    entryFileArr,
 		clientExpFileMap:  map[string]struct{}{},
 		fileStructMap:     map[string]*results.FileStruct{},
@@ -59,11 +62,13 @@ func CreateAllProject(allFilesList []string, entryFileArr []string, clientExpPat
 		checkTerm:         results.CheckTermFirst,
 		completeCache:     common.CreateCompleteCache(),
 		fileLRUMap:        common.NewLRUCache(20),
+		fileIndexInfo:     common.CreateFileIndexInfo(),
 	}
 
 	// 传人的所有文件列表转换成map
 	for _, fileName := range allFilesList {
-		allProject.allFilesMap[fileName] = struct{}{}
+		allProject.allFilesMap[fileName] = common.CompleteFilePathToPreStr(fileName)
+		allProject.fileIndexInfo.InsertOneFile(fileName)
 	}
 
 	// 传人的插件客户端额外的文件列表转换成map
@@ -154,8 +159,13 @@ func (a *AllProject) rebuidCreateTypeMap() {
 }
 
 // GetAllFilesMap 获取分析的文件map列表
-func (a *AllProject) GetAllFilesMap() (allFilesMap map[string]struct{}) {
+func (a *AllProject) GetAllFilesMap() (allFilesMap map[string]string) {
 	return a.allFilesMap
+}
+
+// GetFileIndexInfo 获取文件的缓存结构
+func (a *AllProject) GetFileIndexInfo() *common.FileIndexInfo {
+	return a.fileIndexInfo
 }
 
 // IsInAllFilesMap 指定的文件，是否在已经分析的map列表中
@@ -173,6 +183,8 @@ func (a *AllProject) GetAllFileNumber() int {
 func (a *AllProject) RemoveFile(strFile string) {
 	// 1) 所有需要分析的文件，删除它
 	delete(a.allFilesMap, strFile)
+
+	a.fileIndexInfo.RemoveOneFile(strFile)
 
 	// 2)删除第一阶段的文件指针
 	_, beforeExitFlag := a.GetFirstFileStuct(strFile)

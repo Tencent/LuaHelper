@@ -39,7 +39,9 @@ func (a *AllProject) HandleFileEventChanges(fileEventVec []FileEventStruct) (cha
 	for _, fileEvents := range fileEventVec {
 		strFile := fileEvents.StrFile
 		if fileEvents.Type == FileEventCreated {
-			a.allFilesMap[strFile] = struct{}{}
+			a.allFilesMap[strFile] = common.CompleteFilePathToPreStr(strFile)
+			a.fileIndexInfo.InsertOneFile(strFile)
+			
 			needAgainFileVec = append(needAgainFileVec, strFile)
 			if dirManager.IsInDir(strFile) {
 				needReferFileMap[strFile] = struct{}{}
@@ -116,7 +118,7 @@ func (a *AllProject) HandleFileEventChanges(fileEventVec []FileEventStruct) (cha
 				continue
 			}
 
-			fileStruct.FileResult.ReanalyseReferInfo(needReferFileMap, a.allFilesMap)
+			fileStruct.FileResult.ReanalyseReferInfo(needReferFileMap, a.allFilesMap, a.fileIndexInfo)
 		}
 		// 引用关系变了，诊断信息也要跟着改变
 		changeDiagnostic = true

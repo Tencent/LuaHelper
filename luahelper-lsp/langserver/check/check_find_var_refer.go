@@ -750,7 +750,7 @@ func (a *AllProject) getImportReferSymbol(luaInFile string, funcExp *ast.FuncCal
 	}
 
 	// 先查找该引用是否有效
-	fileStruct.FileResult.CheckReferFile(oneRefer, a.allFilesMap)
+	fileStruct.FileResult.CheckReferFile(oneRefer, a.allFilesMap, a.fileIndexInfo)
 	if !oneRefer.Valid {
 		return nil
 	}

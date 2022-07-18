@@ -1128,7 +1128,7 @@ func (g *GlobalConfig) IsIgnoreRequireModuleError(strName string) bool {
 
 // RebuildSameFileNameVar 重构应该忽略的同文件名的变量
 // allFilesMap为最新的加载的所有文件名，包含了前缀
-func (g *GlobalConfig) RebuildSameFileNameVar(allFilesMap map[string]struct{}) {
+func (g *GlobalConfig) RebuildSameFileNameVar(allFilesMap map[string]string) {
 	if !g.IgnoreFileNameVarFlag {
 		return
 	}
