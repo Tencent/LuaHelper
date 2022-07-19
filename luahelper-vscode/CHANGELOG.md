@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.17 (July 19, 2022)
++ 针对大工程require引起卡顿问题，进行了优化
++ 优化了self的推导([issues:96](https://github.com/Tencent/LuaHelper/issues/96))
++ 增强了函数参数不匹配的校验
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.16 (June 1, 2022)
 + 增加了试验的类型告警项
 + 优化了self的推导([issues:96](https://github.com/Tencent/LuaHelper/issues/96))
