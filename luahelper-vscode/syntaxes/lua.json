@@ -365,7 +365,7 @@
         "comment": {
             "patterns": [
                 {
-                    "match": "(-- *todo\\b)|(-- *TODO\\b)",
+                    "match": "(--[- ]*)(todo|TODO)(\\b)",
                     "name": "keyword.todo.lua"
                 },
                 {
