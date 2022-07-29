@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.18 (July 29, 2022)
++ 修复允许设置对大表的分析 ([issues:112](https://github.com/Tencent/LuaHelper/issues/112))
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.17 (July 19, 2022)
 + 针对大工程require引起卡顿问题，进行了优化
 + 优化了self的推导([issues:96](https://github.com/Tencent/LuaHelper/issues/96))
