@@ -1,6 +1,7 @@
 # Change Log
 
-## 0.2.18 (July 29, 2022)
+## 0.2.19 (July 29, 2022)
++ 合入外网提交的todo highlight on multi dashes(5m1Ly)
 + 修复允许设置对大表的分析 ([issues:112](https://github.com/Tencent/LuaHelper/issues/112))
 + [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
 
