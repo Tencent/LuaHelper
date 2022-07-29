@@ -421,7 +421,7 @@
                     "description": "%luahelper.show.costTime%"
                 },
                 "luahelper.base.formatErrShow": {
-                    "default": true,
+                    "default": false,
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.format.errShow%"
