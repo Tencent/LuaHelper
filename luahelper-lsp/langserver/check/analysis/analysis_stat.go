@@ -88,6 +88,8 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 	}
 
 	if referFunc.IsVararg {
+		//有可变参数也可以进行参数类型检查
+		a.funcCallParamTypeCheck(node, referFunc)
 		return
 	}
 
@@ -151,6 +153,11 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 	}
 
 	for i, argExp := range node.Args {
+		if i >= len(referFunc.ParamList) {
+			//可能是可变参数导致
+			break
+		}
+
 		if _, ok := paramTypeMap[referFunc.ParamList[i]]; !ok {
 			//该参数没写注解
 			continue
