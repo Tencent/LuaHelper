@@ -274,3 +274,7 @@ func (fun *FuncInfo) FindFirstColonFunc() *FuncInfo {
 	// 向上找父函数
 	return fun.parent.FindFirstColonFunc()
 }
+
+func (fun *FuncInfo) GetParent() *FuncInfo {
+	return fun.parent
+}

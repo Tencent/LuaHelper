@@ -124,17 +124,29 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 		strName := strTabName[1:]
 
 		// 2.1) 查找局部变量的引用
-		var referInfo *common.ReferInfo
+		var findVar *common.VarInfo
+
+		// 需要先判断该变量是否直接含义key的函数
 		loc = common.GetTablePrefixLoc(taExp)
 		if locVar, ok := scope.FindLocVar(strName, loc); ok {
-			referInfo = locVar.ReferInfo
+			findVar = locVar
 		} else {
 			// 2.2) 局部变量没有找到，查找全局变量
 			if ok, oneVar := fileResult.FindGlobalVarInfo(strName, false, ""); ok {
-				referInfo = oneVar.ReferInfo
+				findVar = oneVar
 			}
 		}
 
+		if findVar == nil {
+			return nil, strName
+		}
+
+		subVar := common.GetVarSubGlobalVar(findVar, strKeyName)
+		if subVar != nil {
+			return subVar.ReferFunc, strKeyName
+		}
+
+		referInfo := findVar.ReferInfo
 		if referInfo == nil {
 			return nil, strName
 		}
@@ -1307,7 +1319,7 @@ func (a *Analysis) GetImportReferByCallExp(funcExp *ast.FuncCallExp) *common.Ref
 	}
 
 	// 先查找该引用是否有效
-	fileResult.CheckReferFile(oneRefer, a.Projects.GetAllFilesMap())
+	fileResult.CheckReferFile(oneRefer, a.Projects.GetAllFilesMap(), a.Projects.GetFileIndexInfo())
 
 	// 全局的引用文件里面增加一个引用对象
 	// if fileResult.ReferVec == nil {

@@ -217,7 +217,7 @@ func (f *FileResult) FindGlobalVarInfo(strName string, gFlag bool, strProPre str
 
 // 查找引用一个文件的结果
 // allFilesMap 为所有加载文件map
-func (f *FileResult) CheckReferFile(referInfo *common.ReferInfo, allFilesMap map[string]struct{}) {
+func (f *FileResult) CheckReferFile(referInfo *common.ReferInfo, allFilesMap map[string]string, fileIndexInfo *common.FileIndexInfo) {
 	strFile := referInfo.ReferStr
 	strFile = pathpre.GetRemovePreStr(strFile)
 	curFile := f.Name
@@ -245,7 +245,7 @@ func (f *FileResult) CheckReferFile(referInfo *common.ReferInfo, allFilesMap map
 		// 1.2) 非全路径匹配
 		if !common.GConfig.ReferMatchPathFlag {
 			// 如果配置为非全路径匹配，尝试模糊匹配路径
-			bestFilePath := common.GetBestMatchReferFile(curFile, strFile, allFilesMap)
+			bestFilePath := common.GetBestMatchReferFile(curFile, strFile, allFilesMap, fileIndexInfo)
 			if bestFilePath != "" {
 				// lua文件存在，正常
 				referInfo.ReferValidStr = bestFilePath
@@ -324,7 +324,7 @@ func (f *FileResult) CheckReferFile(referInfo *common.ReferInfo, allFilesMap map
 	}
 
 	// b) 如果配置为非全路径匹配，尝试模糊匹配路径
-	strBestFileTmp := common.GetBestMatchReferFile(curFile, strNewFile, allFilesMap)
+	strBestFileTmp := common.GetBestMatchReferFile(curFile, strNewFile, allFilesMap, fileIndexInfo)
 	if strBestFileTmp != "" {
 		// 匹配到了，判断对应的文件，是否存在
 		// lua文件存在，正常
@@ -335,7 +335,7 @@ func (f *FileResult) CheckReferFile(referInfo *common.ReferInfo, allFilesMap map
 	// c) suffixStrFile = strOldFile + "/init.lua"
 	initFile := strNewFile + "/init.lua"
 	// 如果配置为全路径匹配，尝试模糊匹配路径
-	strBestFileTmp = common.GetBestMatchReferFile(curFile, initFile, allFilesMap)
+	strBestFileTmp = common.GetBestMatchReferFile(curFile, initFile, allFilesMap, fileIndexInfo)
 	if strBestFileTmp != "" {
 		referInfo.ReferValidStr = strBestFileTmp
 		return
@@ -390,7 +390,7 @@ func (f *FileResult) isReferFileContainFiles(needReferFileMap map[string]struct{
 
 // ReanalyseReferInfo 重新分析这个文件的所有引用关系，引用有文件变动（有文件增加或减少）
 // allFilesMap map[string]bool 为所有加载的文件列表
-func (f *FileResult) ReanalyseReferInfo(needReferFileMap map[string]struct{}, allFilesMap map[string]struct{}) {
+func (f *FileResult) ReanalyseReferInfo(needReferFileMap map[string]struct{}, allFilesMap map[string]string, fileIndexInfo *common.FileIndexInfo) {
 	// 1) 首先判断是否有包含改动的引用关系
 	if !f.isHasErrorNoFile() && !f.isReferFileContainFiles(needReferFileMap) {
 		return
@@ -412,7 +412,7 @@ func (f *FileResult) ReanalyseReferInfo(needReferFileMap map[string]struct{}, al
 	// 3) 然后重新扫描所有的引用关系
 	for _, oneRefer := range f.ReferVec {
 		oneRefer.Valid = true
-		f.CheckReferFile(oneRefer, allFilesMap)
+		f.CheckReferFile(oneRefer, allFilesMap, fileIndexInfo)
 	}
 }
 
