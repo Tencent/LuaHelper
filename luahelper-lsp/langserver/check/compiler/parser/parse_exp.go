@@ -269,10 +269,10 @@ func (p *Parser) parseTableConstructorExp() *ast.TableConstructorExp {
 	loc := lexer.GetRangeLoc(&beginLoc, &endLoc)
 
 	// 当table的元素过多时，暂时先截断
-	if len(keyExps) == len(valExps) && len(keyExps) > 1000 {
-		keyExps = keyExps[:1000]
-		valExps = valExps[:1000]
-	}
+	// if len(keyExps) == len(valExps) && len(keyExps) > 1000 {
+	// 	keyExps = keyExps[:1000]
+	// 	valExps = valExps[:1000]
+	// }
 
 	return &ast.TableConstructorExp{
 		KeyExps: keyExps,

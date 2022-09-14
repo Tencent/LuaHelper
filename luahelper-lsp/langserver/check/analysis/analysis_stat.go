@@ -80,9 +80,7 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 	fileResult := a.curResult
 	nArgs := len(node.Args)
 
-	var referFunc *common.FuncInfo
-	var referStr string
-	referFunc, referStr = a.getFuncCallReferFunc(node)
+	referFunc, referStr := a.getFuncCallReferFunc(node)
 	if referFunc == nil {
 		return
 	}
@@ -94,7 +92,6 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 	}
 
 	paramLen := len(referFunc.ParamList)
-
 	if nArgs > paramLen {
 		//调用处参数个数大于定义参数个数的，直接告警
 		errorStr := fmt.Sprintf("%s call func param num(%d) > func define param num(%d)", referStr, nArgs, paramLen)
@@ -102,7 +99,6 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 		return
 	} else if nArgs < paramLen {
 		// 函数调用处参数个数小于定义参数个数的，支持注解辅助检查
-
 		// 如果未获取过
 		if !referFunc.ParamDefaultInit {
 			referFunc.ParamDefaultInit = true
@@ -218,7 +214,7 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 	}
 }
 
-//获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
+//GetAnnTypeStrForRefer 获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
 func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp, idx int) (retVec []string) {
 	retVec = []string{}
 	argType := common.GetAnnTypeFromExp(referExp)
@@ -276,10 +272,10 @@ func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp, idx int) (retVec []st
 	if argType == "LuaTypeRefer" {
 		//若仍是LuaTypeRefer 递归推导
 		return a.GetAnnTypeStrForRefer(varInfo.ReferExp, varIdx)
-	} else {
-		retVec = append(retVec, argType)
-		return retVec
 	}
+	
+	retVec = append(retVec, argType)
+	return retVec
 }
 
 func (a *Analysis) cgBreakStat(node *ast.BreakStat) {

@@ -597,7 +597,7 @@ func calcMatchStrScore(fileName string, referFileName string, condidateStr strin
 // referFile 为引用的lua文件名
 // allFilesMap 为项目中所有包含的lua文件
 // 返回值为匹配最合适的文件
-func GetBestMatchReferFile(curFile string, referFile string, allFilesMap map[string]struct{}) (findStr string) {
+func GetBestMatchReferFile(curFile string, referFile string, allFilesMap map[string]string, fileIndexInfo *FileIndexInfo) (findStr string) {
 	// 首先判断传人的文件是否带有后缀的
 	suffixFlag := false
 	seperateIndex := strings.Index(referFile, ".")
@@ -607,30 +607,27 @@ func GetBestMatchReferFile(curFile string, referFile string, allFilesMap map[str
 	}
 
 	candidateVec := []string{}
-	lenReferFile := len(referFile)
-	for strFile := range allFilesMap {
-		referFileTmp := referFile
+	strVec := strings.Split(referFile, "/")
+	referfileName := strVec[len(strVec)-1]	
 
+	var fileNameMap map[string]string
+	if suffixFlag {
+		fileNameMap = fileIndexInfo.GetFileNameMap(referfileName)
+	} else {
+		fileNameMap = fileIndexInfo.GetPreFileNameMap(referfileName)
+	}
+
+	referFileTmp := "/" + referFile
+	for strFile, pathToPreStr := range fileNameMap {
 		if suffixFlag {
-			if len(strFile) > lenReferFile {
-				referFileTmp = "/" + referFile
-			}
-
-			// 如果是带了后缀，拿后缀的去匹配
 			if !strings.HasSuffix(strFile, referFileTmp) {
 				continue
-			}
+			}	
 		} else {
-			// 如果不带后缀，map中的路径名先提取
-			preFile := completeFilePathToPreStr(strFile)
+			preFile := pathToPreStr
 			if preFile == "" {
 				continue
 			}
-
-			if len(preFile) > lenReferFile {
-				referFileTmp = "/" + referFile
-			}
-
 			if !strings.HasSuffix(preFile, referFileTmp) {
 				continue
 			}

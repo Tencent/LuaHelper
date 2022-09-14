@@ -266,6 +266,40 @@ func (a *AllProject) HandleFirstAllProject() {
 
 	// 重建
 	common.GConfig.RebuildSameFileNameVar(a.allFilesMap)
+	// time2 := time.Now()
+	// // 创建所有文件的目录结构
+	// for strFile := range a.allFilesMap {
+	// 	splitVec := strings.Split(strFile, "/")
+	// 	vecLen := len(splitVec)
+
+	// 	tmpFileDir := a.allFilesDirStruct
+	// 	for index := range splitVec {
+	// 		if index == vecLen - 1 {
+	// 			if tmpFileDir.FilesMap == nil {
+	// 				tmpFileDir.FilesMap = map[string]struct{}{}
+	// 			}
+	// 			tmpFileDir.FilesMap[strFile] = struct{}{}
+	// 			break
+	// 		}
+
+	// 		subStr := strings.Join(splitVec[0:index + 1], "/")
+	// 		if subFileDir, ok := tmpFileDir.SubDirList[subStr]; ok {
+	// 			tmpFileDir = subFileDir
+	// 		} else {
+	// 			oneFileDir := &common.FileDirSturct{}
+	// 			oneFileDir.CurDir = subStr
+	// 			if tmpFileDir.SubDirList == nil {
+	// 				tmpFileDir.SubDirList =  map[string]*common.FileDirSturct{}
+	// 			}
+
+	// 			tmpFileDir.SubDirList[subStr] = oneFileDir
+	// 			tmpFileDir = oneFileDir
+	// 		}
+	// 	}
+	// }
+	// tc2 := time.Since(time2)
+	// ftime2 := tc2.Milliseconds()
+	// log.Debug("allFilesDirStruct cost time=%d(ms)", ftime2)
 
 	a.firstCreateAndTraverseAst(filesList, false)
 

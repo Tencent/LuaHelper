@@ -23,7 +23,13 @@ type Projects interface {
 	GetFirstReferFileResult(referInfo *common.ReferInfo) *results.FileResult
 
 	// GetAllFilesMap 获取所有的文件map
-	GetAllFilesMap() map[string]struct{}
+	GetAllFilesMap() map[string]string
+
+	// GetFileIndexInfo 获取文件的缓存结构
+	GetFileIndexInfo() *common.FileIndexInfo
+
+	// GetAllFilesPreStrMap 获取所有文件的前置路径map
+	//GetAllFilesPreStrMap() map[string]string
 
 	// GetFuncDefaultParamInfo 在函数注解中获取默认参数标记
 	GetFuncDefaultParamInfo(fileName string, lastLine int, paramNameList []string) (paramDefaultNum int)

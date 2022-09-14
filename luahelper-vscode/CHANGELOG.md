@@ -1,5 +1,22 @@
 # Change Log
 
+## 0.2.19 (July 29, 2022)
++ 合入外网提交的todo highlight on multi dashes(5m1Ly)
++ 修复允许设置对大表的分析 ([issues:112](https://github.com/Tencent/LuaHelper/issues/112))
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
+## 0.2.17 (July 19, 2022)
++ 针对大工程require引起卡顿问题，进行了优化
++ 优化了self的推导([issues:96](https://github.com/Tencent/LuaHelper/issues/96))
++ 增强了函数参数不匹配的校验
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
+## 0.2.16 (June 1, 2022)
++ 增加了试验的类型告警项
++ 优化了self的推导([issues:96](https://github.com/Tencent/LuaHelper/issues/96))
++ 修复了外网一处字符串崩溃([issues:102](https://github.com/Tencent/LuaHelper/issues/102))
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.15 (Apr 9, 2022)
 + 对table的hover继续进行了优化
 + 修复了外网一处死循环崩溃

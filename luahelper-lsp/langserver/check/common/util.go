@@ -919,18 +919,6 @@ func GetUnopExpType(exp *ast.UnopExp) LuaType {
 	return LuaTypeRefer
 }
 
-func completeFilePathToPreStr(pathFile string) (preStr string) {
-	// 完整路径提前前缀
-	// 字符串中，查找第一个.
-	seperateIndex := strings.Index(pathFile, ".")
-	if seperateIndex < 0 {
-		return ""
-	}
-
-	preStr = pathFile[0:seperateIndex]
-	return preStr
-}
-
 // GetMakeTableConstructorExp 获取构造的时候的TableConstructorExp
 func GetMakeTableConstructorExp(valExp ast.Exp) (tableNode *ast.TableConstructorExp) {
 	switch exp := valExp.(type) {
@@ -1056,6 +1044,12 @@ func ChangeFuncSelfToReferVar(fi *FuncInfo, varStruct *DefineVarStruct) {
 		} else {
 			strArray = append(strArray, varStruct.StrVec[1:]...)
 			varStruct.StrVec = strArray
+		}
+		// 通过 scope 寻找 table name 定义的位置，肯定在 ':' 函数之前
+		relateVar, _ := firstColonFunc.MainScope.FindLocVar(varStruct.StrVec[0], firstColonFunc.Loc)
+		if relateVar != nil {
+			varStruct.PosLine = relateVar.Loc.StartLine
+			varStruct.PosCh = relateVar.Loc.StartColumn
 		}
 	}
 }
