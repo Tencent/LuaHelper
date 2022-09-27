@@ -34,7 +34,7 @@ func (l *LspServer) TextDocumentRename(ctx context.Context, vs lsp.RenameParams)
 
 	for _, referVarInfo := range referenVecs {
 		retRange := lspcommon.LocToRange(&referVarInfo.Loc)
-		uriStr := string(stringutil.GetFileDocumentURI(referVarInfo.StrFile))
+		uriStr := string(lspcommon.GetFileDocumentURI(referVarInfo.StrFile))
 
 		if _, ok := edit.Changes[uriStr]; !ok {
 			edit.Changes[uriStr] = []lsp.TextEdit{}

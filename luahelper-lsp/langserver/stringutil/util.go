@@ -3,9 +3,7 @@ package stringutil
 import (
 	"luahelper-lsp/langserver/check"
 	"luahelper-lsp/langserver/check/common"
-	"luahelper-lsp/langserver/log"
-	"luahelper-lsp/langserver/pathpre"
-	lsp "luahelper-lsp/langserver/protocol"
+
 	"regexp"
 	"strings"
 )
@@ -140,11 +138,6 @@ func GetCompeleteLineStr(contents []byte, offset int) (lineStr string) {
 	}
 	lineStr = string(contents[beforeLinePos : endLinePos+1])
 	return lineStr
-}
-
-// 获取文件名转换为的DocumentURI路径
-func GetFileDocumentURI(strFile string) lsp.DocumentURI {
-	return lsp.DocumentURI(pathpre.StringToVscodeURI(strFile))
 }
 
 // stringutil.GetOpenFileStr 判断是否为打开的文件，返回文件名
@@ -354,7 +347,7 @@ func GetVarStruct(contents []byte, offset int, line uint32, character uint32) (v
 	if curCh != '_' && !IsDigit(curCh) && !IsLetter(curCh) {
 		// 知道的当前字符为非有效的，退出
 		varStruct.ValidFlag = false
-		log.Error("stringutil.GetVarStruct not valid")
+		//log.Error("stringutil.GetVarStruct not valid")
 		return
 	}
 
@@ -396,7 +389,7 @@ func GetVarStruct(contents []byte, offset int, line uint32, character uint32) (v
 		break
 	}
 
-	log.Debug("stringutil.GetVarStruct str=%s", str)
+	//log.Debug("stringutil.GetVarStruct str=%s", str)
 	varStruct = check.StrToDefineVarStruct(str)
 	varStruct.Str = str
 	varStruct.PosLine = (int)(line)
