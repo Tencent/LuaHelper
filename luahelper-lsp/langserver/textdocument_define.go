@@ -3,6 +3,7 @@ package langserver
 import (
 	"context"
 	"luahelper-lsp/langserver/check"
+	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/log"
 	"luahelper-lsp/langserver/lspcommon"
 	lsp "luahelper-lsp/langserver/protocol"
@@ -29,7 +30,7 @@ func (l *LspServer) TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentP
 	project := l.getAllProject()
 
 	// 1）判断查找的定义是否为打开一个文件
-	fileList := stringutil.GetOpenFileStr(fileRequest.contents, fileRequest.offset, (int)(fileRequest.pos.Character))
+	fileList := stringutil.GetOpenFileStr(fileRequest.contents, fileRequest.offset, (int)(fileRequest.pos.Character), common.GConfig.GetFrameReferFiles())
 	if len(fileList) > 0 {
 		var openDefineVecs []check.DefineStruct
 		for _, strItem := range fileList {
@@ -52,7 +53,7 @@ func (l *LspServer) TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentP
 	}
 
 	// 3) 其他的查找定义
-	varStruct := stringutil.GetVarStruct(fileRequest.contents, fileRequest.offset, fileRequest.pos.Line, fileRequest.pos.Character)
+	varStruct := check.GetVarStruct(fileRequest.contents, fileRequest.offset, fileRequest.pos.Line, fileRequest.pos.Character)
 	if !varStruct.ValidFlag || len(varStruct.StrVec) == 0 {
 		log.Error("TextDocumentDefine not valid")
 		return

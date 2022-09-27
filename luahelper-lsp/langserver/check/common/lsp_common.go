@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"luahelper-lsp/langserver/check/annotation/annotateast"
+
 	"luahelper-lsp/langserver/check/compiler/ast"
 	"luahelper-lsp/langserver/check/compiler/lexer"
 )

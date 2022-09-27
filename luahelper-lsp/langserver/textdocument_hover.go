@@ -3,6 +3,7 @@ package langserver
 import (
 	"context"
 	"fmt"
+	"luahelper-lsp/langserver/check"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/codingconv"
 	"luahelper-lsp/langserver/log"
@@ -94,7 +95,7 @@ func (l *LspServer) getHoverStr(comResult commFileRequest) (lableStr, docStr, lu
 	}
 
 	// 3) 普通查找定义悬浮
-	varStruct := stringutil.GetVarStruct(comResult.contents, comResult.offset, comResult.pos.Line, comResult.pos.Character)
+	varStruct := check.GetVarStruct(comResult.contents, comResult.offset, comResult.pos.Line, comResult.pos.Character)
 	if !varStruct.ValidFlag {
 		log.Error("TextDocumentDefine not valid")
 		return
@@ -107,7 +108,7 @@ func (l *LspServer) getHoverStr(comResult commFileRequest) (lableStr, docStr, lu
 
 // 判断是否悬停提示打开一个文件
 func (l *LspServer) hoverOpenFile(comResult commFileRequest) (fileName string) {
-	fileList := stringutil.GetOpenFileStr(comResult.contents, comResult.offset, (int)(comResult.pos.Character))
+	fileList := stringutil.GetOpenFileStr(comResult.contents, comResult.offset, (int)(comResult.pos.Character), common.GConfig.GetFrameReferFiles())
 	if len(fileList) == 0 {
 		return
 	}

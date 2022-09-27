@@ -9,7 +9,6 @@ import (
 	"luahelper-lsp/langserver/codingconv"
 	"luahelper-lsp/langserver/log"
 	lsp "luahelper-lsp/langserver/protocol"
-	"luahelper-lsp/langserver/stringutil"
 )
 
 // TextDocumentSignatureHelp 补全函数的参数
@@ -24,7 +23,7 @@ func (l *LspServer) TextDocumentSignatureHelp(ctx context.Context, vs lsp.TextDo
 	}
 
 	pos := vs.Position
-	varStruct := stringutil.GetVarStruct(comResult.contents, comResult.offset, pos.Line, pos.Character)
+	varStruct := check.GetVarStruct(comResult.contents, comResult.offset, pos.Line, pos.Character)
 	if !varStruct.ValidFlag {
 		return
 	}
@@ -132,7 +131,7 @@ func (l *LspServer) getFuncParamCandidateType(ctx context.Context, url lsp.Docum
 		return
 	}
 
-	varStruct := stringutil.GetVarStruct(comResult.contents, comResult.offset, pos.Line, pos.Character)
+	varStruct := check.GetVarStruct(comResult.contents, comResult.offset, pos.Line, pos.Character)
 	if !varStruct.ValidFlag {
 		return
 	}
