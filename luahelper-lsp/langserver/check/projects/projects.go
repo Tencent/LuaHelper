@@ -49,4 +49,7 @@ type Projects interface {
 	GetFuncReturnType(fileName string, lastLine int) (retVec [][]annotateast.Type)
 
 	GetAnnClassInfo(className string) *common.CreateTypeInfo
+
+	FindVarDefine(strFile string, varStruct *common.DefineVarStruct) (
+		oldSymbol *common.Symbol, symList []*common.Symbol)
 }

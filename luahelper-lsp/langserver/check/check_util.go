@@ -446,7 +446,7 @@ func (a *AllProject) IsMemberOfAnnotateClassByLoc(strFile string, strFieldNameli
 	return isMemberMap, className
 }
 
-//3 根据className 查找注解的class信息
+// 根据className 查找注解的class信息
 func (a *AllProject) GetAnnClassInfo(className string) *common.CreateTypeInfo {
 	createTypeList, flag := a.createTypeMap[className]
 	if !flag || len(createTypeList.List) == 0 {

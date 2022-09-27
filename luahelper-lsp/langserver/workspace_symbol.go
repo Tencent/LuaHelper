@@ -5,10 +5,11 @@ import (
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/lspcommon"
 	lsp "luahelper-lsp/langserver/protocol"
+	"luahelper-lsp/langserver/stringutil"
 )
 
 // WorkspaceSymbolRequest 全工程符合查找提示，返回多个符合
-func (l *LspServer)WorkspaceSymbolRequest(ctx context.Context, vs lsp.WorkspaceSymbolParams) (items []lsp.SymbolInformation, err error) {
+func (l *LspServer) WorkspaceSymbolRequest(ctx context.Context, vs lsp.WorkspaceSymbolParams) (items []lsp.SymbolInformation, err error) {
 	project := l.getAllProject()
 	fileSymbolVec := project.FindWorkspaceAllSymbol(vs.Query)
 
@@ -17,7 +18,7 @@ func (l *LspServer)WorkspaceSymbolRequest(ctx context.Context, vs lsp.WorkspaceS
 
 	for _, oneSymbol := range fileSymbolVec {
 		loc := lsp.Location{
-			URI:   getFileDocumentURI(oneSymbol.FileName),
+			URI:   stringutil.GetFileDocumentURI(oneSymbol.FileName),
 			Range: lspcommon.LocToRange(&oneSymbol.Loc),
 		}
 

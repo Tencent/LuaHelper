@@ -7,6 +7,7 @@ import (
 	"luahelper-lsp/langserver/codingconv"
 	"luahelper-lsp/langserver/log"
 	lsp "luahelper-lsp/langserver/protocol"
+	"luahelper-lsp/langserver/stringutil"
 	"strings"
 )
 
@@ -93,7 +94,7 @@ func (l *LspServer) getHoverStr(comResult commFileRequest) (lableStr, docStr, lu
 	}
 
 	// 3) 普通查找定义悬浮
-	varStruct := getVarStruct(comResult.contents, comResult.offset, comResult.pos.Line, comResult.pos.Character)
+	varStruct := stringutil.GetVarStruct(comResult.contents, comResult.offset, comResult.pos.Line, comResult.pos.Character)
 	if !varStruct.ValidFlag {
 		log.Error("TextDocumentDefine not valid")
 		return
@@ -106,7 +107,7 @@ func (l *LspServer) getHoverStr(comResult commFileRequest) (lableStr, docStr, lu
 
 // 判断是否悬停提示打开一个文件
 func (l *LspServer) hoverOpenFile(comResult commFileRequest) (fileName string) {
-	fileList := getOpenFileStr(comResult.contents, comResult.offset, (int)(comResult.pos.Character))
+	fileList := stringutil.GetOpenFileStr(comResult.contents, comResult.offset, (int)(comResult.pos.Character))
 	if len(fileList) == 0 {
 		return
 	}
@@ -128,7 +129,7 @@ func (l *LspServer) hoverOpenFile(comResult commFileRequest) (fileName string) {
 // 判断是否为注解带来的悬停提示打开一个文件
 // 处理注解系统带来的类型定义
 func (l *LspServer) handleAnnotateHover(comResult commFileRequest) (strLabl, strHover, strFile string, flag bool) {
-	strLine := getCompeleteLineStr(comResult.contents, comResult.offset)
+	strLine := stringutil.GetCompeleteLineStr(comResult.contents, comResult.offset)
 	if strLine == "" {
 		return
 	}
@@ -195,7 +196,7 @@ func spliteAnnotateStr(contents []byte, offset int) (str string) {
 	// 判断查找的定义是否为
 	// 向前找
 	posCh := contents[offset]
-	if offset > 0 && posCh != '_' && !IsDigit(posCh) && !IsLetter(posCh) {
+	if offset > 0 && posCh != '_' && !stringutil.IsDigit(posCh) && !stringutil.IsLetter(posCh) {
 		// 如果offset为非有效的字符，offset向前找一个字符
 		offset--
 	}
@@ -203,7 +204,7 @@ func spliteAnnotateStr(contents []byte, offset int) (str string) {
 	beforeIndex := offset
 	for index := offset; index >= 0; index-- {
 		ch := contents[index]
-		if ch == '_' || IsDigit(ch) || IsLetter(ch) || ch == '.' {
+		if ch == '_' || stringutil.IsDigit(ch) || stringutil.IsLetter(ch) || ch == '.' {
 			beforeIndex = index
 			continue
 		}
@@ -213,7 +214,7 @@ func spliteAnnotateStr(contents []byte, offset int) (str string) {
 	endIndex := offset
 	for index := offset; index < len(contents); index++ {
 		ch := contents[index]
-		if ch == '_' || IsDigit(ch) || IsLetter(ch) || ch == '.' {
+		if ch == '_' || stringutil.IsDigit(ch) || stringutil.IsLetter(ch) || ch == '.' {
 			endIndex = index
 			continue
 		}
