@@ -49,7 +49,7 @@ func (l *LspServer) TextDocumentReferences(ctx context.Context, vs protocol.Refe
 		}
 
 		locList = append(locList, protocol.Location{
-			URI:   stringutil.GetFileDocumentURI(referVarInfo.StrFile),
+			URI:   lspcommon.GetFileDocumentURI(referVarInfo.StrFile),
 			Range: lspcommon.LocToRange(&referVarInfo.Loc),
 		})
 	}

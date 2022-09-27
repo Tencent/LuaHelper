@@ -98,7 +98,7 @@ func (l *LspServer) handleAnnotateTypeDefine(strFile string, contents []byte, of
 func defineVecConvert(defineVecs []check.DefineStruct) (locList []lsp.Location) {
 	for _, defineVarInfo := range defineVecs {
 		locList = append(locList, lsp.Location{
-			URI:   stringutil.GetFileDocumentURI(defineVarInfo.StrFile),
+			URI:   lspcommon.GetFileDocumentURI(defineVarInfo.StrFile),
 			Range: lspcommon.LocToRange(&defineVarInfo.Loc),
 		})
 	}

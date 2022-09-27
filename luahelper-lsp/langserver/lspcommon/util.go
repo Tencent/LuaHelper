@@ -44,7 +44,7 @@ func IsSameErrList(oldErrList []common.CheckError, newErrList []common.CheckErro
 }
 
 // 获取文件名转换为的DocumentURI路径
-func getFileDocumentURI(strFile string) lsp.DocumentURI {
+func GetFileDocumentURI(strFile string) lsp.DocumentURI {
 	return lsp.DocumentURI(pathpre.StringToVscodeURI(strFile))
 }
 
