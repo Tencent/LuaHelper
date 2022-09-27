@@ -6,6 +6,7 @@ import (
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/log"
 	"luahelper-lsp/langserver/lspcommon"
+	"luahelper-lsp/langserver/stringutil"
 
 	lsp "luahelper-lsp/langserver/protocol"
 )
@@ -13,7 +14,7 @@ import (
 // pushFileErrList 给指定的文件推送指定的错误列表
 func (l *LspServer) pushFileErrList(ctx context.Context, strFile string, fileErrVec []common.CheckError) {
 	var diagnostics lsp.PublishDiagnosticsParams
-	diagnostics.URI = getFileDocumentURI(strFile)
+	diagnostics.URI = stringutil.GetFileDocumentURI(strFile)
 	diagnostics.Diagnostics = []lsp.Diagnostic{}
 	for _, oneErr := range fileErrVec {
 		diagnostics.Diagnostics = append(diagnostics.Diagnostics, changeErrToDiagnostic(&oneErr))
@@ -89,7 +90,7 @@ func (l *LspServer) pushAllDiagnosticsAgain(ctx context.Context) {
 // ClearOneFileDiagnostic 清空某个文件的所有诊断错误
 func (l *LspServer) ClearOneFileDiagnostic(ctx context.Context, strFile string) {
 	var diagnostics lsp.PublishDiagnosticsParams
-	diagnostics.URI = getFileDocumentURI(strFile)
+	diagnostics.URI = stringutil.GetFileDocumentURI(strFile)
 	diagnostics.Diagnostics = []lsp.Diagnostic{}
 	l.sendDiagnostics(ctx, diagnostics)
 }
@@ -107,7 +108,7 @@ func (l *LspServer) pushFileChangeDiagnostic(ctx context.Context, strFile string
 	}
 
 	var diagnostics lsp.PublishDiagnosticsParams
-	diagnostics.URI = getFileDocumentURI(strFile)
+	diagnostics.URI = stringutil.GetFileDocumentURI(strFile)
 	diagnostics.Diagnostics = []lsp.Diagnostic{}
 	for _, oneErr := range errList {
 		diagnostics.Diagnostics = append(diagnostics.Diagnostics, changeErrToDiagnostic(&oneErr))
@@ -127,7 +128,7 @@ func (l *LspServer) pushFileDiagnostic(ctx context.Context, strFile string, igno
 	}
 
 	var diagnostics lsp.PublishDiagnosticsParams
-	diagnostics.URI = getFileDocumentURI(strFile)
+	diagnostics.URI = stringutil.GetFileDocumentURI(strFile)
 	diagnostics.Diagnostics = []lsp.Diagnostic{}
 	for _, oneErr := range fileErrVec {
 		if oneErr.ErrType == common.CheckErrorSyntax && ignoreSyntax {
@@ -230,7 +231,7 @@ func changeErrToDiagnostic(checkErr *common.CheckError) lsp.Diagnostic {
 	for _, oneRelate := range checkErr.RelateVec {
 		oneRelateLsp := lsp.DiagnosticRelatedInformation{
 			Location: lsp.Location{
-				URI:   getFileDocumentURI(oneRelate.LuaFile),
+				URI:   stringutil.GetFileDocumentURI(oneRelate.LuaFile),
 				Range: lspcommon.LocToRange(&oneRelate.Loc),
 			},
 			Message: oneRelate.ErrStr,

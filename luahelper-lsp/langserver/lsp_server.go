@@ -5,6 +5,8 @@ import (
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/log"
 	"luahelper-lsp/langserver/lspcommon"
+	"luahelper-lsp/langserver/pathpre"
+	lsp "luahelper-lsp/langserver/protocol"
 	"sync"
 	"time"
 
@@ -154,4 +156,45 @@ func setConfigSet(referenceMaxNum int, referenceDefine bool) {
 	if referenceMaxNum > 0 {
 		common.GConfig.ReferenceMaxNum = referenceMaxNum
 	}
+}
+
+// commFileRequest 通用的文件处理请求
+type commFileRequest struct {
+	result   bool         // 处理结果
+	strFile  string       // 文件名
+	contents []byte       // 文件具体的内容
+	offset   int          // 光标的偏移
+	pos      lsp.Position // 请求的行与列
+}
+
+// beginFileRequest 通用的文件处理请求预处理
+func (l *LspServer) beginFileRequest(url lsp.DocumentURI, pos lsp.Position) (fileRequest commFileRequest) {
+	fileRequest.result = false
+
+	strFile := pathpre.VscodeURIToString(string(url))
+	project := l.getAllProject()
+	if !project.IsNeedHandle(strFile) {
+		log.Debug("not need to handle strFile=%s", strFile)
+		return
+	}
+
+	fileCache := l.getFileCache()
+	contents, found := fileCache.GetFileContent(strFile)
+	if !found {
+		log.Error("file %s not find contents", strFile)
+		return
+	}
+
+	offset, err := lspcommon.OffsetForPosition(contents, (int)(pos.Line), (int)(pos.Character))
+	if err != nil {
+		log.Error("file position error=%s", err.Error())
+		return
+	}
+
+	fileRequest.result = true
+	fileRequest.strFile = strFile
+	fileRequest.contents = contents
+	fileRequest.offset = offset
+	fileRequest.pos = pos
+	return
 }

@@ -6,6 +6,7 @@ import (
 	"luahelper-lsp/langserver/log"
 	"luahelper-lsp/langserver/lspcommon"
 	lsp "luahelper-lsp/langserver/protocol"
+	"luahelper-lsp/langserver/stringutil"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ func (l *LspServer) TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentP
 	project := l.getAllProject()
 
 	// 1）判断查找的定义是否为打开一个文件
-	fileList := getOpenFileStr(fileRequest.contents, fileRequest.offset, (int)(fileRequest.pos.Character))
+	fileList := stringutil.GetOpenFileStr(fileRequest.contents, fileRequest.offset, (int)(fileRequest.pos.Character))
 	if len(fileList) > 0 {
 		var openDefineVecs []check.DefineStruct
 		for _, strItem := range fileList {
@@ -51,7 +52,7 @@ func (l *LspServer) TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentP
 	}
 
 	// 3) 其他的查找定义
-	varStruct := getVarStruct(fileRequest.contents, fileRequest.offset, fileRequest.pos.Line, fileRequest.pos.Character)
+	varStruct := stringutil.GetVarStruct(fileRequest.contents, fileRequest.offset, fileRequest.pos.Line, fileRequest.pos.Character)
 	if !varStruct.ValidFlag || len(varStruct.StrVec) == 0 {
 		log.Error("TextDocumentDefine not valid")
 		return
@@ -69,13 +70,13 @@ func (l *LspServer) TextDocumentDefine(ctx context.Context, vs lsp.TextDocumentP
 // handleAnnotateTypeDefine 处理注解系统带来的类型定义
 func (l *LspServer) handleAnnotateTypeDefine(strFile string, contents []byte, offset int,
 	posLine int, posCharacter int) (defineVecs []check.DefineStruct, flag bool) {
-	strLine := getCompeleteLineStr(contents, offset)
+	strLine := stringutil.GetCompeleteLineStr(contents, offset)
 	if strLine == "" {
 		return
 	}
 
 	posCh := contents[offset]
-	if offset > 0 && posCh != '_' && !IsDigit(posCh) && !IsLetter(posCh) {
+	if offset > 0 && posCh != '_' && !stringutil.IsDigit(posCh) && !stringutil.IsLetter(posCh) {
 		// 如果offset为非有效的字符，offset向前找一个字符
 		posCharacter--
 	}
@@ -97,7 +98,7 @@ func (l *LspServer) handleAnnotateTypeDefine(strFile string, contents []byte, of
 func defineVecConvert(defineVecs []check.DefineStruct) (locList []lsp.Location) {
 	for _, defineVarInfo := range defineVecs {
 		locList = append(locList, lsp.Location{
-			URI:   getFileDocumentURI(defineVarInfo.StrFile),
+			URI:   stringutil.GetFileDocumentURI(defineVarInfo.StrFile),
 			Range: lspcommon.LocToRange(&defineVarInfo.Loc),
 		})
 	}

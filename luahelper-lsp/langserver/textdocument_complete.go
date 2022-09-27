@@ -8,6 +8,7 @@ import (
 	"luahelper-lsp/langserver/codingconv"
 	"luahelper-lsp/langserver/log"
 	lsp "luahelper-lsp/langserver/protocol"
+	"luahelper-lsp/langserver/stringutil"
 	"regexp"
 	"strings"
 	"unicode"
@@ -152,7 +153,7 @@ func getDefaultHashtag(comResult commFileRequest) common.CompleteVarStruct {
 // 处理注解系统的代码补全，注解系统是以---@开头的
 func (l *LspServer) handleGenerateAnnotateType(strFile string, contents []byte, offset int,
 	posLine int) (comList CompletionListTmp, flag bool) {
-	strLine := getPreLineStr(offset, contents)
+	strLine := stringutil.GetPreLineStr(offset, contents)
 	if strLine == "" {
 		return
 	}
@@ -170,7 +171,7 @@ func (l *LspServer) handleGenerateAnnotateType(strFile string, contents []byte, 
 			break
 		}
 
-		if ch == '_' || ch == '.' || IsDigit(ch) || IsLetter(ch) {
+		if ch == '_' || ch == '.' || stringutil.IsDigit(ch) || stringutil.IsLetter(ch) {
 			beforeIndex = index
 			continue
 		}
@@ -242,7 +243,7 @@ func isBeforeHasHashtag(contents []byte, offset int) (flag bool) {
 			break
 		}
 
-		if ch == '_' || ch == '.' || IsDigit(ch) || IsLetter(ch) {
+		if ch == '_' || ch == '.' || stringutil.IsDigit(ch) || stringutil.IsLetter(ch) {
 			continue
 		}
 
@@ -257,7 +258,7 @@ func isBeforeHasHashtag(contents []byte, offset int) (flag bool) {
 // preStr 返回的为补全前面的字符串
 // splitByte 为补全前面字符串的分割字符
 func getCompeletePreStr(contents []byte, offset int) (preStr string, splitByte byte) {
-	beforeIndex := GetBeforeIndex(contents, offset-1)
+	beforeIndex := stringutil.GetBeforeIndex(contents, offset-1)
 	if beforeIndex-1 >= 0 {
 		splitByte = contents[beforeIndex-1]
 	}
@@ -265,7 +266,7 @@ func getCompeletePreStr(contents []byte, offset int) (preStr string, splitByte b
 	rangeConents := contents[beforeIndex:offset]
 	str := string(rangeConents)
 
-	strLine := getPreLineStr(offset, contents)
+	strLine := stringutil.GetPreLineStr(offset, contents)
 	log.Debug("completion str=%s", str)
 
 	// 1) 判断是为数字开头的
@@ -278,8 +279,8 @@ func getCompeletePreStr(contents []byte, offset int) (preStr string, splitByte b
 	// 1.1) 判断是["
 	tagIdx, _ := idxOfSquareBracketAndQuote(strLine)
 	if tagIdx > 0 {
-		lineOffset := getLineOffset(offset, contents)
-		beforeIndex = GetBeforeIndex(contents, lineOffset+tagIdx-1)
+		lineOffset := stringutil.GetLineOffset(offset, contents)
+		beforeIndex = stringutil.GetBeforeIndex(contents, lineOffset+tagIdx-1)
 		rangeConents = contents[beforeIndex:offset]
 		str = string(rangeConents)
 	}
@@ -317,7 +318,7 @@ func (l *LspServer) judgeCompeleteFile(strFile string, contents []byte, offset i
 	comList.IsIncomplete = false
 
 	// 获取当前行的所有内容
-	strLine := getPreLineStr(offset, contents)
+	strLine := stringutil.GetPreLineStr(offset, contents)
 	if strLine == "" {
 		return
 	}
@@ -389,7 +390,7 @@ func getComplelteStruct(str string, line, character int) (completeVar common.Com
 		// 判断前面是否以冒号开头
 		for i := len(strContent) - 1; i >= 0; i-- {
 			ch := strContent[i]
-			if IsDigit(ch) || IsLetter(ch) || ch == ' ' {
+			if stringutil.IsDigit(ch) || stringutil.IsLetter(ch) || ch == ' ' {
 				continue
 			}
 
@@ -474,7 +475,7 @@ func getComplelteStruct(str string, line, character int) (completeVar common.Com
 		oneChar := oneStr[0]
 		completeVar.FilterCharacterFlag = false // 查找的结果，是否过滤指定的字符
 
-		if !IsLetter(oneChar) {
+		if !stringutil.IsLetter(oneChar) {
 			return
 		}
 
