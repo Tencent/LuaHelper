@@ -9,6 +9,7 @@ import (
 	"luahelper-lsp/langserver/check/compiler/parser"
 	"luahelper-lsp/langserver/check/results"
 	"luahelper-lsp/langserver/log"
+	"luahelper-lsp/langserver/stringutil"
 	"strings"
 )
 
@@ -907,4 +908,76 @@ func (a *AllProject) getCommFunc(strFile string, line, ch int) (comParam *Common
 	}
 
 	return comParam
+}
+
+// GetVarStruct 根据内容的坐标信息，解析出对应的表达式结构
+func GetVarStruct(contents []byte, offset int, line uint32, character uint32) (varStruct common.DefineVarStruct) {
+	conLen := len(contents)
+	if offset == conLen {
+		offset = offset - 1
+	}
+
+	// 判断查找的定义是否为
+	// 向前找
+	posCh := contents[offset]
+	if offset > 0 && posCh != '_' && !stringutil.IsDigit(posCh) && !stringutil.IsLetter(posCh) {
+		// 如果offset为非有效的字符，offset向前找一个字符
+		offset--
+	}
+
+	curCh := contents[offset]
+	if curCh != '_' && !stringutil.IsDigit(curCh) && !stringutil.IsLetter(curCh) {
+		// 知道的当前字符为非有效的，退出
+		varStruct.ValidFlag = false
+		//log.Error("stringutil.GetVarStruct not valid")
+		return
+	}
+
+	beforeIndex, endIndex, bracketsFlag := stringutil.getContentBracketsFlag(contents, offset)
+	rangeConents := contents[beforeIndex : endIndex+1]
+	str := string(rangeConents)
+
+	lastIndex := strings.LastIndex(str, "..")
+	if lastIndex >= 0 {
+		subStr := string(str[lastIndex+2:])
+		str = subStr
+	}
+
+	// 判断最后一个切词是是否为：1为：，-1表示不为
+	lastColonFlag := 0
+
+	// 判断前面是否以冒号开头
+	for i := len(str) - 1; i >= 0; i-- {
+		ch := str[i]
+		if stringutil.IsDigit(ch) || stringutil.IsLetter(ch) || ch == ' ' || ch == '_' {
+			continue
+		}
+
+		if ch == ':' {
+			if lastColonFlag == 0 {
+				lastColonFlag = 1
+			}
+
+			// 以冒号分割
+			if (i + 1) <= (len(str) - 1) {
+				str = str[0:i] + "." + str[i+1:]
+			}
+		} else if ch == '.' {
+			if lastColonFlag != 1 {
+				lastColonFlag = -1
+			}
+		}
+
+		break
+	}
+
+	//log.Debug("stringutil.GetVarStruct str=%s", str)
+	varStruct = StrToDefineVarStruct(str)
+	varStruct.Str = str
+	varStruct.PosLine = (int)(line)
+	varStruct.PosCh = (int)(character)
+	varStruct.BracketsFlag = bracketsFlag
+	varStruct.ColonFlag = (lastColonFlag == 1)
+
+	return varStruct
 }

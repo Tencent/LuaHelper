@@ -2,11 +2,11 @@ package langserver
 
 import (
 	"context"
+	"luahelper-lsp/langserver/check"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/log"
 	"luahelper-lsp/langserver/lspcommon"
 	lsp "luahelper-lsp/langserver/protocol"
-	"luahelper-lsp/langserver/stringutil"
 )
 
 // TextDocumentRename 批量更改名字
@@ -22,7 +22,7 @@ func (l *LspServer) TextDocumentRename(ctx context.Context, vs lsp.RenameParams)
 	}
 
 	project := l.getAllProject()
-	varStruct := stringutil.GetVarStruct(comResult.contents, comResult.offset, comResult.pos.Line, comResult.pos.Character)
+	varStruct := check.GetVarStruct(comResult.contents, comResult.offset, comResult.pos.Line, comResult.pos.Character)
 	if !varStruct.ValidFlag {
 		log.Error("TextDocumentRename varStruct.ValidFlag not valid")
 		return

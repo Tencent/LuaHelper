@@ -2,11 +2,11 @@ package langserver
 
 import (
 	"context"
+	"luahelper-lsp/langserver/check"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/log"
 	"luahelper-lsp/langserver/lspcommon"
 	protocol "luahelper-lsp/langserver/protocol"
-	"luahelper-lsp/langserver/stringutil"
 )
 
 // TextDocumentReferences 文件中查找符合的所有的引用
@@ -21,7 +21,7 @@ func (l *LspServer) TextDocumentReferences(ctx context.Context, vs protocol.Refe
 	}
 
 	project := l.getAllProject()
-	varStruct := stringutil.GetVarStruct(comResult.contents, comResult.offset, comResult.pos.Line, comResult.pos.Character)
+	varStruct := check.GetVarStruct(comResult.contents, comResult.offset, comResult.pos.Line, comResult.pos.Character)
 	if !varStruct.ValidFlag {
 		log.Error("TextDocumentReferences not valid")
 		return

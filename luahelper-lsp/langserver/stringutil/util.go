@@ -1,9 +1,6 @@
 package stringutil
 
 import (
-	"luahelper-lsp/langserver/check"
-	"luahelper-lsp/langserver/check/common"
-
 	"regexp"
 	"strings"
 )
@@ -143,7 +140,7 @@ func GetCompeleteLineStr(contents []byte, offset int) (lineStr string) {
 // stringutil.GetOpenFileStr 判断是否为打开的文件，返回文件名
 // 当为require时候，可能返回两个文件名， 因为require("one") 含义可能是包含one.lua 也有可能是one/init.lua
 // firstStr 为优先级高的文件名，secondStr为优先级次之的文件名
-func GetOpenFileStr(contents []byte, offset int, character int) []string {
+func GetOpenFileStr(contents []byte, offset int, character int, referFiles []string) []string {
 	// 获取当前行的所有内容
 	lineContents := GetCompeleteLineStr(contents, offset)
 
@@ -170,7 +167,6 @@ func GetOpenFileStr(contents []byte, offset int, character int) []string {
 	}
 
 	if len(importVec) == 0 {
-		referFiles := common.GConfig.GetFrameReferFiles()
 		for _, strOne := range referFiles {
 			regImport1 := regexp.MustCompile(strOne + ` *?(\()? *?[\"|\'][0-9a-zA-Z_/|.\-]+.lua+[\"|\'] *?(\))?`)
 			importVec = regImport1.FindAllString(lineContents, -1)
@@ -290,7 +286,7 @@ func matchSpecialBracketsStr(contents []byte, offset int) (flag bool, beforeInde
 }
 
 // 判断是否有括号
-func getContentBracketsFlag(contents []byte, offset int) (beforeIndex int, endIndex int, bracketsFlag bool) {
+func GetContentBracketsFlag(contents []byte, offset int) (beforeIndex int, endIndex int, bracketsFlag bool) {
 	// 判断光标是否在特殊的[""]里面
 	flag, _, rightI := matchSpecialBracketsStr(contents, offset)
 	if flag {
@@ -326,76 +322,4 @@ func getContentBracketsFlag(contents []byte, offset int) (beforeIndex int, endIn
 	}
 
 	return beforeIndex, endIndex, bracketsFlag
-}
-
-// GetVarStruct 根据内容的坐标信息，解析出对应的表达式结构
-func GetVarStruct(contents []byte, offset int, line uint32, character uint32) (varStruct common.DefineVarStruct) {
-	conLen := len(contents)
-	if offset == conLen {
-		offset = offset - 1
-	}
-
-	// 判断查找的定义是否为
-	// 向前找
-	posCh := contents[offset]
-	if offset > 0 && posCh != '_' && !IsDigit(posCh) && !IsLetter(posCh) {
-		// 如果offset为非有效的字符，offset向前找一个字符
-		offset--
-	}
-
-	curCh := contents[offset]
-	if curCh != '_' && !IsDigit(curCh) && !IsLetter(curCh) {
-		// 知道的当前字符为非有效的，退出
-		varStruct.ValidFlag = false
-		//log.Error("stringutil.GetVarStruct not valid")
-		return
-	}
-
-	beforeIndex, endIndex, bracketsFlag := getContentBracketsFlag(contents, offset)
-	rangeConents := contents[beforeIndex : endIndex+1]
-	str := string(rangeConents)
-
-	lastIndex := strings.LastIndex(str, "..")
-	if lastIndex >= 0 {
-		subStr := string(str[lastIndex+2:])
-		str = subStr
-	}
-
-	// 判断最后一个切词是是否为：1为：，-1表示不为
-	lastColonFlag := 0
-
-	// 判断前面是否以冒号开头
-	for i := len(str) - 1; i >= 0; i-- {
-		ch := str[i]
-		if IsDigit(ch) || IsLetter(ch) || ch == ' ' || ch == '_' {
-			continue
-		}
-
-		if ch == ':' {
-			if lastColonFlag == 0 {
-				lastColonFlag = 1
-			}
-
-			// 以冒号分割
-			if (i + 1) <= (len(str) - 1) {
-				str = str[0:i] + "." + str[i+1:]
-			}
-		} else if ch == '.' {
-			if lastColonFlag != 1 {
-				lastColonFlag = -1
-			}
-		}
-
-		break
-	}
-
-	//log.Debug("stringutil.GetVarStruct str=%s", str)
-	varStruct = check.StrToDefineVarStruct(str)
-	varStruct.Str = str
-	varStruct.PosLine = (int)(line)
-	varStruct.PosCh = (int)(character)
-	varStruct.BracketsFlag = bracketsFlag
-	varStruct.ColonFlag = (lastColonFlag == 1)
-
-	return varStruct
 }
