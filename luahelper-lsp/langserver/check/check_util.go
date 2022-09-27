@@ -933,7 +933,7 @@ func GetVarStruct(contents []byte, offset int, line uint32, character uint32) (v
 		return
 	}
 
-	beforeIndex, endIndex, bracketsFlag := stringutil.getContentBracketsFlag(contents, offset)
+	beforeIndex, endIndex, bracketsFlag := stringutil.GetContentBracketsFlag(contents, offset)
 	rangeConents := contents[beforeIndex : endIndex+1]
 	str := string(rangeConents)
 
