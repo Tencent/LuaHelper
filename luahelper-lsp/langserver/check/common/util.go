@@ -16,28 +16,54 @@ func GetTableAccessName(tabExp *ast.TableAccessExp) string {
 	return strPre + "." + strKey
 }
 
-// GetTableNameInfo 获取表表达式的表名
-// 例如table.a.b.c 取table
-// _G.table.a.b取table
-func GetTableNameInfo(tabExp *ast.TableAccessExp) (string, lexer.Location) {
+// GetTableNameInfo 获取表达式的前三个值
+// 例如 moduleA.var.key.a.b.c... 得到三个值 moduleA,var,key
+// 当第一个词是_G,取前两个值，例如_G.var.key... 得到两个值 var,key
+// 当只有两个值的时候 var.key 就取这两个
+func GetTableNameInfo(tabExp *ast.TableAccessExp) (string, string, string, lexer.Location, lexer.Location, bool) {
+	preExp := tabExp.PrefixExp
+	varExp := tabExp.PrefixExp
+	keyExp := tabExp.KeyExp
+	srcKeyExp := keyExp
+	isWhole := false
 	for {
 		subExp, ok := tabExp.PrefixExp.(*ast.TableAccessExp)
 		if !ok {
 			break
 		}
+
+		preExp = subExp.PrefixExp
+		varExp = subExp.KeyExp
+		keyExp = tabExp.KeyExp
 		tabExp = subExp
 	}
 
-	keyName := GetExpName(tabExp.KeyExp)
+	preName := GetExpName(preExp)
+	varName := GetExpName(varExp)
+	keyName := GetExpName(keyExp)
+	srcKeyName := GetExpName(srcKeyExp)
 
-	//return GetExpName(tabExp.PrefixExp), GetExpLoc(tabExp.PrefixExp)
-	preName := GetExpName(tabExp.PrefixExp)
-	if preName == "!_G" {
-		return keyName, GetExpLoc(tabExp.KeyExp)
-	} else {
-		return GetSimpleValue(preName), GetExpLoc(tabExp.PrefixExp)
+	if srcKeyName == keyName {
+		isWhole = true
 	}
 
+	// 当是a[b]这种形式，b的值类型更多是运行时决定，这里截断
+	if _, ok := keyExp.(*ast.StringExp); !ok {
+		isWhole = false
+		keyName = ""
+	}
+
+	if preName == "_G" || preName == varName {
+		return GetSimpleValue(varName), keyName, "", GetExpLoc(varExp), GetExpLoc(keyExp), isWhole
+	}
+
+	// 当是a[b]这种形式，b的值类型更多是运行时决定，这里截断
+	if _, ok := varExp.(*ast.StringExp); !ok {
+		isWhole = false
+		varName = ""
+	}
+
+	return GetSimpleValue(preName), varName, keyName, GetExpLoc(preExp), GetExpLoc(varExp), isWhole
 }
 
 // GetExpType 获取exp的类型

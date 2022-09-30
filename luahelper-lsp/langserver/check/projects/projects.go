@@ -40,7 +40,7 @@ type Projects interface {
 
 	IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool)
 
-	GetAnnotateTypeString(varInfo *common.VarInfo, name string, idx int) (retVec []string)
+	GetAnnotateTypeString(varInfo *common.VarInfo, varName string, keyName string, idx int) (retVec []string)
 
 	GetFuncParamType(fileName string, lastLine int) (retMap map[string][]annotateast.Type)
 
@@ -49,7 +49,4 @@ type Projects interface {
 	GetFuncReturnType(fileName string, lastLine int) (retVec [][]annotateast.Type)
 
 	GetAnnClassInfo(className string) *common.CreateTypeInfo
-
-	FindVarDefine(strFile string, varStruct *common.DefineVarStruct) (
-		oldSymbol *common.Symbol, symList []*common.Symbol)
 }
