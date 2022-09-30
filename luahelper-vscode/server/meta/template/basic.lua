@@ -208,7 +208,7 @@ function pairs(t) end
 --- `pcall` also returns all results from the call, after this first result. In
 --- case of any error, `pcall` returns **false** plus the error message.
 ---@param f fun():any
----@param arg1 ? table
+---@param arg1 ? any
 ---@return boolean|table
 -- [`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-pcall)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-pcall"])
 function pcall(f, arg1, ...) end
