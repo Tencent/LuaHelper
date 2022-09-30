@@ -499,8 +499,103 @@ func (a *AllProject) IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (
 	return isConst
 }
 
+func (a *AllProject) filterAnnotateTypeByKey(ClassName string, keyName string) (retVec []string) {
+	//classList := a.getAllNormalAnnotateClass(astType, fileName, lastLine)
+	repeatTypeList := &common.CreateTypeList{
+		List: []*common.CreateTypeInfo{},
+	}
+
+	classList := []*common.OneClassInfo{}
+
+	strMap := map[string]bool{}
+	strMap["any"] = true
+
+	strName := ClassName
+	// 2.1) 获取所有的全局信息
+	createTypeList, flag := a.createTypeMap[strName]
+	if !flag || len(createTypeList.List) == 0 {
+		return
+	}
+
+	for _, oneCreate := range createTypeList.List {
+		// 2.2) 判重
+		if repeatTypeList.IsRepeateTypeInfo(oneCreate) {
+			// 如果有重复的
+			continue
+		}
+
+		repeatTypeList.List = append(repeatTypeList.List, oneCreate)
+
+		if oneCreate.ClassInfo != nil {
+			classInfo := oneCreate.ClassInfo
+			classList = append(classList, classInfo)
+
+			// 所有父类型也处理下，再次递归获取
+			for _, strParent := range classInfo.ClassState.ParentNameList {
+				if _, ok := strMap[strParent]; ok {
+					continue
+				}
+
+				if strName == strParent {
+					continue
+				}
+
+				classListTmp := a.getClassTypeInfoList(strParent, classInfo.LuaFile,
+					oneCreate.LastLine, repeatTypeList, strMap)
+				classList = append(classList, classListTmp...)
+			}
+		}
+
+		if oneCreate.AliasInfo != nil {
+			aliasInfo := oneCreate.AliasInfo
+			aliasType := aliasInfo.AliasState.AliasType
+			classListTmp := a.getInLineAllNormalAnnotateClass(aliasType, aliasInfo.LuaFile,
+				oneCreate.LastLine, repeatTypeList, strMap)
+			classList = append(classList, classListTmp...)
+		}
+	}
+
+	for _, classOne := range classList {
+		if field, ok := classOne.FieldMap[keyName]; ok {
+
+			switch typeInfo := field.FiledType.(type) {
+			case *annotateast.MultiType:
+				for _, oneTypeInfo := range typeInfo.TypeList {
+					switch oneType := oneTypeInfo.(type) {
+					case *annotateast.NormalType:
+						retVec = append(retVec, oneType.StrName)
+					}
+				}
+
+			case *annotateast.NormalType:
+				retVec = append(retVec, typeInfo.StrName)
+			}
+		}
+	}
+
+	return
+}
+
+func (a *AllProject) getAnnotateTypeStringhelp(argTypeInfo annotateast.Type, keyName string) (retVec []string) {
+	switch typeInfo := argTypeInfo.(type) {
+	case *annotateast.MultiType:
+		for _, oneTypeInfo := range typeInfo.TypeList {
+			switch oneType := oneTypeInfo.(type) {
+			case *annotateast.NormalType:
+				retVec = append(retVec, a.filterAnnotateTypeByKey(oneType.StrName, keyName)...)
+			}
+		}
+
+	case *annotateast.NormalType:
+		retVec = append(retVec, a.filterAnnotateTypeByKey(typeInfo.StrName, keyName)...)
+	}
+
+	return retVec
+}
+
 // 获取注解中的类型 可以指定取第几个 如函数有多个返回值时候
-func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo, name string, idx int) (retVec []string) {
+// keyName为varInfo的成员，当keyName有值时，尝试取keyName的注解类型
+func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo, varName string, keyName string, idx int) (retVec []string) {
 
 	retVec = []string{}
 	// 1) 获取文件对应的annotateFile
@@ -523,18 +618,8 @@ func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo, name string,
 			return
 		}
 
-		switch retType := fragmentInfo.ReturnInfo.ReturnTypeList[idx-1].(type) {
-		case *annotateast.MultiType:
-			for _, oneRetType := range retType.TypeList {
-				switch oneType := oneRetType.(type) {
-				case *annotateast.NormalType:
-					retVec = append(retVec, oneType.StrName)
-				}
-			}
-		case *annotateast.NormalType:
-			retVec = append(retVec, retType.StrName)
-
-		}
+		typeInfo := fragmentInfo.ReturnInfo.ReturnTypeList[idx-1]
+		retVec = append(retVec, a.getAnnotateTypeStringhelp(typeInfo, keyName)...)
 
 		return retVec
 	}
@@ -546,7 +631,7 @@ func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo, name string,
 		//需要用参数名称匹配
 		matchIdx := -1
 		for i, paramState := range fragmentInfo.ParamInfo.ParamList {
-			if paramState.Name == name {
+			if paramState.Name == varName {
 				matchIdx = i
 				break
 			}
@@ -556,36 +641,16 @@ func (a *AllProject) GetAnnotateTypeString(varInfo *common.VarInfo, name string,
 			return
 		}
 
-		switch typeInfo := fragmentInfo.ParamInfo.ParamList[matchIdx].ParamType.(type) {
-		case *annotateast.MultiType:
-			for _, oneTypeInfo := range typeInfo.TypeList {
-				switch oneType := oneTypeInfo.(type) {
-				case *annotateast.NormalType:
-					retVec = append(retVec, oneType.StrName)
-				}
-			}
-
-		case *annotateast.NormalType:
-			retVec = append(retVec, typeInfo.StrName)
-		}
+		typeInfo := fragmentInfo.ParamInfo.ParamList[matchIdx].ParamType
+		retVec = append(retVec, a.getAnnotateTypeStringhelp(typeInfo, keyName)...)
 		return retVec
 	}
 
 	if fragmentInfo.TypeInfo != nil &&
 		len(fragmentInfo.TypeInfo.TypeList) >= idx {
 
-		switch typeInfo := fragmentInfo.TypeInfo.TypeList[idx-1].(type) {
-		case *annotateast.MultiType:
-			for _, oneTypeInfo := range typeInfo.TypeList {
-				switch oneType := oneTypeInfo.(type) {
-				case *annotateast.NormalType:
-					retVec = append(retVec, oneType.StrName)
-				}
-			}
-
-		case *annotateast.NormalType:
-			retVec = append(retVec, typeInfo.StrName)
-		}
+		typeInfo := fragmentInfo.TypeInfo.TypeList[idx-1]
+		retVec = append(retVec, a.getAnnotateTypeStringhelp(typeInfo, keyName)...)
 
 		return retVec
 	}

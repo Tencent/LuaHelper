@@ -449,10 +449,9 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 }
 
 // FindVarDefineForCheck 查找检查
-func (a *Analysis) FindVarDefineForCheck(varName string, loc lexer.Location) (find bool, varInfo *common.VarInfo) {
-	find = false
+func (a *Analysis) findVarDefineForCheckhelp(varName string, varLoc lexer.Location) (find bool, varInfo *common.VarInfo) {
 	//先尝试找local变量
-	varInfo, find = a.curScope.FindLocVar(varName, loc)
+	varInfo, find = a.curScope.FindLocVar(varName, varLoc)
 	if find {
 		return find, varInfo
 	}
@@ -498,10 +497,62 @@ func (a *Analysis) FindVarDefineForCheck(varName string, loc lexer.Location) (fi
 	}
 
 	return find, varInfo
+}
 
+// FindVarDefineForCheck 查找检查
+// 如果preName空，查找varName
+// 如果preName是import值 查找varName
+// 如果preName非import值 根据findSub 查找preName定义或者preName的成员即varName的定义
+func (a *Analysis) FindVarDefineForCheck(preName string, varName string, preLoc lexer.Location, varLoc lexer.Location, findSub bool) (find bool, varInfo *common.VarInfo, isPreImport bool) {
+	find = false
+
+	if preName != "" {
+		//有前缀
+
+		ok, preInfo := a.findVarDefineForCheckhelp(preName, preLoc)
+		if !ok {
+			return
+		}
+
+		referInfo := preInfo.ReferInfo
+		if referInfo == nil {
+			// 前缀非import变量
+
+			if findSub && varName != "" {
+
+				subVar, ok := preInfo.SubMaps[varName]
+				return ok, subVar, false
+			} else {
+				return ok, preInfo, false
+			}
+		}
+
+		// 前缀是模块变量 在模块中再查找
+		if len(varName) <= 0 {
+			return
+		}
+
+		referFile := a.Projects.GetFirstReferFileResult(referInfo)
+		if referFile == nil {
+			// 文件不存在
+			return
+		}
+
+		find, varInfo = referFile.FindGlobalVarInfo(varName, false, "")
+		return find, varInfo, true
+	}
+
+	//无前缀 直接找定义
+	if len(varName) <= 0 {
+		return
+	}
+
+	find, varInfo = a.findVarDefineForCheckhelp(varName, varLoc)
+	return find, varInfo, false
 }
 
 // 根据注解判断table成员合法性 包括 t.a t可以是符号 或者函数参数
+// 最多只判断三段，如a.b.c.. 当a是import值或者_G时，会判断c是否b的成员，否则只判断b是否a成员
 func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 	if !a.isNeedCheck() || a.realTimeFlag {
 		return
@@ -515,33 +566,45 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	strTable := common.GetExpName(node.PrefixExp)
-	strTableName := common.GetSimpleValue(strTable)
-	if strTableName == "" {
+	preName := ""
+	varName := ""
+	keyName := ""
+	preLoc := lexer.Location{}
+	varLoc := lexer.Location{}
+
+	preName, varName, keyName, preLoc, varLoc, _ = common.GetTableNameInfo(node)
+	if preName == "" || varName == "" {
 		return
 	}
 
-	strKey := common.GetExpName(node.KeyExp)
-	// 如果不是简单字符，退出
-	if !common.JudgeSimpleStr(strKey) || strKey == "" {
-		return
-	}
-
-	ok, varInfo := a.FindVarDefineForCheck(strTableName, node.Loc)
+	ok, varInfo, isPreImport := a.FindVarDefineForCheck(preName, varName, preLoc, varLoc, false)
 	if !ok {
 		return
 	}
 
-	isMember, className := a.Projects.IsMemberOfAnnotateClassByVar(strKey, strTableName, varInfo)
+	isMember := true
+	className := ""
+	useKeyName := keyName
+	if isPreImport {
+		if keyName == "" {
+			//只有a.b a又是import值 这时候不检查成员
+			return
+		}
+		isMember, className = a.Projects.IsMemberOfAnnotateClassByVar(keyName, varName, varInfo)
+	} else {
+		isMember, className = a.Projects.IsMemberOfAnnotateClassByVar(varName, preName, varInfo)
+		useKeyName = varName
+	}
+
 	if isMember || len(className) == 0 || (className) == "any" {
 		return
 	}
 
-	errStr := fmt.Sprintf("Property '%s' not found in '%s'", strKey, className)
+	errStr := fmt.Sprintf("Property '%s' not found in '%s'", useKeyName, className)
 	a.curResult.InsertError(common.CheckErrorClassField, errStr, node.Loc)
 }
 
-// 是否给常量赋值
+// 是否给常量赋值 当有a.b.c时，只判断a是否常量 若a是import值，则只判断b是否常量
 func (a *Analysis) checkConstAssgin(node ast.Exp) {
 	if !a.isNeedCheck() || a.realTimeFlag {
 		return
@@ -555,33 +618,40 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		return
 	}
 
-	name := ""
-	loc := lexer.Location{}
+	preName := ""
+	varName := ""
+	preLoc := lexer.Location{}
+	varLoc := lexer.Location{}
 	switch exp := node.(type) {
 	case *ast.NameExp:
-		name = exp.Name
-		loc = exp.Loc
+		varName = exp.Name
+		varLoc = exp.Loc
 	case *ast.TableAccessExp:
-		name, loc = common.GetTableNameInfo(exp)
+		preName, varName, _, preLoc, varLoc, _ = common.GetTableNameInfo(exp)
 	}
 
-	if len(name) <= 0 {
-		return
-	}
-
-	ok, varInfo := a.FindVarDefineForCheck(name, loc)
+	ok, varInfo, isPreImport := a.FindVarDefineForCheck(preName, varName, preLoc, varLoc, false)
 	if !ok {
 		return
 	}
-	if varInfo.Loc == loc {
+	if varInfo.Loc == varLoc {
 		//定义处不检查
 		return
 	}
+	if varInfo.ReferInfo != nil {
+		//引用不检查
+		return
+	}
 
-	if a.Projects.IsAnnotateTypeConst(name, varInfo) {
+	tabName := preName
+	if isPreImport {
+		tabName = varName
+	}
+
+	if a.Projects.IsAnnotateTypeConst(varName, varInfo) {
 		//标记了常量，却赋值
-		errStr := fmt.Sprintf("'%s' is constant and not assignable", name)
-		a.curResult.InsertError(common.CheckErrorConstAssign, errStr, loc)
+		errStr := fmt.Sprintf("'%s' is constant and not assignable", tabName)
+		a.curResult.InsertError(common.CheckErrorConstAssign, errStr, varLoc)
 	}
 }
 
@@ -597,14 +667,21 @@ func (a *Analysis) CompAnnTypeAndCodeType(annType string, codeType string) bool 
 		return true
 	}
 
+	//number与interger相等
+	if (annType == "number" && codeType == "integer") ||
+		(annType == "integer" && codeType == "number") {
+		return true
+	}
+
 	commonType := map[string]bool{
 		"number":  true,
 		"string":  true,
 		"boolean": true,
 		"table":   true,
+		"integer": true,
 	}
 
-	//认为class类型与table类型相等
+	//认为复杂类型与table类型相等
 	if (!commonType[annType] && codeType == "table") ||
 		(!commonType[codeType] && annType == "table") {
 		return true
