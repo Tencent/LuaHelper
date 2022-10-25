@@ -404,7 +404,7 @@ async function copyDebugFile() {
             vscode.window.showInformationMessage("copy lua debug file success.");
         } else if (process.platform === "darwin") {
 
-            let cmdStr = "cp -R " + srcPath + dstPath;
+            let cmdStr = "cp -R " + srcPath + " " + dstPath;
             console.log("cmdStr:%s", cmdStr);
             child_process.execSync(cmdStr);
             vscode.window.showInformationMessage("copy lua debug file success.");
