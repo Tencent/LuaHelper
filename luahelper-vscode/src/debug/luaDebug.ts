@@ -25,6 +25,7 @@ import { PathManager } from '../common/pathManager';
 import { VisualSetting } from './visualSetting';
 const { Subject } = require('await-notify');
 let fs = require('fs');
+let path = require('path');
 import {LuaPath} from '../common/luaPath';
 
 export class LuaDebugSession extends LoggingDebugSession {
@@ -338,33 +339,72 @@ export class LuaDebugSession extends LoggingDebugSession {
         }
         else{
             // 非单文件调试模式下，拉起program
-            if(args.program != undefined && args.program.trim() != ''){
-                if(fs.existsSync(args.program) && fs.statSync(args.program).isFile()){
-                    //program 和 args 分开
-                    if(this._programTermianl){
-                        this._programTermianl.dispose();
-                    }
-                    this._programTermianl = vscode.window.createTerminal({
-                        name: "Run Program File (LuaPanda)",
-                        env: {}, 
-                    });
-    
-                    let progaamCmdwithArgs = args.program;
-                    for (const arg of args.args) {
-                        progaamCmdwithArgs = progaamCmdwithArgs + " " + arg;
-                    }
-                    
-                    this._programTermianl.sendText(progaamCmdwithArgs , true);
-                    this._programTermianl.show(); 
-                }else{
+            let [programPath, errMsg] = this.getProgramFullPath(args);
+            if (!programPath) {
+                if (errMsg) {
                     let progError = "[Warning] 配置文件 launch.json 中的 program 路径有误: \n";
                     progError += " + program 配置项的作用是，在调试器开始运行时拉起一个可执行文件（注意不是lua文件）。";
                     progError += "如无需此功能，建议 program 设置为 \"\" 或从 launch.json 中删除 program 项。\n";
-                    progError += " + 当前设置的 " + args.program + " 不存在或不是一个可执行文件。";
+                    progError += " + " + errMsg;
                     this.printLogInDebugConsole(progError);
                 }
+                return;
+            }
+
+            //program 和 args 分开
+            if(this._programTermianl){
+                this._programTermianl.dispose();
+            }
+            this._programTermianl = vscode.window.createTerminal({
+                name: "Run Program File (LuaPanda)",
+                env: {}, 
+            });
+
+            let programCmdwithArgs = programPath;
+            for (const arg of args.args) {
+                // todo 解析参数里面的变量，比如${workspaceFolder}
+                programCmdwithArgs = programCmdwithArgs + " " + arg;
+            }
+            console.log("cmd: " + programCmdwithArgs);
+            this._programTermianl.sendText(programCmdwithArgs, true);
+            this._programTermianl.show();     
+        }
+    }
+    private getProgramFullPath(args) {
+        let programPath = args.program;
+        if (!programPath || programPath.trim() === '') {
+            return [null, ""];// 没有配置不提示
+        }
+        if (programPath.startsWith(".") || programPath.startsWith("..")) {
+            // 相对路径
+            let prefixArray = [args.rootFolder, args.cwd];
+            prefixArray = prefixArray.filter((dir) => {
+                return fs.existsSync(dir) && fs.statSync(dir).isDirectory();
+            });
+            let success = false;
+            for (let i = 0; i < prefixArray.length; i++) {
+                const prefix = prefixArray[i];
+                let programFullPath = path.join(prefix, args.program);
+                if (fs.existsSync(programFullPath)) {
+                    programPath = programFullPath;
+                    success = true;
+                    break;
+                }
+            }
+            if (!success) {
+                return [null, "无效的相对路径：" + programPath]
+            }
+        } else {
+            // 绝对路径
+            if (!fs.existsSync(programPath)) {
+                return [null, "找不到：" + programPath];
             }
         }
+        if (!fs.statSync(programPath).isFile()) {
+            // todo 判断是否具有执行权限
+            return [null, programPath + " 不是一个可执行文件。"];
+        }
+        return [programPath, ""];
     }
 
     private startServer(sendArgs){
