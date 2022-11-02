@@ -500,6 +500,11 @@ func (a *AllProject) IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (
 }
 
 func (a *AllProject) filterAnnotateTypeByKey(ClassName string, keyName string) (retVec []string) {
+	if len(keyName) == 0 {
+		retVec = append(retVec, ClassName)
+		return
+	}
+
 	//classList := a.getAllNormalAnnotateClass(astType, fileName, lastLine)
 	repeatTypeList := &common.CreateTypeList{
 		List: []*common.CreateTypeInfo{},
