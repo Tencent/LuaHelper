@@ -495,7 +495,7 @@ func (a *AllProject) IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (
 		}
 	}
 
-	//没找到返回空的
+	//没找到返回空的 
 	return isConst
 }
 
