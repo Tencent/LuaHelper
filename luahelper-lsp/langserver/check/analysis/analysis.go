@@ -643,14 +643,14 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		return
 	}
 
-	tabName := preName
-	if isPreImport {
-		tabName = varName
-	}
-
 	if a.Projects.IsAnnotateTypeConst(varName, varInfo) {
+		tabName := preName
+		if isPreImport || tabName == "" {
+			tabName = varName
+		}
+
 		//标记了常量，却赋值
-		errStr := fmt.Sprintf("'%s' is constant and not assignable", tabName)
+		errStr := fmt.Sprintf("'%s' is constant and not assignable", varName)
 		a.curResult.InsertError(common.CheckErrorConstAssign, errStr, varLoc)
 	}
 }
