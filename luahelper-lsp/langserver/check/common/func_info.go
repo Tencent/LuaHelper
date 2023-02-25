@@ -57,6 +57,8 @@ type FuncInfo struct {
 	ParamDefaultNum  int            // 默认函数数量
 	ParamDefaultInit bool           // 是否获取过默认函数数量
 	FileName         string         // 函数所在的文件名
+	ClassName        string         // 例如 function table.func() end // table即ClassName
+	FuncName         string         // 例如 function table.func() end // func即FuncName
 }
 
 // CreateFuncInfo 创建一个函数指针

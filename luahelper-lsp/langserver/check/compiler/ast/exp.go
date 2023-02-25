@@ -109,6 +109,8 @@ type TableConstructorExp struct {
 // parlist ::= namelist [‘,’ ‘...’] | ‘...’
 // namelist ::= Name {‘,’ Name}
 type FuncDefExp struct {
+	ClassName  string // 例如 function table.func() end // table即ClassName
+	FuncName   string // 例如 function table.func() end // func即FuncName
 	ParList    []string
 	ParLocList []lexer.Location // 所有参数的位置信息
 	Block      *Block

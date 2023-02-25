@@ -208,6 +208,68 @@ func (a *AllProject) getAnnotateFile(strFile string) (annotateFile *common.Annot
 	return annotateFile
 }
 
+// GetFuncParamInfo 获取前面注释行的所有参数返回 还包含所属类型的成员函数定义
+func (a *AllProject) GetFuncParamTypeByClass(referFunc *common.FuncInfo) (retMap map[string]string) {
+	// // 从函数定义前找
+	// paramInfo = a.GetFuncParamInfo(referFunc.FileName, referFunc.Loc.StartLine-1)
+	// if paramInfo != nil {
+	// 	return retMap
+	// }
+	retMap = make(map[string]string)
+
+	// 以下是从所属类成员找
+	if referFunc.ClassName == "" {
+		return
+	}
+
+	// 正常是根据classname查找全局变量定义 再查找定义上一行的类型注解 再找到class定义
+	// 这里简化处理 判断协议簇 然后直接查找同名的class注解
+	if !common.GConfig.IsStrProtocol(referFunc.ClassName) {
+		return
+	}
+
+	createTypeList, flag := a.createTypeMap[referFunc.ClassName]
+	if !flag || len(createTypeList.List) != 1 {
+		return
+	}
+
+	ci := createTypeList.List[0].ClassInfo
+	if ci == nil {
+		return
+	}
+
+	ann, ok := ci.FieldMap[referFunc.FuncName]
+	if !ok {
+		return
+	}
+
+	//一路解析下去
+	multiType, ok := ann.FiledType.(*annotateast.MultiType)
+	if !ok || len(multiType.TypeList) != 1 {
+		return
+	}
+
+	funcType, ok := multiType.TypeList[0].(*annotateast.FuncType)
+	if len(funcType.ParamNameList) != len(funcType.ParamTypeList) {
+		return
+	}
+
+	for i, v := range funcType.ParamNameList {
+		vt, ok := funcType.ParamTypeList[i].(*annotateast.MultiType)
+		if !ok || len(vt.TypeList) != 1 {
+			return
+		}
+		vtn, ok := vt.TypeList[0].(*annotateast.NormalType)
+		if !ok {
+			return
+		}
+		retMap[v] = vtn.StrName
+
+	}
+
+	return
+}
+
 // GetFuncParamInfo 获取前面注释行的所有参数返回
 func (a *AllProject) GetFuncParamInfo(fileName string, lastLine int) (paramInfo *common.FragementParamInfo) {
 	annotateFile := a.getAnnotateFile(fileName)
