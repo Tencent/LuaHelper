@@ -448,107 +448,42 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 	}
 }
 
-// FindVarDefineForCheck 查找检查
-func (a *Analysis) findVarDefineForCheckhelp(varName string, varLoc lexer.Location) (find bool, varInfo *common.VarInfo) {
-	//先尝试找local变量
-	varInfo, find = a.curScope.FindLocVar(varName, varLoc)
-	if find {
-		return find, varInfo
-	}
-
-	//没找到就找全局变量
-	fi := a.curFunc
-	firstFile := a.getFirstFileResult(a.curResult.Name)
-
-	gFlag := false
-	strName := varName
-	strProPre := ""
-
-	fileResult := a.curResult
-	if a.isSecondTerm() {
-		secondFileResult := fileResult
-		if fi.FuncLv == 0 {
-			// 最顶层的函数，只在前面的定义中查找
-			find, varInfo = secondFileResult.FindGlobalVarInfo(strName, gFlag, strProPre)
-			if !find {
-				find, varInfo = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre)
-			}
-		} else {
-			// 非底层的函数，需要查找全局的变量
-			find, varInfo = firstFile.FindGlobalVarInfo(strName, gFlag, strProPre)
-			if !find {
-				find, varInfo = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre)
-			}
-		}
-	} else if a.isThirdTerm() {
-		thirdFileResult := fileResult
-		if fi.FuncLv == 0 {
-			// 最顶层的函数，只在前面的定义中查找
-			find, varInfo = thirdFileResult.FindGlobalVarInfo(strName, gFlag, strProPre)
-		} else {
-			// 非底层的函数，需要查找全局的变量
-			find, varInfo = firstFile.FindGlobalVarInfo(strName, gFlag, strProPre)
-		}
-
-		// 查找所有的
-		if !find {
-			find, varInfo = a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre)
-		}
-	}
-
-	return find, varInfo
-}
-
-// FindVarDefineForCheck 查找检查
-// 如果preName空，查找varName
-// 如果preName是import值 查找varName
-// 如果preName非import值 根据findSub 查找preName定义或者preName的成员即varName的定义
-func (a *Analysis) FindVarDefineForCheck(preName string, varName string, preLoc lexer.Location, varLoc lexer.Location, findSub bool) (find bool, varInfo *common.VarInfo, isPreImport bool) {
-	find = false
-
-	if preName != "" {
-		//有前缀
-
-		ok, preInfo := a.findVarDefineForCheckhelp(preName, preLoc)
-		if !ok {
-			return
-		}
-
-		referInfo := preInfo.ReferInfo
-		if referInfo == nil {
-			// 前缀非import变量
-
-			if findSub && varName != "" {
-
-				subVar, ok := preInfo.SubMaps[varName]
-				return ok, subVar, false
-			} else {
-				return ok, preInfo, false
-			}
-		}
-
-		// 前缀是模块变量 在模块中再查找
-		if len(varName) <= 0 {
-			return
-		}
-
-		referFile := a.Projects.GetFirstReferFileResult(referInfo)
-		if referFile == nil {
-			// 文件不存在
-			return
-		}
-
-		find, varInfo = referFile.FindGlobalVarInfo(varName, false, "")
-		return find, varInfo, true
-	}
-
-	//无前缀 直接找定义
-	if len(varName) <= 0 {
+func (a *Analysis) checkFuncOfClass(className string, funcName string, loc lexer.Location) {
+	if !a.isNeedCheck() || a.realTimeFlag {
 		return
 	}
 
-	find, varInfo = a.findVarDefineForCheckhelp(varName, varLoc)
-	return find, varInfo, false
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
+		return
+	}
+
+	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorClassField]; !ok {
+		return
+	}
+
+	if className == "" || funcName == "" {
+		return
+	}
+
+	// 如果是类的成员函数 先找类变量的定义
+	find, varDefine := a.findVarDefineGlobal(className)
+	if !find {
+		return
+	}
+
+	// 再找类上方注解
+	classTypeStr, ok := a.Projects.GetVarAnnType(varDefine.FileName, varDefine.Loc.StartLine-1)
+	if !ok {
+		return
+	}
+
+	// 根据注解找成员
+	if a.Projects.IsFieldOfClass(classTypeStr, funcName) {
+		return
+	}
+
+	errStr := fmt.Sprintf("Property '%s' not found in '%s'", funcName, className)
+	a.curResult.InsertError(common.CheckErrorClassField, errStr, loc)
 }
 
 // 根据注解判断table成员合法性 包括 t.a t可以是符号 或者函数参数
@@ -577,7 +512,7 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	ok, varInfo, isPreImport := a.FindVarDefineForCheck(preName, varName, preLoc, varLoc, false)
+	ok, varInfo, isPreImport := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, false)
 	if !ok {
 		return
 	}
@@ -630,7 +565,7 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		preName, varName, _, preLoc, varLoc, _ = common.GetTableNameInfo(exp)
 	}
 
-	ok, varInfo, isPreImport := a.FindVarDefineForCheck(preName, varName, preLoc, varLoc, false)
+	ok, varInfo, isPreImport := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, false)
 	if !ok {
 		return
 	}

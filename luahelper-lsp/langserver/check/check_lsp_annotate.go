@@ -208,27 +208,44 @@ func (a *AllProject) getAnnotateFile(strFile string) (annotateFile *common.Annot
 	return annotateFile
 }
 
-// GetFuncParamInfo 获取前面注释行的所有参数返回 还包含所属类型的成员函数定义
-func (a *AllProject) GetFuncParamTypeByClass(referFunc *common.FuncInfo) (retMap map[string]string) {
-	// // 从函数定义前找
-	// paramInfo = a.GetFuncParamInfo(referFunc.FileName, referFunc.Loc.StartLine-1)
-	// if paramInfo != nil {
-	// 	return retMap
-	// }
+// 判断类是否有该成员 默认返回true
+func (a *AllProject) IsFieldOfClass(className string, fieldName string) bool {
+
+	// 以下是从所属类成员找
+	if className == "" {
+		return true
+	}
+
+	createTypeList, flag := a.createTypeMap[className]
+	if !flag || len(createTypeList.List) != 1 {
+		return true
+	}
+
+	ci := createTypeList.List[0].ClassInfo
+	if ci == nil {
+		return true
+	}
+
+	_, ok := ci.FieldMap[fieldName]
+	return ok
+}
+
+// 查找成员函数的参数类型
+func (a *AllProject) GetFuncParamTypeByClass(className string, funcName string) (retMap map[string]string) {
 	retMap = make(map[string]string)
 
 	// 以下是从所属类成员找
-	if referFunc.ClassName == "" {
+	if className == "" || funcName == "" {
 		return
 	}
 
 	// 正常是根据classname查找全局变量定义 再查找定义上一行的类型注解 再找到class定义
 	// 这里简化处理 判断协议簇 然后直接查找同名的class注解
-	if !common.GConfig.IsStrProtocol(referFunc.ClassName) {
+	if !common.GConfig.IsStrProtocol(className) {
 		return
 	}
 
-	createTypeList, flag := a.createTypeMap[referFunc.ClassName]
+	createTypeList, flag := a.createTypeMap[className]
 	if !flag || len(createTypeList.List) != 1 {
 		return
 	}
@@ -238,7 +255,7 @@ func (a *AllProject) GetFuncParamTypeByClass(referFunc *common.FuncInfo) (retMap
 		return
 	}
 
-	ann, ok := ci.FieldMap[referFunc.FuncName]
+	ann, ok := ci.FieldMap[funcName]
 	if !ok {
 		return
 	}

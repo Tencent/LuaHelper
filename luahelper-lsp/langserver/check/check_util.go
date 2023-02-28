@@ -275,6 +275,42 @@ func (a *AllProject) GetFuncDefaultParamInfo(fileName string, lastLine int, para
 }
 
 // 获取参数类型
+func (a *AllProject) GetVarAnnType(fileName string, lastLine int) (string, bool) {
+	annotateFile := a.getAnnotateFile(fileName)
+	if annotateFile == nil {
+		return "", false
+	}
+
+	// 2) 获取注解文件指定行号的注释块信息
+	fragmentInfo := annotateFile.GetLineFragementInfo(lastLine)
+	if fragmentInfo == nil || fragmentInfo.TypeInfo == nil || len(fragmentInfo.TypeInfo.TypeList) == 0 {
+		return "", false
+	}
+
+	multiType, ok := fragmentInfo.TypeInfo.TypeList[0].(*annotateast.MultiType)
+	if !ok {
+		return "", false
+	}
+
+	nt, ok := multiType.TypeList[0].(*annotateast.NormalType)
+	if !ok {
+		return "", false
+	}
+
+	// typeState, ok := multiType.TypeList[0].(*annotateast.AnnotateTypeState)
+	// if !ok {
+	// 	return "", false
+	// }
+
+	// nt, ok := typeState.ListType[0].(*annotateast.NormalType)
+	// if !ok {
+	// 	return "", false
+	// }
+
+	return nt.StrName, true
+}
+
+// 获取参数类型
 func (a *AllProject) GetFuncParamType(fileName string, lastLine int) (retMap map[string][]annotateast.Type) {
 	retMap = map[string][]annotateast.Type{}
 	annotateParamInfo := a.GetFuncParamInfo(fileName, lastLine)

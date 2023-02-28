@@ -101,6 +101,9 @@ func (a *Analysis) cgFuncDefExp(node *ast.FuncDefExp) *common.FuncInfo {
 	subFi.ClassName = node.ClassName
 	subFi.FuncName = node.FuncName
 
+	// 在第二轮 检查FuncName是否为ClassName的成员  checkTableAccess 已能判断 重复了 暂且注释
+	//a.checkFuncOfClass(subFi.ClassName, subFi.FuncName, node.Loc)
+
 	fileResult := a.curResult
 	fileResult.InertNewFunc(subFi)
 

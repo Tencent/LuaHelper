@@ -130,20 +130,18 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 		return
 	}
 
-	// 判断是否开启了函数调用参数个数不匹配的校验
 	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorCallParamType) {
 		return
 	}
 
-	// 判断是否开启了函数调用参数个数不匹配的校验
 	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorCallParamType]; !ok {
 		return
 	}
 
-	fileResult := a.curResult
-	//到此参数个数正常，继续检查参数类型匹配
 	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
 	if len(paramTypeMap) > 0 {
+		//从函数上方获取到了注解
+
 		for i, argExp := range node.Args {
 			if i >= len(referFunc.ParamList) {
 				//可能是可变参数导致
@@ -205,15 +203,33 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 
 			//类型不一致，报警
 			errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", allTypeStr, allArgTypeStr)
-			fileResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
+			a.curResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
 
 		}
 
 		return //找到函数上方的定义 就不再查找类的了
 	}
 
-	paramTypeMapByClass := a.Projects.GetFuncParamTypeByClass(referFunc)
-	if len(paramTypeMapByClass) > 0 {
+	if referFunc.ClassName != "" {
+		// 如果是类的成员函数 先找类变量的定义
+		find, varDefine := a.findVarDefineGlobal(referFunc.ClassName)
+		if !find {
+			return
+		}
+
+		// 再找类上方注解
+		classTypeStr, ok := a.Projects.GetVarAnnType(varDefine.FileName, varDefine.Loc.StartLine-1)
+		if !ok {
+			return
+		}
+
+		// 根据注解找成员函数
+		paramTypeMapByClass := a.Projects.GetFuncParamTypeByClass(classTypeStr, referFunc.FuncName)
+		if len(paramTypeMapByClass) == 0 {
+			return
+		}
+
+		// 参数类型跟注解类型比对
 		for i, argExp := range node.Args {
 			if i >= len(referFunc.ParamList) {
 				//可能是可变参数导致
@@ -253,10 +269,9 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 
 			//类型不一致，报警
 			errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", annType, allArgTypeStr)
-			fileResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
+			a.curResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
 
 		}
-
 	}
 
 }
@@ -299,7 +314,7 @@ func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp, idx int) (retVec []st
 		}
 	}
 
-	ok, varInfo, _ := a.FindVarDefineForCheck(preName, varName, preLoc, varLoc, true)
+	ok, varInfo, _ := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, true)
 	if !ok {
 		return
 	}
