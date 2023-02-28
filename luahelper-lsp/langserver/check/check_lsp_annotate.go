@@ -239,12 +239,6 @@ func (a *AllProject) GetFuncParamTypeByClass(className string, funcName string) 
 		return
 	}
 
-	// 正常是根据classname查找全局变量定义 再查找定义上一行的类型注解 再找到class定义
-	// 这里简化处理 判断协议簇 然后直接查找同名的class注解
-	if !common.GConfig.IsStrProtocol(className) {
-		return
-	}
-
 	createTypeList, flag := a.createTypeMap[className]
 	if !flag || len(createTypeList.List) != 1 {
 		return
