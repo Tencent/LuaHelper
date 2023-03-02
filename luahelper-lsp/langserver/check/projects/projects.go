@@ -44,7 +44,7 @@ type Projects interface {
 
 	GetFuncParamType(fileName string, lastLine int) (retMap map[string][]annotateast.Type)
 
-	GetFuncParamTypeByClass(className string, funcName string) (retMap map[string]string)
+	GetFuncParamTypeByClass(className string, funcName string) (retMap map[string][]string)
 
 	GetFuncReturnInfo(fileName string, lastLine int) (paramInfo *common.FragementReturnInfo)
 

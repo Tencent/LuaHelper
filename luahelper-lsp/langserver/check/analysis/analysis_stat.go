@@ -2,7 +2,6 @@ package analysis
 
 import (
 	"fmt"
-	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/check/compiler/ast"
 	"luahelper-lsp/langserver/check/compiler/lexer"
@@ -138,227 +137,184 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 		return
 	}
 
-	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
-	if len(paramTypeMap) > 0 {
-		//从函数上方获取到了注解
-
-		for i, argExp := range node.Args {
-			if i >= len(referFunc.ParamList) {
-				//可能是可变参数导致
-				break
-			}
-
-			if _, ok := paramTypeMap[referFunc.ParamList[i]]; !ok {
-				//该参数没写注解
-				continue
-			}
-
-			annTypeVec := paramTypeMap[referFunc.ParamList[i]]
-			allTypeStr := ""
-			for _, annTypeOne := range annTypeVec {
-				typeOne := annotateast.GetAstTypeName(annTypeOne)
-				if len(allTypeStr) > 0 {
-					allTypeStr = fmt.Sprintf("%s|", allTypeStr)
-				}
-				allTypeStr = fmt.Sprintf("%s%s", allTypeStr, typeOne)
-			}
-
-			//函数调用处的参数类型
-			argTypeVec := a.GetAnnTypeStrForRefer(argExp, -1)
-			if len(argTypeVec) == 0 {
-				// 取不到参数类型
-				continue
-			}
-
-			allArgTypeStr := ""
-			for _, argTypeOne := range argTypeVec {
-				if len(allArgTypeStr) > 0 {
-					allArgTypeStr = fmt.Sprintf("%s|", allArgTypeStr)
-				}
-				allArgTypeStr = fmt.Sprintf("%s%s", allArgTypeStr, argTypeOne)
-			}
-
-			hasMatch := false
-			for _, annTypeOne := range annTypeVec {
-				//函数定义处注解的参数类型
-				annType := annotateast.GetAstTypeName(annTypeOne)
-
-				for _, argTypeOne := range argTypeVec {
-					if a.CompAnnTypeAndCodeType(annType, argTypeOne) {
-						hasMatch = true
-						break
-					}
-				}
-
-				if hasMatch {
-					break
-				}
-			}
-
-			if hasMatch {
-				continue
-			}
-
-			loc := common.GetExpLoc(argExp)
-
-			//类型不一致，报警
-			errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", allTypeStr, allArgTypeStr)
-			a.curResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
-
+	for i, argExp := range node.Args {
+		if i >= len(referFunc.ParamList) {
+			//可能是可变参数导致
+			break
 		}
 
-		return //找到函数上方的定义 就不再查找类的了
-	}
-
-	if referFunc.ClassName != "" {
-		// 如果是类的成员函数 先找类变量的定义
-		find, varDefine := a.findVarDefineGlobal(referFunc.ClassName)
-		if !find {
-			return
-		}
-
-		// 再找类上方注解
-		classTypeStr, ok := a.Projects.GetVarAnnType(varDefine.FileName, varDefine.Loc.StartLine-1)
+		allAnnTypeVec, ok := referFunc.ParamType[referFunc.ParamList[i]]
 		if !ok {
-			return
+			//该参数没写注解
+			continue
 		}
 
-		// 根据注解找成员函数
-		paramTypeMapByClass := a.Projects.GetFuncParamTypeByClass(classTypeStr, referFunc.FuncName)
-		if len(paramTypeMapByClass) == 0 {
-			return
+		//函数调用处的参数类型
+		argCallTypeVec := a.GetAnnTypeStrForRefer(argExp, -1)
+		if len(argCallTypeVec) == 0 {
+			// 取不到参数类型
+			continue
 		}
 
-		// 参数类型跟注解类型比对
-		for i, argExp := range node.Args {
-			if i >= len(referFunc.ParamList) {
-				//可能是可变参数导致
-				break
-			}
-
-			//函数调用处的参数类型
-			argTypeVec := a.GetAnnTypeStrForRefer(argExp, -1)
-			if len(argTypeVec) == 0 {
-				// 取不到参数类型
-				continue
-			}
-
-			annType := paramTypeMapByClass[referFunc.ParamList[i]]
-			allArgTypeStr := ""
-			for _, argTypeOne := range argTypeVec {
-				if len(allArgTypeStr) > 0 {
-					allArgTypeStr = fmt.Sprintf("%s|", allArgTypeStr)
-				}
-				allArgTypeStr = fmt.Sprintf("%s%s", allArgTypeStr, argTypeOne)
-			}
-
-			hasMatch := false
-
-			for _, argTypeOne := range argTypeVec {
-				if a.CompAnnTypeAndCodeType(annType, argTypeOne) {
+		hasMatch := false
+		for _, argCallTypeOne := range argCallTypeVec {
+			for _, argAnnTypeOne := range allAnnTypeVec {
+				if a.CompAnnTypeAndCodeType(argCallTypeOne, argAnnTypeOne) {
 					hasMatch = true
 					break
 				}
 			}
-
-			if hasMatch {
-				continue
-			}
-
-			loc := common.GetExpLoc(argExp)
-
-			//类型不一致，报警
-			errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", annType, allArgTypeStr)
-			a.curResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
-
 		}
-	}
 
-}
-
-//GetAnnTypeStrForRefer 获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
-func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp, idx int) (retVec []string) {
-
-	argType := common.GetAnnTypeFromExp(referExp)
-	if argType != "LuaTypeRefer" {
-		retVec = append(retVec, argType)
-		return
-	}
-
-	//若是引用，则继续查找定义
-	preName := ""
-	varName := ""
-	keyName := ""
-	preLoc := lexer.Location{}
-	varLoc := lexer.Location{}
-	isTableExp := false
-	isTableWhole := false
-	switch exp := referExp.(type) {
-	case *ast.NameExp:
-		varName = exp.Name
-		varLoc = exp.Loc
-	case *ast.TableAccessExp:
-		preName, varName, keyName, preLoc, varLoc, isTableWhole = common.GetTableNameInfo(exp)
-		isTableExp = true
-	case *ast.FuncCallExp:
-		if nameExp, ok := exp.PrefixExp.(*ast.NameExp); ok && exp.NameExp == nil {
-			varName = nameExp.Name
-			varLoc = nameExp.Loc
+		if hasMatch {
+			continue
 		}
+
+		loc := common.GetExpLoc(argExp)
+		allAnnTypeStr := strings.Join(allAnnTypeVec, "|")
+		argCallTypeStr := strings.Join(argCallTypeVec, "|")
+
+		//类型不一致，报警
+		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", allAnnTypeStr, argCallTypeStr)
+		a.curResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
 	}
 
-	if isTableExp {
-		//当是表且有截断 不继续推导类型
-		if !isTableWhole {
-			return
-		}
-	}
+	// paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
+	// if len(paramTypeMap) > 0 {
+	// 	//从函数上方获取到了注解
 
-	ok, varInfo, _ := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, true)
-	if !ok {
-		return
-	}
+	// 	for i, argExp := range node.Args {
+	// 		if i >= len(referFunc.ParamList) {
+	// 			//可能是可变参数导致
+	// 			break
+	// 		}
 
-	varIdx := int(varInfo.VarIndex)
-	if idx > 0 {
-		varIdx = idx
-	}
+	// 		if _, ok := paramTypeMap[referFunc.ParamList[i]]; !ok {
+	// 			//该参数没写注解
+	// 			continue
+	// 		}
 
-	//优先取变量定义处的注解类型
-	defAnnTypeVec := a.Projects.GetAnnotateTypeString(varInfo, varName, keyName, varIdx)
-	if len(defAnnTypeVec) > 0 {
-		return defAnnTypeVec
-	}
+	// 		annTypeVec := paramTypeMap[referFunc.ParamList[i]]
+	// 		allTypeStr := ""
+	// 		for _, annTypeOne := range annTypeVec {
+	// 			typeOne := annotateast.GetAstTypeName(annTypeOne)
+	// 			if len(allTypeStr) > 0 {
+	// 				allTypeStr = fmt.Sprintf("%s|", allTypeStr)
+	// 			}
+	// 			allTypeStr = fmt.Sprintf("%s%s", allTypeStr, typeOne)
+	// 		}
 
-	//若无注解，则取变量定义处表达式推导的类型
-	//如果是表exp，到这里已经是：表exp完整，如果有keyname就取keyname的类型
-	if isTableExp && len(keyName) > 0 {
-		//必须取到keyName的类型 否则退出
-		if keyVarInfo, ok := varInfo.SubMaps[keyName]; ok {
-			argType = common.GetAnnTypeFromLuaType(keyVarInfo.VarType)
-		} else {
-			return
-		}
-	} else {
-		argType = common.GetAnnTypeFromLuaType(varInfo.VarType)
-	}
+	// 		//函数调用处的参数类型
+	// 		argTypeVec := a.GetAnnTypeStrForRefer(argExp, -1)
+	// 		if len(argTypeVec) == 0 {
+	// 			// 取不到参数类型
+	// 			continue
+	// 		}
 
-	//例如：
-	//---@type classA
-	//local tableA = {}
-	//argType是table, defAnnType是classA,
-	//当tableA作为参数时，table或者classA都可以匹配
+	// 		allArgTypeStr := ""
+	// 		for _, argTypeOne := range argTypeVec {
+	// 			if len(allArgTypeStr) > 0 {
+	// 				allArgTypeStr = fmt.Sprintf("%s|", allArgTypeStr)
+	// 			}
+	// 			allArgTypeStr = fmt.Sprintf("%s%s", allArgTypeStr, argTypeOne)
+	// 		}
 
-	if argType == "LuaTypeRefer" && isTableWhole {
-		//若仍是LuaTypeRefer 且完整解析了table 可以递归
-		//table的递归会导致栈溢出，先屏蔽
-		if !isTableExp {
-			return a.GetAnnTypeStrForRefer(varInfo.ReferExp, varIdx)
-		}
-	}
+	// 		hasMatch := false
+	// 		for _, annTypeOne := range annTypeVec {
+	// 			//函数定义处注解的参数类型
+	// 			annType := annotateast.GetAstTypeName(annTypeOne)
 
-	retVec = append(retVec, argType)
-	return retVec
+	// 			for _, argTypeOne := range argTypeVec {
+	// 				if a.CompAnnTypeAndCodeType(annType, argTypeOne) {
+	// 					hasMatch = true
+	// 					break
+	// 				}
+	// 			}
+
+	// 			if hasMatch {
+	// 				break
+	// 			}
+	// 		}
+
+	// 		if hasMatch {
+	// 			continue
+	// 		}
+
+	// 		loc := common.GetExpLoc(argExp)
+
+	// 		//类型不一致，报警
+	// 		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", allTypeStr, allArgTypeStr)
+	// 		a.curResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
+
+	// 	}
+
+	// 	return //找到函数上方的定义 就不再查找类的了
+	// }
+
+	// if referFunc.ClassName != "" {
+	// 	// 如果是类的成员函数 先找类变量的定义
+	// 	find, varDefine := a.findVarDefineGlobal(referFunc.ClassName)
+	// 	if !find {
+	// 		return
+	// 	}
+
+	// 	// 再找类上方注解
+	// 	classTypeStr, ok := a.Projects.GetVarAnnType(varDefine.FileName, varDefine.Loc.StartLine-1)
+	// 	if !ok {
+	// 		return
+	// 	}
+
+	// 	// 根据注解找成员函数
+	// 	paramTypeMapByClass := a.Projects.GetFuncParamTypeByClass(classTypeStr, referFunc.FuncName)
+	// 	if len(paramTypeMapByClass) == 0 {
+	// 		return
+	// 	}
+
+	// 	// 参数类型跟注解类型比对
+	// 	for i, argExp := range node.Args {
+	// 		if i >= len(referFunc.ParamList) {
+	// 			//可能是可变参数导致
+	// 			break
+	// 		}
+
+	// 		//函数调用处的参数类型
+	// 		argTypeVec := a.GetAnnTypeStrForRefer(argExp, -1)
+	// 		if len(argTypeVec) == 0 {
+	// 			// 取不到参数类型
+	// 			continue
+	// 		}
+
+	// 		annType := paramTypeMapByClass[referFunc.ParamList[i]]
+	// 		allArgTypeStr := ""
+	// 		for _, argTypeOne := range argTypeVec {
+	// 			if len(allArgTypeStr) > 0 {
+	// 				allArgTypeStr = fmt.Sprintf("%s|", allArgTypeStr)
+	// 			}
+	// 			allArgTypeStr = fmt.Sprintf("%s%s", allArgTypeStr, argTypeOne)
+	// 		}
+
+	// 		hasMatch := false
+
+	// 		for _, argTypeOne := range argTypeVec {
+	// 			if a.CompAnnTypeAndCodeType(annType, argTypeOne) {
+	// 				hasMatch = true
+	// 				break
+	// 			}
+	// 		}
+
+	// 		if hasMatch {
+	// 			continue
+	// 		}
+
+	// 		loc := common.GetExpLoc(argExp)
+
+	// 		//类型不一致，报警
+	// 		errorStr := fmt.Sprintf("Expected parameter of type '%s', '%s' provided", annType, allArgTypeStr)
+	// 		a.curResult.InsertError(common.CheckErrorCallParamType, errorStr, loc)
+
+	// 	}
+	// }
+
 }
 
 func (a *Analysis) cgBreakStat(node *ast.BreakStat) {

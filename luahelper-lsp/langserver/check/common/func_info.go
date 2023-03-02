@@ -42,23 +42,24 @@ type ReturnInfo struct {
 
 // FuncInfo 函数信息
 type FuncInfo struct {
-	parent           *FuncInfo      // 父的funcInfo
-	labelVecs        []*LabelInfo   // 包含所有的labelInfo
-	ReturnVecs       []*ReturnInfo  // 包含所有的函数返回信息, 函数可能有多处返回，用列表存储
-	MainScope        *ScopeInfo     // 函数指向的主的ScopeInfo
-	RelateVar        *FuncRelateVar // 函数反向关联的指针，当为冒号函数时候，即IsColon为true才存储
-	ParamList        []string       // 函数所有的参数列表
-	Loc              lexer.Location // 位置信息
-	ScopeLv          int            // 当前的作用域层级，初始值为0
-	FuncLv           int            // func的层级，最上层的func层级为0，子的func层级+1
-	FuncID           int            // funcInfo在AnalysisFileResult中出现的序号，默认从0开始
-	IsVararg         bool           // 是否含义可变参数
-	IsColon          bool           // 是否为: 这样的函数
-	ParamDefaultNum  int            // 默认函数数量
-	ParamDefaultInit bool           // 是否获取过默认函数数量
-	FileName         string         // 函数所在的文件名
-	ClassName        string         // 例如 function table.func() end // table即ClassName
-	FuncName         string         // 例如 function table.func() end // func即FuncName
+	parent           *FuncInfo           // 父的funcInfo
+	labelVecs        []*LabelInfo        // 包含所有的labelInfo
+	ReturnVecs       []*ReturnInfo       // 包含所有的函数返回信息, 函数可能有多处返回，用列表存储
+	MainScope        *ScopeInfo          // 函数指向的主的ScopeInfo
+	RelateVar        *FuncRelateVar      // 函数反向关联的指针，当为冒号函数时候，即IsColon为true才存储
+	ParamList        []string            // 函数所有的参数列表
+	Loc              lexer.Location      // 位置信息
+	ScopeLv          int                 // 当前的作用域层级，初始值为0
+	FuncLv           int                 // func的层级，最上层的func层级为0，子的func层级+1
+	FuncID           int                 // funcInfo在AnalysisFileResult中出现的序号，默认从0开始
+	IsVararg         bool                // 是否含义可变参数
+	IsColon          bool                // 是否为: 这样的函数
+	ParamDefaultNum  int                 // 默认函数数量
+	ParamDefaultInit bool                // 是否获取过默认函数数量
+	FileName         string              // 函数所在的文件名
+	ClassName        string              // 例如 function table.func() end // table即ClassName
+	FuncName         string              // 例如 function table.func() end // func即FuncName
+	ParamType        map[string][]string // 函数所有的参数注解类型列表 参数可能有多个类型 number|string
 }
 
 // CreateFuncInfo 创建一个函数指针
@@ -79,6 +80,7 @@ func CreateFuncInfo(parent *FuncInfo, funcLv int, loc lexer.Location, isVararg b
 		ParamDefaultNum:  -1,
 		ParamDefaultInit: false,
 		FileName:         fileName,
+		ParamType:        make(map[string][]string),
 	}
 
 	// 设置函数指向的主scope

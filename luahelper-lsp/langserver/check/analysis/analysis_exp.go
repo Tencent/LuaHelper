@@ -101,9 +101,6 @@ func (a *Analysis) cgFuncDefExp(node *ast.FuncDefExp) *common.FuncInfo {
 	subFi.ClassName = node.ClassName
 	subFi.FuncName = node.FuncName
 
-	// 在第二轮 检查FuncName是否为ClassName的成员  checkTableAccess 已能判断 重复了 暂且注释
-	//a.checkFuncOfClass(subFi.ClassName, subFi.FuncName, node.Loc)
-
 	fileResult := a.curResult
 	fileResult.InertNewFunc(subFi)
 
@@ -121,6 +118,11 @@ func (a *Analysis) cgFuncDefExp(node *ast.FuncDefExp) *common.FuncInfo {
 
 		// 函数所有的参数放入数组进去，函数代码提示的时候有用
 		subFi.ParamList = append(subFi.ParamList, param)
+	}
+
+	if a.isSecondTerm() {
+		//获取参数的注解类型
+		a.loadFuncParamAnnType(subFi)
 	}
 
 	// 备份

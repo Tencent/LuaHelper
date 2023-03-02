@@ -231,8 +231,8 @@ func (a *AllProject) IsFieldOfClass(className string, fieldName string) bool {
 }
 
 // 查找成员函数的参数类型
-func (a *AllProject) GetFuncParamTypeByClass(className string, funcName string) (retMap map[string]string) {
-	retMap = make(map[string]string)
+func (a *AllProject) GetFuncParamTypeByClass(className string, funcName string) (retMap map[string][]string) {
+	retMap = make(map[string][]string)
 
 	// 以下是从所属类成员找
 	if className == "" || funcName == "" {
@@ -266,16 +266,23 @@ func (a *AllProject) GetFuncParamTypeByClass(className string, funcName string) 
 	}
 
 	for i, v := range funcType.ParamNameList {
-		vt, ok := funcType.ParamTypeList[i].(*annotateast.MultiType)
-		if !ok || len(vt.TypeList) != 1 {
-			return
-		}
-		vtn, ok := vt.TypeList[0].(*annotateast.NormalType)
+		mt, ok := funcType.ParamTypeList[i].(*annotateast.MultiType)
 		if !ok {
-			return
+			continue
 		}
-		retMap[v] = vtn.StrName
+		// vtn, ok := vt.TypeList[0].(*annotateast.NormalType)
+		// if !ok {
+		// 	return
+		// }
+		// retMap[v] = vtn.StrName
 
+		for _, typeone := range mt.TypeList {
+			nt, ok := typeone.(*annotateast.NormalType)
+			if !ok {
+				continue
+			}
+			retMap[v] = append(retMap[v], nt.StrName)
+		}
 	}
 
 	return
