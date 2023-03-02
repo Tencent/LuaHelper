@@ -8,51 +8,54 @@ import (
 	"luahelper-lsp/langserver/check/results"
 )
 
-func (a *Analysis) findVarDefine(varName string, varLoc lexer.Location) (find bool, varInfo *common.VarInfo) {
+func (a *Analysis) findVarDefine(varName string, varLoc lexer.Location) (find bool, varInfo *common.VarInfo, varType []string) {
 	//先尝试找local变量
 	varInfo, find = a.curScope.FindLocVar(varName, varLoc)
 	if find {
-		return find, varInfo
+		if varInfo.IsParam {
+			// 如果是函数参数 同时返回参数类型
+			varType, ok := a.curFunc.ParamType[varName]
+			if ok {
+				return find, varInfo, varType
+			}
+
+		}
+		return find, varInfo, varType
 	}
 
-	return a.findVarDefineGlobal(varName)
+	find, varInfo = a.findVarDefineGlobal(varName)
+
+	return find, varInfo, varType
 }
 
-// 从全局查找变量定义
+// 从全局查找变量定义 只从当前阶段的数据中找
 func (a *Analysis) findVarDefineGlobal(varName string) (find bool, varInfo *common.VarInfo) {
 
-	//没找到就找全局变量
 	fi := a.curFunc
-	firstFile := a.getFirstFileResult(a.curResult.Name)
-
 	gFlag := false
 	strName := varName
 	strProPre := ""
-
-	fileResult := a.curResult
 	if a.isSecondTerm() {
-		secondFileResult := fileResult
 		if fi.FuncLv == 0 {
 			// 最顶层的函数，只在前面的定义中查找
-			find, varInfo = secondFileResult.FindGlobalVarInfo(strName, gFlag, strProPre)
+			find, varInfo = a.curResult.FindGlobalVarInfo(strName, gFlag, strProPre)
 			if !find {
 				find, varInfo = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre)
 			}
 		} else {
 			// 非底层的函数，需要查找全局的变量
-			find, varInfo = firstFile.FindGlobalVarInfo(strName, gFlag, strProPre)
+			find, varInfo = a.curResult.FindGlobalVarInfo(strName, gFlag, strProPre)
 			if !find {
-				find, varInfo = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre)
+				find, varInfo = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre)
 			}
 		}
 	} else if a.isThirdTerm() {
-		thirdFileResult := fileResult
 		if fi.FuncLv == 0 {
 			// 最顶层的函数，只在前面的定义中查找
-			find, varInfo = thirdFileResult.FindGlobalVarInfo(strName, gFlag, strProPre)
+			find, varInfo = a.curResult.FindGlobalVarInfo(strName, gFlag, strProPre)
 		} else {
 			// 非底层的函数，需要查找全局的变量
-			find, varInfo = firstFile.FindGlobalVarInfo(strName, gFlag, strProPre)
+			find, varInfo = a.curResult.FindGlobalVarInfo(strName, gFlag, strProPre)
 		}
 
 		// 查找所有的
@@ -64,17 +67,17 @@ func (a *Analysis) findVarDefineGlobal(varName string) (find bool, varInfo *comm
 	return find, varInfo
 }
 
-// findVarDefineWithPre 查找检查
+// findVarDefineWithPre 查找定义 并尝试带出其类型
 // 如果preName空，查找varName
 // 如果preName是import值 查找varName
 // 如果preName非import值 根据findSub 查找preName定义或者preName的成员即varName的定义
-func (a *Analysis) findVarDefineWithPre(preName string, varName string, preLoc lexer.Location, varLoc lexer.Location, findSub bool) (find bool, varInfo *common.VarInfo, isPreImport bool) {
+func (a *Analysis) findVarDefineWithPre(preName string, varName string, preLoc lexer.Location, varLoc lexer.Location, findSub bool) (find bool, varInfo *common.VarInfo, isPreImport bool, varType []string) {
 	find = false
 
 	if preName != "" {
 		//有前缀
 
-		ok, preInfo := a.findVarDefine(preName, preLoc)
+		ok, preInfo, _ := a.findVarDefine(preName, preLoc)
 		if !ok {
 			return
 		}
@@ -86,9 +89,9 @@ func (a *Analysis) findVarDefineWithPre(preName string, varName string, preLoc l
 			if findSub && varName != "" {
 
 				subVar, ok := preInfo.SubMaps[varName]
-				return ok, subVar, false
+				return ok, subVar, false, nil
 			} else {
-				return ok, preInfo, false
+				return ok, preInfo, false, nil
 			}
 		}
 
@@ -104,7 +107,7 @@ func (a *Analysis) findVarDefineWithPre(preName string, varName string, preLoc l
 		}
 
 		find, varInfo = referFile.FindGlobalVarInfo(varName, false, "")
-		return find, varInfo, true
+		return find, varInfo, true, nil
 	}
 
 	//无前缀 直接找定义
@@ -112,8 +115,8 @@ func (a *Analysis) findVarDefineWithPre(preName string, varName string, preLoc l
 		return
 	}
 
-	find, varInfo = a.findVarDefine(varName, varLoc)
-	return find, varInfo, false
+	find, varInfo, varType = a.findVarDefine(varName, varLoc)
+	return find, varInfo, false, varType
 }
 
 //GetAnnTypeByExp 获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
@@ -155,7 +158,7 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 		}
 	}
 
-	ok, varInfo, _ := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, true)
+	ok, varInfo, _, varType := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, true)
 	if !ok {
 		return
 	}
@@ -163,6 +166,11 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 	varIdx := int(varInfo.VarIndex)
 	if idx > 0 {
 		varIdx = idx
+	}
+
+	if varInfo.IsParam {
+		// 变量属于函数参数 此处可确认其类型 直接返回
+		return varType
 	}
 
 	//优先取变量定义处的注解类型
@@ -206,7 +214,7 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 	return retVec
 }
 
-//
+// 加载函数的参数与返回值的注解类型
 func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
 	if referFunc == nil {
 		return

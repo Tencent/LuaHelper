@@ -33,7 +33,7 @@ func (a *Analysis) checkConstAssgin(node ast.Exp) {
 		preName, varName, _, preLoc, varLoc, _ = common.GetTableNameInfo(exp)
 	}
 
-	ok, varInfo, isPreImport := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, false)
+	ok, varInfo, isPreImport, _ := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, false)
 	if !ok {
 		return
 	}

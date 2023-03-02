@@ -113,9 +113,15 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		return
 	}
 
-	ok, varInfo, isPreImport := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, false)
+	ok, varInfo, isPreImport, varType := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, false)
 	if !ok {
 		return
+	}
+
+	if varInfo.IsParam {
+		for _, annType := range varType {
+			print(annType) //todo
+		}
 	}
 
 	isMember := true
