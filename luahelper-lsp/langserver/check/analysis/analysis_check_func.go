@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+//函数调用处的参数类型检查
 func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *common.FuncInfo) {
 
 	// 第二轮或第三轮函数参数check
@@ -65,8 +66,8 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 	}
 }
 
-// 检查函数的返回值类型与注解类型是否匹配 一次检查一个return语句
-func (a *Analysis) cgFuncReturnCheck(retInfo *common.ReturnInfo) {
+// 函数体内的返回值类型检查 检查函数的返回值类型与注解类型是否匹配 一次检查一个return语句
+func (a *Analysis) funcReturnCheck(retInfo *common.ReturnInfo) {
 	// 第二轮或第三轮函数参数check
 	if !a.isNeedCheck() {
 		return

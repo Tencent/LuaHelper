@@ -37,7 +37,7 @@ func (a *Analysis) cgRetStat(exps []ast.Exp) {
 
 		returnInfo.ReturnVarVec = append(returnInfo.ReturnVarVec, returnItem)
 
-		a.cgFuncReturnCheck(returnInfo)
+		a.funcReturnCheck(returnInfo)
 	}
 
 	fi := a.curFunc
