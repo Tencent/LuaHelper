@@ -230,6 +230,63 @@ func (a *AllProject) IsFieldOfClass(className string, fieldName string) bool {
 	return ok
 }
 
+// 查找成员函数的返回值类型
+func (a *AllProject) GetFuncReturnTypeByClass(className string, funcName string) (retVec [][]string) {
+
+	// 以下是从所属类成员找
+	if className == "" || funcName == "" {
+		return
+	}
+
+	createTypeList, flag := a.createTypeMap[className]
+	if !flag || len(createTypeList.List) != 1 {
+		return
+	}
+
+	ci := createTypeList.List[0].ClassInfo
+	if ci == nil {
+		return
+	}
+
+	ann, ok := ci.FieldMap[funcName]
+	if !ok {
+		return
+	}
+
+	//一路解析下去
+	multiType, ok := ann.FiledType.(*annotateast.MultiType)
+	if !ok || len(multiType.TypeList) != 1 {
+		return
+	}
+
+	funcType, ok := multiType.TypeList[0].(*annotateast.FuncType)
+	if len(funcType.ParamNameList) != len(funcType.ParamTypeList) {
+		return
+	}
+
+	for _, v := range funcType.ReturnTypeList {
+		oneRetType := []string{}
+
+		mt, ok := v.(*annotateast.MultiType)
+		if !ok {
+			// 这里要补空的
+			retVec = append(retVec, oneRetType)
+			continue
+		}
+
+		for _, typeone := range mt.TypeList {
+			nt, ok := typeone.(*annotateast.NormalType)
+			if !ok {
+				continue
+			}
+			oneRetType = append(oneRetType, nt.StrName)
+		}
+		retVec = append(retVec, oneRetType)
+	}
+
+	return
+}
+
 // 查找成员函数的参数类型
 func (a *AllProject) GetFuncParamTypeByClass(className string, funcName string) (retMap map[string][]string) {
 	retMap = make(map[string][]string)
@@ -270,12 +327,8 @@ func (a *AllProject) GetFuncParamTypeByClass(className string, funcName string) 
 		if !ok {
 			continue
 		}
-		// vtn, ok := vt.TypeList[0].(*annotateast.NormalType)
-		// if !ok {
-		// 	return
-		// }
-		// retMap[v] = vtn.StrName
 
+		retMap[v] = []string{}
 		for _, typeone := range mt.TypeList {
 			nt, ok := typeone.(*annotateast.NormalType)
 			if !ok {

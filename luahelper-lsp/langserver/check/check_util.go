@@ -297,16 +297,6 @@ func (a *AllProject) GetVarAnnType(fileName string, lastLine int) (string, bool)
 		return "", false
 	}
 
-	// typeState, ok := multiType.TypeList[0].(*annotateast.AnnotateTypeState)
-	// if !ok {
-	// 	return "", false
-	// }
-
-	// nt, ok := typeState.ListType[0].(*annotateast.NormalType)
-	// if !ok {
-	// 	return "", false
-	// }
-
 	return nt.StrName, true
 }
 
@@ -330,6 +320,26 @@ func (a *AllProject) GetFuncParamType(fileName string, lastLine int) (retMap map
 
 	}
 	return retMap
+}
+
+// 获取返回值类型 返回一个二维数组 如---@return number,string|number 对应[[number],[string,number]]
+func (a *AllProject) GetFuncReturnTypeVec(fileName string, lastLine int) (retVec [][]string) {
+
+	annotatePeturnInfo := a.GetFuncReturnInfo(fileName, lastLine)
+	if annotatePeturnInfo == nil {
+		return
+	}
+	for _, oneReturn := range annotatePeturnInfo.ReturnTypeList {
+		oneRetVec := []string{}
+		switch subAst := oneReturn.(type) {
+		case *annotateast.MultiType:
+			for _, oneType := range subAst.TypeList {
+				oneRetVec = append(oneRetVec, annotateast.GetAstTypeName(oneType))
+			}
+		}
+		retVec = append(retVec, oneRetVec)
+	}
+	return retVec
 }
 
 // 获取返回值类型 返回一个二维数组 如---@return number,string|number 对应[[number],[string,number]]

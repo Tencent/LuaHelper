@@ -60,6 +60,7 @@ type FuncInfo struct {
 	ClassName        string              // 例如 function table.func() end // table即ClassName
 	FuncName         string              // 例如 function table.func() end // func即FuncName
 	ParamType        map[string][]string // 函数所有的参数注解类型列表 参数可能有多个类型 number|string
+	ReturnType       [][]string          // 函数注解处的返回值类型 返回值只能按顺序查找
 }
 
 // CreateFuncInfo 创建一个函数指针

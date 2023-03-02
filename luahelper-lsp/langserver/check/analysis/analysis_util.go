@@ -197,6 +197,10 @@ func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp, idx int) (retVec []st
 		}
 	}
 
+	if argType == "function" {
+		// 取函数返回值类型 此时函数还未解析 直接取取不到 todo
+	}
+
 	retVec = append(retVec, argType)
 	return retVec
 }
@@ -207,7 +211,6 @@ func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
 		return
 	}
 
-	// 在此获取函数参数的注解类型 并保存
 	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
 	if len(paramTypeMap) > 0 {
 		//从函数上方获取到了注解
@@ -220,6 +223,9 @@ func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
 				}
 			}
 		}
+
+		//继续获取返回值注解
+		referFunc.ReturnType = a.Projects.GetFuncReturnTypeVec(referFunc.FileName, referFunc.Loc.StartLine-1)
 
 		return //从函数上方获取到了注解之后就不再查找类成员函数的注解
 	}
@@ -238,16 +244,8 @@ func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
 		}
 
 		// 根据注解找成员函数
-		paramTypeMapByClass := a.Projects.GetFuncParamTypeByClass(classTypeStr, referFunc.FuncName)
-		if len(paramTypeMapByClass) == 0 {
-			return
-		}
-
-		for _, paramName := range referFunc.ParamList {
-			if annTypeStr, ok := paramTypeMapByClass[paramName]; ok {
-				referFunc.ParamType[paramName] = annTypeStr
-			}
-		}
+		referFunc.ParamType = a.Projects.GetFuncParamTypeByClass(classTypeStr, referFunc.FuncName)
+		referFunc.ReturnType = a.Projects.GetFuncReturnTypeByClass(classTypeStr, referFunc.FuncName)
 
 		return
 	}
