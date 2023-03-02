@@ -116,10 +116,11 @@ func (a *Analysis) findVarDefineWithPre(preName string, varName string, preLoc l
 	return find, varInfo, false
 }
 
-//GetAnnTypeStrForRefer 获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
-func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp, idx int) (retVec []string) {
+//GetAnnTypeByExp 获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
+func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) {
+	expType := common.GetExpType(referExp)
+	argType := common.GetAnnTypeFromLuaType(expType)
 
-	argType := common.GetAnnTypeFromExp(referExp)
 	if argType != "LuaTypeRefer" {
 		retVec = append(retVec, argType)
 		return
@@ -193,7 +194,7 @@ func (a *Analysis) GetAnnTypeStrForRefer(referExp ast.Exp, idx int) (retVec []st
 		//若仍是LuaTypeRefer 且完整解析了table 可以递归
 		//table的递归会导致栈溢出，先屏蔽
 		if !isTableExp {
-			return a.GetAnnTypeStrForRefer(varInfo.ReferExp, varIdx)
+			return a.GetAnnTypeByExp(varInfo.ReferExp, varIdx)
 		}
 	}
 
