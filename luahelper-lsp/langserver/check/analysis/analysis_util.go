@@ -165,9 +165,19 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 		preName, varName, keyName, preLoc, varLoc, isTableWhole = common.GetTableNameInfo(exp)
 		isTableExp = true
 	case *ast.FuncCallExp:
+		// 这里最多取两段 如 a.b() 的形式
 		if nameExp, ok := exp.PrefixExp.(*ast.NameExp); ok && exp.NameExp == nil {
 			varName = nameExp.Name
 			varLoc = nameExp.Loc
+		} else if preExp, ok := exp.PrefixExp.(*ast.TableAccessExp); ok {
+			if nameExp, ok := preExp.PrefixExp.(*ast.NameExp); ok {
+				preName = nameExp.Name
+				preLoc = nameExp.Loc
+			}
+			if stringExp, ok := preExp.KeyExp.(*ast.StringExp); ok {
+				varName = stringExp.Str
+				varLoc = stringExp.Loc
+			}
 		}
 		isFuncCall = true
 	}
@@ -181,6 +191,20 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 
 	ok, varInfo, _, varType := a.findVarDefineWithPre(preName, varName, preLoc, varLoc, true)
 	if !ok {
+
+		// // 有前缀但找不到成员时候 返回前缀的定义 如c2s.func 直接找c2s的注解
+		// if len(preName) > 0 && isFuncCall {
+		// 	ok, preInfo, _ := a.findVarDefine(preName, preLoc)
+		// 	if !ok {
+		// 		return
+		// 	}
+
+		// 	defAnnTypeVec := a.Projects.GetAnnotateTypeString(preInfo, preName, varName, 1)
+		// 	if len(defAnnTypeVec) > 0 {
+		// 		return defAnnTypeVec
+		// 	}
+		// }
+
 		return
 	}
 

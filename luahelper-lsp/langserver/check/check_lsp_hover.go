@@ -100,7 +100,7 @@ func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, c
 
 // GetLspHoverVarStr 提示信息hover
 func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineVarStruct) (lableStr, docStr, luaFileStr string) {
-	symbol, findList := a.FindVarDefine(strFile, varStruct)
+	symbol, findList := a.findVarDefineForHover(strFile, varStruct)
 
 	if symbol == nil && len(varStruct.StrVec) == 1 {
 		// 1) 判断是否为系统的函数提示
@@ -307,4 +307,91 @@ func judgetSystemModuleMemHover(strName string, strKey string) (flag bool, lable
 	}
 
 	return
+}
+
+// 用FindVarDefine改的 调用的findOldDefineInfoForHover
+func (a *AllProject) findVarDefineForHover(strFile string, varStruct *common.DefineVarStruct) (
+	oldSymbol *common.Symbol, symList []*common.Symbol) {
+	comParam := a.getVarCommonFuncParam(strFile, varStruct)
+	if comParam == nil {
+		return
+	}
+
+	if varStruct.StrVec[0] == "require" && varStruct.IsFuncVec[0] && varStruct.Exp != nil {
+		findExpList := []common.FindExpFile{}
+		oldSymbol = a.FindVarReferSymbol(comParam.fileResult.Name, varStruct.Exp, comParam, &findExpList, 1)
+
+		// require，已经处理了。上面已经进行了特殊的处理
+		if len(varStruct.IsFuncVec) > 0 {
+			varStruct.IsFuncVec[0] = false
+		}
+	} else {
+		// 最初始的第一次查找，原始的
+		findStrName, findVar := a.findOldDefineInfoForHover(comParam, varStruct)
+		if findVar == nil || len(varStruct.StrVec) <= 0 {
+			return oldSymbol, symList
+		}
+
+		oldSymbol = a.createAnnotateSymbol(findStrName, findVar)
+	}
+	//调用链中没有函数，走这里
+	if oldSymbol != nil {
+		symList = a.getDeepVarList(oldSymbol, varStruct, comParam)
+		return oldSymbol, symList
+	}
+	return nil, nil
+}
+
+// 拿findOldDefineInfo改的 原函数把协议截断的了(c2s s2s)
+func (a *AllProject) findOldDefineInfoForHover(comParam *CommonFuncParam, varStruct *common.DefineVarStruct) (
+	findStrName string, findLocVar *common.VarInfo) {
+	// 1) 判断是否为_G的前缀
+	if varStruct.StrVec[0] == "_G" {
+		// 设置_G的标记，且切分下数据
+		varStruct.StrVec = varStruct.StrVec[1:]
+		varStruct.IsFuncVec = varStruct.IsFuncVec[1:]
+		if len(varStruct.StrVec) <= 0 {
+			// 只有_G的，没有其他的内容, 直接返回
+			log.Debug("just only _G, return")
+			return "", nil
+		}
+
+		strName := varStruct.StrVec[0]
+		gFlag := !common.GConfig.GetGVarExtendFlag()
+
+		findVar := a.findGlobalVarDefineInfo(comParam, strName, "", gFlag)
+		return strName, findVar
+	}
+
+	dirManager := common.GConfig.GetDirManager()
+
+	// 2) 有前缀，先找到前缀指向的地方
+	// 2) 先判断是否为协议前缀
+	strProPre := ""
+	if len(varStruct.StrVec) >= 2 && common.GConfig.IsStrProtocol(varStruct.StrVec[0]) &&
+		dirManager.IsInDir(comParam.fileResult.Name) && varStruct.StrVec[0] != "" {
+		// 如果为协议前缀，要进行切分  这里把协议截断了
+		// strProPre = varStruct.StrVec[0]
+		// varStruct.StrVec = varStruct.StrVec[1:]
+		// varStruct.IsFuncVec = varStruct.IsFuncVec[1:]
+	}
+
+	if len(varStruct.StrVec) <= 0 {
+		// 内容不够，直接退出
+		log.Error("StrVec len error")
+		return "", nil
+	}
+
+	strName := varStruct.StrVec[0]
+	findLocVar = a.findVarDefineInfo(comParam, strName, strProPre)
+
+	// 3) 判断是否查找的为后台协议的前缀内容
+	if len(varStruct.StrVec) == 1 && findLocVar == nil && dirManager.IsInDir(comParam.fileResult.Name) {
+		symbol := a.findProtocolDefine(strName, comParam.secondProject)
+		if symbol != nil {
+			findLocVar = symbol.VarInfo
+		}
+	}
+
+	return strName, findLocVar
 }
