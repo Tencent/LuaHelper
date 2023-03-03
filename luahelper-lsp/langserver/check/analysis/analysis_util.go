@@ -23,48 +23,67 @@ func (a *Analysis) findVarDefine(varName string, varLoc lexer.Location) (find bo
 		return find, varInfo, varType
 	}
 
-	find, varInfo = a.findVarDefineGlobal(varName)
+	fromTerm := 0
+	find, varInfo, fromTerm = a.findVarDefineGlobal(varName)
+
+	if find && fromTerm == 1 && varInfo.ReferFunc != nil {
+		a.loadFuncParamAnnType(varInfo.ReferFunc)
+	}
 
 	return find, varInfo, varType
 }
 
-// 从全局查找变量定义 只从当前阶段的数据中找
-func (a *Analysis) findVarDefineGlobal(varName string) (find bool, varInfo *common.VarInfo) {
-
-	fi := a.curFunc
+// 从全局查找变量定义
+func (a *Analysis) findVarDefineGlobal(varName string) (find bool, varInfo *common.VarInfo, fromTerm int) {
 	gFlag := false
 	strName := varName
 	strProPre := ""
+
+	fi := a.curFunc
+	fileResult := a.curResult
+	// 4) 第三步查找全局中是否有该变量
+	firstFile := a.getFirstFileResult(fileResult.Name)
 	if a.isSecondTerm() {
+		secondFileResult := fileResult
 		if fi.FuncLv == 0 {
 			// 最顶层的函数，只在前面的定义中查找
-			find, varInfo = a.curResult.FindGlobalVarInfo(strName, gFlag, strProPre)
-			if !find {
-				find, varInfo = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre)
+			if ok, oneVar := secondFileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
+				return ok, oneVar, 2
+			}
+
+			if ok, oneVar := a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre); ok {
+				return ok, oneVar, 2
 			}
 		} else {
 			// 非底层的函数，需要查找全局的变量
-			find, varInfo = a.curResult.FindGlobalVarInfo(strName, gFlag, strProPre)
-			if !find {
-				find, varInfo = a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre)
+			if ok, oneVar := firstFile.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
+				return ok, oneVar, 1
+			}
+
+			if ok, oneVar := a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre); ok {
+				return ok, oneVar, 1
 			}
 		}
 	} else if a.isThirdTerm() {
+		thirdFileResult := fileResult
 		if fi.FuncLv == 0 {
 			// 最顶层的函数，只在前面的定义中查找
-			find, varInfo = a.curResult.FindGlobalVarInfo(strName, gFlag, strProPre)
+			if ok, oneVar := thirdFileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
+				return ok, oneVar, 3
+			}
 		} else {
 			// 非底层的函数，需要查找全局的变量
-			find, varInfo = a.curResult.FindGlobalVarInfo(strName, gFlag, strProPre)
+			if ok, oneVar := firstFile.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
+				return ok, oneVar, 1
+			}
 		}
 
 		// 查找所有的
-		if !find {
-			find, varInfo = a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre)
+		if ok, oneVar := a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre); ok {
+			return ok, oneVar, 3
 		}
 	}
-
-	return find, varInfo
+	return find, varInfo, 0
 }
 
 // findVarDefineWithPre 查找定义 并尝试带出其类型
@@ -241,7 +260,7 @@ func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
 
 	if referFunc.ClassName != "" {
 		// 如果是类的成员函数 先找类变量的定义
-		find, varDefine := a.findVarDefineGlobal(referFunc.ClassName)
+		find, varDefine, _ := a.findVarDefineGlobal(referFunc.ClassName)
 		if !find {
 			return
 		}

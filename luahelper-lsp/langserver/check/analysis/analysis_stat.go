@@ -79,14 +79,14 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 	fileResult := a.curResult
 	nArgs := len(node.Args)
 
-	referFunc, referStr := a.getFuncCallReferFunc(node)
+	referFunc, referStr, findTerm := a.getFuncCallReferFunc(node)
 	if referFunc == nil {
 		return
 	}
 
 	if referFunc.IsVararg {
 		//有可变参数也可以进行参数类型检查
-		a.funcCallParamTypeCheck(node, referFunc)
+		a.funcCallParamTypeCheck(node, referFunc, findTerm)
 		return
 	}
 
@@ -119,7 +119,7 @@ func (a *Analysis) cgFuncCallParamCheck(node *ast.FuncCallStat) {
 	}
 
 	//参数个数正确之后再判断参数类型匹配
-	a.funcCallParamTypeCheck(node, referFunc)
+	a.funcCallParamTypeCheck(node, referFunc, findTerm)
 }
 
 func (a *Analysis) cgBreakStat(node *ast.BreakStat) {

@@ -8,7 +8,7 @@ import (
 )
 
 //函数调用处的参数类型检查
-func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *common.FuncInfo) {
+func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *common.FuncInfo, findTerm int) {
 
 	// 第二轮或第三轮函数参数check
 	if !a.isNeedCheck() {
@@ -21,6 +21,10 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 
 	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorCallParamType]; !ok {
 		return
+	}
+
+	if findTerm == 1 {
+		a.loadFuncParamAnnType(referFunc)
 	}
 
 	for i, argExp := range node.Args {

@@ -8,44 +8,6 @@ import (
 	"luahelper-lsp/langserver/log"
 )
 
-func (a *Analysis) checkFuncOfClass(className string, funcName string, loc lexer.Location) {
-	if !a.isNeedCheck() || a.realTimeFlag {
-		return
-	}
-
-	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorClassField) {
-		return
-	}
-
-	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorClassField]; !ok {
-		return
-	}
-
-	if className == "" || funcName == "" {
-		return
-	}
-
-	// 如果是类的成员函数 先找类变量的定义
-	find, varDefine := a.findVarDefineGlobal(className)
-	if !find {
-		return
-	}
-
-	// 再找类上方注解
-	classTypeStr, ok := a.Projects.GetVarAnnType(varDefine.FileName, varDefine.Loc.StartLine-1)
-	if !ok {
-		return
-	}
-
-	// 根据注解找成员
-	if a.Projects.IsFieldOfClass(classTypeStr, funcName) {
-		return
-	}
-
-	errStr := fmt.Sprintf("Property '%s' not found in '%s'", funcName, className)
-	a.curResult.InsertError(common.CheckErrorClassField, errStr, loc)
-}
-
 // CheckTableDecl 根据注解判断table成员合法性 在 t={f1=1,f1=2,} 时使用
 func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string, nodeLoc *lexer.Location, node *ast.TableConstructorExp) {
 	if !a.isNeedCheck() || a.realTimeFlag {

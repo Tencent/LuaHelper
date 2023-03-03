@@ -13,17 +13,17 @@ import (
 // 获取调用函数指向的定义, 在局部变量或者全局变量中查找
 // gFlag 表示是否为_G的全局变量，如果为true表示为_G的，false表示不确定
 // strProPre 为协议的前缀，例如c2s. s2s
-func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bool, strProPre string) *common.FuncInfo {
+func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bool, strProPre string) (f *common.FuncInfo, findTerm int) {
 	// 1) 判断该变量是否为lua模块自带或是框架需要屏蔽的变量
 	if common.GConfig.IsIgnoreNameVar(strName) {
-		return nil
+		return nil, 0
 	}
 
 	fileResult := a.curResult
 
 	// 2) 判断是否为需要忽略的文件中的变量
 	if common.GConfig.IsIgnoreFileDefineVar(fileResult.Name, strName) {
-		return nil
+		return nil, 0
 	}
 
 	scope := a.curScope
@@ -32,7 +32,7 @@ func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bo
 	// 3) 查找局部变量指向的函数信息
 	if !gFlag {
 		if locVar, ok := scope.FindLocVar(strName, loc); ok {
-			return locVar.ReferFunc
+			return locVar.ReferFunc, 0
 		}
 	}
 
@@ -43,20 +43,20 @@ func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bo
 		if fi.FuncLv == 0 {
 			// 最顶层的函数，只在前面的定义中查找
 			if ok, oneVar := secondFileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
-				return oneVar.ReferFunc
+				return oneVar.ReferFunc, 2
 			}
 
 			if ok, oneVar := a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermSecond, strProPre); ok {
-				return oneVar.ReferFunc
+				return oneVar.ReferFunc, 2
 			}
 		} else {
 			// 非底层的函数，需要查找全局的变量
 			if ok, oneVar := firstFile.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
-				return oneVar.ReferFunc
+				return oneVar.ReferFunc, 1
 			}
 
 			if ok, oneVar := a.SingleProjectResult.FindGlobalGInfo(strName, results.CheckTermFirst, strProPre); ok {
-				return oneVar.ReferFunc
+				return oneVar.ReferFunc, 1
 			}
 		}
 	} else if a.isThirdTerm() {
@@ -64,37 +64,37 @@ func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bo
 		if fi.FuncLv == 0 {
 			// 最顶层的函数，只在前面的定义中查找
 			if ok, oneVar := thirdFileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
-				return oneVar.ReferFunc
+				return oneVar.ReferFunc, 3
 			}
 		} else {
 			// 非底层的函数，需要查找全局的变量
 			if ok, oneVar := firstFile.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
-				return oneVar.ReferFunc
+				return oneVar.ReferFunc, 1
 			}
 		}
 
 		// 查找所有的
 		if ok, oneVar := a.AnalysisThird.ThirdStruct.FindThirdGlobalGInfo(gFlag, strName, strProPre); ok {
-			return oneVar.ReferFunc
+			return oneVar.ReferFunc, 3
 		}
 	}
 
-	return nil
+	return nil, 0
 }
 
 // 获取函数调用的指向的func信息
-func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *common.FuncInfo, strName string) {
+func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *common.FuncInfo, strName string, findTerm int) {
 	// 1) 直接为 a("1", "2", "3") 函数，检查参数
 	if nameExp, ok := node.PrefixExp.(*ast.NameExp); ok {
 		strName = nameExp.Name
-		referFunc = a.findStrFuncRefer(nameExp.Loc, strName, false, "")
-		return referFunc, strName
+		referFunc, findTerm = a.findStrFuncRefer(nameExp.Loc, strName, false, "")
+		return referFunc, strName, findTerm
 	}
 
 	// 2) 判断是否为_G.a() 或是 local a = import("one.lua") a.test()这样的场景
 	taExp, ok := node.PrefixExp.(*ast.TableAccessExp)
 	if !ok {
-		return nil, strName
+		return nil, strName, 0
 	}
 
 	fileResult := a.curResult
@@ -107,17 +107,17 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 	// 2) 为_G的全局变量
 	if strTabName == "!_G" {
 		if !common.JudgeSimpleStr(strKeyName) {
-			return nil, strKeyName
+			return nil, strKeyName, 0
 		}
-		referFunc = a.findStrFuncRefer(loc, strKeyName, true, "")
-		return referFunc, strKeyName
+		referFunc, findTerm = a.findStrFuncRefer(loc, strKeyName, true, "")
+		return referFunc, strKeyName, findTerm
 	} else if strings.HasPrefix(strTabName, "!") && !strings.Contains(strTabName, ".") && common.JudgeSimpleStr(strKeyName) {
 		// 判断是否为直接协议的调用c2s 或是s2s
 		strProPre := common.GConfig.GetStrProtocol(strTabName)
 		if strProPre != "" {
 			// 为协议的调用
-			referFunc = a.findStrFuncRefer(loc, strKeyName, false, strProPre)
-			return referFunc, strName
+			referFunc, findTerm = a.findStrFuncRefer(loc, strKeyName, false, strProPre)
+			return referFunc, strName, findTerm
 		}
 
 		// 下面的为模块的调用，先判断最简单的用例
@@ -138,39 +138,39 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 		}
 
 		if findVar == nil {
-			return nil, strName
+			return nil, strName, 0
 		}
 
 		subVar := common.GetVarSubGlobalVar(findVar, strKeyName)
 		if subVar != nil {
-			return subVar.ReferFunc, strKeyName
+			return subVar.ReferFunc, strKeyName, 0
 		}
 
 		referInfo := findVar.ReferInfo
 		if referInfo == nil {
-			return nil, strName
+			return nil, strName, 0
 		}
 
 		referFile := a.Projects.GetFirstReferFileResult(referInfo)
 		if referFile == nil {
-			return nil, strName
+			return nil, strName, 0
 		}
 
 		// 排查过滤掉的文件变量
 		referLuaFile := referInfo.ReferStr
 		if common.GConfig.IsIgnoreFileDefineVar(referLuaFile, strKeyName) {
-			return nil, strName
+			return nil, strName, 0
 		}
 
 		if referInfo.ReferType == common.ReferTypeRequire {
 			find, returnExp := referFile.MainFunc.GetLastOneReturnExp()
 			if !find {
-				return nil, strName
+				return nil, strName, 0
 			}
 
 			subExp, ok := returnExp.(*ast.NameExp)
 			if !ok {
-				return nil, strName
+				return nil, strName, 0
 			}
 
 			varInfo, ok := referFile.MainFunc.MainScope.FindLocVar(subExp.Name, subExp.Loc)
@@ -179,25 +179,25 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 			}
 
 			if varInfo == nil {
-				return nil, strName
+				return nil, strName, 0
 			}
 
 			subVar := common.GetVarSubGlobalVar(varInfo, strKeyName)
 			if subVar == nil {
-				return nil, strName
+				return nil, strName, 0
 			}
 
-			return subVar.ReferFunc, strKeyName
+			return subVar.ReferFunc, strKeyName, 0
 		}
 
 		if ok, oneVar := referFile.FindGlobalVarInfo(strKeyName, false, ""); ok {
-			return oneVar.ReferFunc, strKeyName
+			return oneVar.ReferFunc, strKeyName, 0
 		}
 
-		return nil, strKeyName
+		return nil, strKeyName, 0
 	}
 
-	return nil, strName
+	return nil, strName, 0
 }
 
 // 查找lua文件中所有引用的外表文件，看是否有这样的用法
