@@ -51,7 +51,7 @@ func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bo
 			}
 		} else {
 			// 非底层的函数，需要查找全局的变量
-			if ok, oneVar := secondFileResult.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
+			if ok, oneVar := firstFile.FindGlobalVarInfo(strName, gFlag, strProPre); ok {
 				return oneVar.ReferFunc
 			}
 
