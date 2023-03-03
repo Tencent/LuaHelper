@@ -100,7 +100,14 @@ func (a *AllProject) AnnotateTypeHover(strFile, strLine, strWord string, line, c
 
 // GetLspHoverVarStr 提示信息hover
 func (a *AllProject) GetLspHoverVarStr(strFile string, varStruct *common.DefineVarStruct) (lableStr, docStr, luaFileStr string) {
+
+	//先找类注解中成员函数的注解
 	symbol, findList := a.findVarDefineForHover(strFile, varStruct)
+
+	//类没有注解 尝试找函数上方的注解
+	if symbol != nil && len(findList) == 0 {
+		symbol, findList = a.FindVarDefine(strFile, varStruct)
+	}
 
 	if symbol == nil && len(varStruct.StrVec) == 1 {
 		// 1) 判断是否为系统的函数提示

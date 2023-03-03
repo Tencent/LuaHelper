@@ -11,7 +11,7 @@ import (
 func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *common.FuncInfo, findTerm int) {
 
 	// 第二轮或第三轮函数参数check
-	if !a.isNeedCheck() {
+	if !a.isNeedCheck() || a.realTimeFlag {
 		return
 	}
 
@@ -73,7 +73,7 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 // 函数体内的返回值类型检查 检查函数的返回值类型与注解类型是否匹配 一次检查一个return语句
 func (a *Analysis) funcReturnCheck(retInfo *common.ReturnInfo) {
 	// 第二轮或第三轮函数参数check
-	if !a.isNeedCheck() {
+	if !a.isNeedCheck() || a.realTimeFlag {
 		return
 	}
 
