@@ -156,6 +156,7 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 	varLoc := lexer.Location{}
 	isTableExp := false
 	isTableWhole := false
+	isFuncCall := false
 	switch exp := referExp.(type) {
 	case *ast.NameExp:
 		varName = exp.Name
@@ -168,6 +169,7 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 			varName = nameExp.Name
 			varLoc = nameExp.Loc
 		}
+		isFuncCall = true
 	}
 
 	if isTableExp {
@@ -225,8 +227,12 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 		}
 	}
 
-	if argType == "function" {
-		// 取函数返回值类型 此时函数还未解析 直接取取不到 todo
+	if argType == "LuaTypeRefer" && varInfo.ReferExp != nil && !isFuncCall {
+		if _, ok := varInfo.ReferExp.(*ast.FuncCallExp); ok {
+			// 如local a = func()形式
+			// 尝试取func()的返回值类型
+			return a.GetAnnTypeByExp(varInfo.ReferExp, varIdx)
+		}
 	}
 
 	retVec = append(retVec, argType)
@@ -235,7 +241,7 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 
 // 加载函数的参数与返回值的注解类型
 func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
-	if referFunc == nil {
+	if referFunc == nil || len(referFunc.ParamType) > 0 || len(referFunc.ReturnVecs) > 0 {
 		return
 	}
 
@@ -244,10 +250,11 @@ func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
 		//从函数上方获取到了注解
 		for _, paramName := range referFunc.ParamList {
 			if annTypeVec, ok := paramTypeMap[paramName]; ok {
+				referFunc.ParamType[paramName] = []string{}
 				for _, annTypeOne := range annTypeVec {
 					typeOne := annotateast.GetAstTypeName(annTypeOne)
-
 					referFunc.ParamType[paramName] = append(referFunc.ParamType[paramName], typeOne)
+
 				}
 			}
 		}
