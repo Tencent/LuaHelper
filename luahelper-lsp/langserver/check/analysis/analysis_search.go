@@ -1025,7 +1025,7 @@ func (a *Analysis) ChangeSelfToReferVar(strTable string, prefixStr string) (str 
 	} else {
 		// 获取第一轮的结构，因为此时RelateVar的结构还没有构造，只能查找第一轮的数据
 		fileStruct, _ := a.Projects.GetFirstFileStuct(fileResult.Name)
-		if fileStruct == nil {
+		if fileStruct == nil || fileStruct.FileResult == nil {
 			return
 		}
 
