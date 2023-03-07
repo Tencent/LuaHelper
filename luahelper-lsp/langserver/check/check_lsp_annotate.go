@@ -503,8 +503,8 @@ func (a *AllProject) getClassTypeInfoFuncType(strName string, fileName string, l
 }
 
 // 对外的接口
-// 通过传人的类型，获取所有的ClassInfo 列表，返回的是一个列表, 包括所有的父类型也统一放在列表中
-// astType 传人的为类型
+// 通过传入的类型，获取所有的ClassInfo 列表，返回的是一个列表, 包括所有的父类型也统一放在列表中
+// astType 传入的为类型
 // fileName 为注解的文件名
 // lastLine 为注解出现的行号
 func (a *AllProject) getAllNormalAnnotateClass(astType annotateast.Type, fileName string,
@@ -664,8 +664,8 @@ func (a *AllProject) getClassTypeInfoList(strName string, fileName string, lastL
 }
 
 // 追踪出所以的函数类型
-// 通过传人的类型，获取所有的ClassInfo 列表，返回的是一个列表, 包括所有的父类型也统一放在列表中
-// astType 传人的为类型
+// 通过传入的类型，获取所有的ClassInfo 列表，返回的是一个列表, 包括所有的父类型也统一放在列表中
+// astType 传入的为类型
 // fileName 为注解的文件名
 // lastLine 为注解出现的行号
 func (a *AllProject) getAllFuncAnnotateType(astType annotateast.Type, fileName string,
@@ -846,8 +846,8 @@ func (a *AllProject) getFuncIndexReturnSymbol(oldSymbol *common.Symbol, varIndex
 
 // 对内的函数的
 // 追踪出所以的函数类型
-// 通过传人的类型，获取所有的ClassInfo 列表，返回的是一个列表, 包括所有的父类型也统一放在列表中
-// astType 传人的为类型
+// 通过传入的类型，获取所有的ClassInfo 列表，返回的是一个列表, 包括所有的父类型也统一放在列表中
+// astType 传入的为类型
 // fileName 为注解的文件名
 // lastLine 为注解出现的行号
 func (a *AllProject) getInlineAllFuncAnnotateType(astType annotateast.Type, fileName string,
@@ -1469,7 +1469,7 @@ func (a *AllProject) getDeepVarList(oldSymbol *common.Symbol, varStruct *common.
 		return symList
 	}
 
-	// 2.1) 有多层，逐层查找传人的子成员
+	// 2.1) 有多层，逐层查找传入的子成员
 	lastSymbol := oldSymbol
 	for i := 0; i < len(varStruct.StrVec)-1; i++ {
 		// 判断这个的值是否为函数的返回。例如字符串为：func().a， 那么第一个值是函数返回，第二个值为否

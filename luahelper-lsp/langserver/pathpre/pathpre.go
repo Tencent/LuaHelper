@@ -35,7 +35,7 @@ func GetRemovePreStr(str string) string {
 	return str
 }
 
-// VscodeURIToString 插件传人的路径转换
+// VscodeURIToString 插件传入的路径转换
 // vscode 传来的路径： file:///g%3A/luaproject
 // 统一转换为：g%3A/luaproject，去掉前缀的file:///，并且都是这样的/../
 func VscodeURIToString(strURL string) string {

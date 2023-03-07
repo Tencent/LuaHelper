@@ -196,7 +196,7 @@ func (a *AllProject) AnnotateTypeComplete(strFile string, strLine string, strWor
 
 // 获取补全注解系统的所有类型
 func (a *AllProject) getTypeCompleteVecs(strFile, strWord string, posLine int) {
-	// 1) 传人的strWord 通过.进行切词
+	// 1) 传入的strWord 通过.进行切词
 	lastIndex := strings.LastIndex(strWord, ".")
 	preStr := ""
 	if lastIndex >= 0 {

@@ -273,7 +273,7 @@ func (varInfo *VarInfo) GetVarTypeDetail() string {
 	return GetLuaTypeString(varInfo.VarType, varInfo.ReferExp)
 }
 
-// IsHasTabkeKeyStr 查看LocVarInfo是否为指向Table，如果是指向Table，判断是否有传人的key值字符串
+// IsHasTabkeKeyStr 查看LocVarInfo是否为指向Table，如果是指向Table，判断是否有传入的key值字符串
 func (varInfo *VarInfo) IsHasTabkeKeyStr(strTableKey string) (bool, lexer.Location) {
 	var exp ast.Exp
 	if varInfo.VarType == LuaTypeTable {

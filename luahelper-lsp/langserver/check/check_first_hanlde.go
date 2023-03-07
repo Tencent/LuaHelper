@@ -25,7 +25,7 @@ type FirstWorkChan struct {
 }
 
 // analysisFirstLuaFile 进行第一段的分析，主要进行词法和语法的分析，然后构造函数和全局变量信息
-// content 为具体传人的内容, 若为nil表示没有传人内容，需要从文件中读取
+// content 为具体传入的内容, 若为nil表示没有传入内容，需要从文件中读取
 // saveFlag 为是否cache住文件的内容
 // realTimeFlag 实时分析标记，当实时敲入代码时候，该字段为true，不进行一些检查
 // handleResult 返回0表示成功， 1表示读文件失败，2表示构造AST失败

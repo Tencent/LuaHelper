@@ -1030,7 +1030,7 @@ func (g *GlobalConfig) IsIgnoreCompleteFile(strFile string) bool {
 }
 
 // GetStrProtocol 判断给定的字符串是否有协议组，例如c2s, s2s
-// 传人的字符串可能为 !c2s，首先去掉! 前缀, 如果找到了返回去掉！前缀的字符串
+// 传入的字符串可能为 !c2s，首先去掉! 前缀, 如果找到了返回去掉！前缀的字符串
 func (g *GlobalConfig) GetStrProtocol(str string) string {
 	if len(str) < 1 {
 		return ""
@@ -1050,7 +1050,7 @@ func (g *GlobalConfig) GetStrProtocol(str string) string {
 }
 
 // IsStrProtocol 判断给定的字符串是否是协议组中的，例如c2s, s2s
-// 传人的字符为c2s或是s2s
+// 传入的字符为c2s或是s2s
 func (g *GlobalConfig) IsStrProtocol(str string) bool {
 	for _, strVars := range g.ProtocolVars {
 		if str == strVars {

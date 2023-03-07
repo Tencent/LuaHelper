@@ -48,7 +48,7 @@ func (a *AllProject) SignaturehelpFunc(strFile string, varStruct *common.DefineV
 	}
 
 	if varStruct.ColonFlag && !referFunc.IsColon {
-		// 传人的是带冒号的，如果语法不是带冒号的，退出
+		// 传入的是带冒号的，如果语法不是带冒号的，退出
 		return
 	}
 
