@@ -84,7 +84,7 @@ func (loc *Location) IsInitialLoc() bool {
 	return false
 }
 
-// IsInLocStruct 判断传人的位置，是否在范围之内
+// IsInLocStruct 判断传入的位置，是否在范围之内
 func (loc *Location) IsInLocStruct(posLine int, posCh int) bool {
 	if posLine < loc.StartLine {
 		return false

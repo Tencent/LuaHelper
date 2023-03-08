@@ -266,7 +266,7 @@ func (a *Analysis) findGlobalVar(strName string, loc lexer.Location, strProPre s
 	gFindGlag bool, nameExp ast.Exp, binParentExp *ast.BinopExp) {
 	fileResult := a.curResult
 
-	// 0) 如果是在五轮， 判断传人的系统名字是变量还是函数
+	// 0) 如果是在五轮， 判断传入的系统名字是变量还是函数
 	if a.isFiveTerm() {
 		subExp, ok := nameExp.(*ast.NameExp)
 		if ok && subExp.Name == "self" {
@@ -1252,7 +1252,7 @@ func (a *Analysis) findTableDefine(node *ast.TableAccessExp) {
 	}
 }
 
-// GetImportRefer 根据传人的exp，判断是否为导入的函数调用
+// GetImportRefer 根据传入的exp，判断是否为导入的函数调用
 func (a *Analysis) GetImportRefer(node *ast.FuncCallExp) *common.ReferInfo {
 	return a.GetImportReferByCallExp(node)
 }
@@ -1282,7 +1282,7 @@ func (a *Analysis) getImportReferError(funcName string, funcExp *ast.FuncCallExp
 	}
 }
 
-// GetImportReferByCallExp 根据传人的exp，判断是否为导入的函数调用
+// GetImportReferByCallExp 根据传入的exp，判断是否为导入的函数调用
 func (a *Analysis) GetImportReferByCallExp(funcExp *ast.FuncCallExp) *common.ReferInfo {
 	if funcExp.NameExp != nil {
 		return nil

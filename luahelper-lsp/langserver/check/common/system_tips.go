@@ -994,7 +994,7 @@ func (g *GlobalConfig) GetSysVar(strName string) *VarInfo {
 	return varInfo
 }
 
-// IsModuleInsideVar 判断传人的是否为系统模块内的变量
+// IsModuleInsideVar 判断传入的是否为系统模块内的变量
 func (g *GlobalConfig) IsModuleInsideVar(moduleName, keyName string) bool {
 	varInfo, _ := g.SysVarMap[moduleName]
 	if varInfo == nil {

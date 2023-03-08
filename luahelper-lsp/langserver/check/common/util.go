@@ -465,7 +465,7 @@ func JudgeIgnoreAssinVale(valExp ast.Exp, expExp ast.Exp) (strVar string, line i
 	return
 }
 
-// judgeAssignSelf 根据传人的var = exp, 判断是否为 a = a
+// judgeAssignSelf 根据传入的var = exp, 判断是否为 a = a
 // 或者为 _G.b = _G.b
 func judgeAssignSelf(valExp ast.Exp, expExp ast.Exp) (strVar string, line int) {
 	strVar = ""
@@ -560,7 +560,7 @@ func JudgeSimpleStr(strName string) bool {
 }
 
 // GetSimpleValue 判断是否为简单变量的引用
-// 传人的为 !a ，获得的变量为a
+// 传入的为 !a ，获得的变量为a
 func GetSimpleValue(strName string) string {
 	if len(strName) <= 1 {
 		return ""
@@ -582,7 +582,7 @@ func GetSimpleValue(strName string) string {
 	return strName
 }
 
-// GetTableStrTwoStr 传人一个tableStr， 切分出两个字符串
+// GetTableStrTwoStr 传入一个tableStr， 切分出两个字符串
 func GetTableStrTwoStr(strTable string) (strOne string, strTwo string) {
 	strOne = ""
 	strTwo = ""
@@ -887,7 +887,7 @@ func GetTableConstructorExpKeyStrLoc(node ast.TableConstructorExp, strSubKey str
 	return false, loc
 }
 
-// GetExpSubKey 判断传人的字符串是否符合！开头的，或是!G开头的
+// GetExpSubKey 判断传入的字符串是否符合！开头的，或是!G开头的
 func GetExpSubKey(str string) string {
 	if strings.Contains(str, "#") {
 		return ""
@@ -1035,7 +1035,7 @@ func GetExpLoc(node ast.Exp) (loc lexer.Location) {
 // 判断是否为这样的在冒号函数内, self.b 这样的 self要进行转换为b，统一起来
 // a = {}
 // function a:test1()
-//	 self.b = 3  -- 传人的为self.b
+//	 self.b = 3  -- 传入的为self.b
 // end
 func ChangeFuncSelfToReferVar(fi *FuncInfo, varStruct *DefineVarStruct) {
 	firstColonFunc := fi.FindFirstColonFunc()

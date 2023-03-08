@@ -44,7 +44,7 @@ func (l *LspServer) TextDocumentComplete(ctx context.Context, vs lsp.CompletionP
 	strFile := comResult.strFile
 
 	// 1) 判断是否输入的为 --- 注释，用于快捷生成函数定义的注释
-	// 输入-时候，传人的为空，特殊处理
+	// 输入-时候，传入的为空，特殊处理
 	if vs.Context.TriggerCharacter == "" && judgeBeforeCommentHorizontal(comResult.contents, comResult.offset) {
 		// 处理快捷生成注解, 以及提升注解系统
 		comList, _ := l.handleGenerateComment(strFile, comResult.contents, comResult.offset, (int)(comResult.pos.Line))

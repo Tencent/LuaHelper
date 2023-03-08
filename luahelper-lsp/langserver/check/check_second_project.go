@@ -48,7 +48,7 @@ func (a *AllProject) recvSecondProject(projectChan SecondProjectChan) {
 	a.analysisSecondMap[projectChan.strFile] = projectChan.returnSecond
 }
 
-// 传人工程入口文件vec，对这些工程入口文件进行分析
+// 传入工程入口文件vec，对这些工程入口文件进行分析
 func (a *AllProject) handleProjectEntryFileVec(projectVec []string) {
 	vecLen := len(projectVec)
 	if vecLen == 0 {
