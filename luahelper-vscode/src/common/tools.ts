@@ -14,7 +14,7 @@ export class Tools {
     // 路径相关函数
     // 获取扩展中预置的lua文件位置
     public static getLuaPathInExtension() : string{
-        let luaPathInVSCodeExtension = this.VSCodeExtensionPath + "/Debugger/LuaPanda.lua";
+        let luaPathInVSCodeExtension = this.VSCodeExtensionPath + "/debugger/LuaPanda.lua";
         return luaPathInVSCodeExtension;
     }
 
@@ -24,13 +24,13 @@ export class Tools {
 
     // 获取扩展中预置的lua文件位置
     public static getClibPathInExtension() : string{
-        let ClibPathInVSCodeExtension = this.VSCodeExtensionPath + "/Debugger/debugger_lib/plugins/";
+        let ClibPathInVSCodeExtension = this.VSCodeExtensionPath + "/debugger/debugger_lib/plugins/";
         return ClibPathInVSCodeExtension;
     }
 
     // 
     public static GetClibPathStr(str:string) : string{
-        let ClibPathInVSCodeExtension = str + "/Debugger/debugger_lib/plugins/";
+        let ClibPathInVSCodeExtension = str + "/debugger/debugger_lib/plugins/";
         return ClibPathInVSCodeExtension;
     }
 
