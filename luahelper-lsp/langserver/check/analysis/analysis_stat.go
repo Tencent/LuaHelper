@@ -1085,4 +1085,10 @@ func (a *Analysis) cgAssignStat(node *ast.AssignStat) {
 		//检查 是否给常量赋值
 		a.checkConstAssgin(node.VarList[0])
 	}
+
+	if nVars == nExps {
+		for i := 0; i < nVars; i++ {
+			a.checkAssignTypeSame(node.VarList[i], node.ExpList[i])
+		}
+	}
 }
