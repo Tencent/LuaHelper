@@ -23,7 +23,9 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 		return
 	}
 
-	a.loadFuncParamAnnType(referFunc)
+	if findTerm == 1 {
+		a.loadFuncParamAnnType(referFunc)
+	}
 
 	for i, argExp := range node.Args {
 		if i >= len(referFunc.ParamList) {

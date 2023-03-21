@@ -76,6 +76,10 @@ func (f *FileResult) InertNewFunc(newFunc *common.FuncInfo) {
 	newFunc.FuncID = f.funcID
 }
 
+func (f *FileResult) GetFileTerm() CheckTerm {
+	return f.checkTerm
+}
+
 // 在globalMaps中插入一个新的全局定义信息
 func (f *FileResult) InsertGlobalVar(name string, varInfo *common.VarInfo) {
 	if varInfo.ExtraGlobal.StrProPre != "" {

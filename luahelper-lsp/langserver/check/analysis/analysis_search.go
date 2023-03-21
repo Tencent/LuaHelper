@@ -32,7 +32,7 @@ func (a *Analysis) findStrFuncRefer(loc lexer.Location, strName string, gFlag bo
 	// 3) 查找局部变量指向的函数信息
 	if !gFlag {
 		if locVar, ok := scope.FindLocVar(strName, loc); ok {
-			return locVar.ReferFunc, 0
+			return locVar.ReferFunc, int(fileResult.GetFileTerm())
 		}
 	}
 
@@ -143,7 +143,7 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 
 		subVar := common.GetVarSubGlobalVar(findVar, strKeyName)
 		if subVar != nil {
-			return subVar.ReferFunc, strKeyName, 0
+			return subVar.ReferFunc, strKeyName, int(fileResult.GetFileTerm())
 		}
 
 		referInfo := findVar.ReferInfo
@@ -187,11 +187,11 @@ func (a *Analysis) getFuncCallReferFunc(node *ast.FuncCallStat) (referFunc *comm
 				return nil, strName, 0
 			}
 
-			return subVar.ReferFunc, strKeyName, 0
+			return subVar.ReferFunc, strKeyName, int(referFile.GetFileTerm())
 		}
 
 		if ok, oneVar := referFile.FindGlobalVarInfo(strKeyName, false, ""); ok {
-			return oneVar.ReferFunc, strKeyName, 0
+			return oneVar.ReferFunc, strKeyName, int(referFile.GetFileTerm())
 		}
 
 		return nil, strKeyName, 0
