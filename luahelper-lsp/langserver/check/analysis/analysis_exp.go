@@ -251,6 +251,8 @@ func (a *Analysis) cgBinopExp(node *ast.BinopExp, parentVar *common.VarInfo) {
 	a.cgExp(node.Exp2, parentVar, node)
 	a.ignoreInfo.strName = ""
 
+	a.checkBinopExpTypeSame(node)
+
 	// 下面的判断只在第一轮，且是非实时检查时才触发
 	if !a.isFirstTerm() || a.realTimeFlag {
 		return

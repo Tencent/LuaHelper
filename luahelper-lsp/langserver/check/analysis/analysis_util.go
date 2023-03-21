@@ -416,3 +416,63 @@ func (a *Analysis) CompAnnTypeForAssign(leftType string, rightType string) bool 
 
 	return false
 }
+
+// 比较注解类型和参数/返回值类型
+func (a *Analysis) CompAnnTypeForBinop(leftType string, rightType string) bool {
+	if leftType == rightType || leftType == "any" ||
+		rightType == "any" || leftType == "nil" || rightType == "nil" ||
+		leftType == "" {
+		return true
+	}
+
+	if leftType == "LuaTypeRefer" || rightType == "LuaTypeRefer" ||
+		leftType == "function" || rightType == "function" ||
+		leftType == "table" || rightType == "table" {
+		return true
+	}
+
+	//string 和number可以运算 lua自动把str转int
+	if (leftType == "string" && rightType == "number") ||
+		(leftType == "number" && rightType == "string") {
+		return true
+	}
+
+	//number与interger相等
+	if (leftType == "number" && rightType == "integer") ||
+		(leftType == "integer" && rightType == "number") {
+		return true
+	}
+
+	commonType := map[string]bool{
+		"number":  true,
+		"string":  true,
+		"boolean": true,
+		"table":   true,
+		"integer": true,
+	}
+
+	//认为复杂类型与table类型相等
+	if (!commonType[leftType] && rightType == "table") ||
+		(!commonType[rightType] && leftType == "table") {
+		return true
+	}
+
+	if !commonType[leftType] {
+
+		annTypeInfo := a.Projects.GetAnnClassInfo(leftType)
+		if annTypeInfo == nil {
+			return true
+		}
+
+		if annTypeInfo.AliasInfo != nil {
+			//别名先不判断
+			return true
+		}
+		// } else if annTypeInfo.ClassInfo != nil {
+		// 	//class先不判断
+		// 	return true
+		// }
+	}
+
+	return false
+}

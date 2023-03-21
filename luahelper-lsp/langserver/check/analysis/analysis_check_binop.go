@@ -4,24 +4,36 @@ import (
 	"fmt"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/check/compiler/ast"
+	"luahelper-lsp/langserver/check/compiler/lexer"
 	"strings"
 )
 
-// 判断复制表达式是否改变了类型
-func (a *Analysis) checkAssignTypeSame(leftNode ast.Exp, rightNode ast.Exp) {
+func (a *Analysis) checkBinopExpTypeSame(node *ast.BinopExp) {
 	if !a.isNeedCheck() || a.realTimeFlag {
 		return
 	}
 
-	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorAssignType) {
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorBinopType) {
 		return
 	}
 
-	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorAssignType]; !ok {
+	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorBinopType]; !ok {
 		return
 	}
 
-	//当左值是表成员时，不判断，如a.b, a["b"]
+	if node.Op == lexer.TkOpMinus ||
+		node.Op == lexer.TkOpAdd ||
+		node.Op == lexer.TkOpMul ||
+		node.Op == lexer.TkOpDiv {
+		//go on
+	} else {
+		return
+	}
+
+	leftNode := node.Exp1
+	rightNode := node.Exp2
+
+	//当是表成员时，不判断，如a.b, a["b"]
 	if _, ok := leftNode.(*ast.TableAccessExp); ok {
 		return
 	}
@@ -42,7 +54,7 @@ func (a *Analysis) checkAssignTypeSame(leftNode ast.Exp, rightNode ast.Exp) {
 	hasMatch := false
 	for _, leftType := range leftTypeVec {
 		for _, rightType := range rightTypeVec {
-			if a.CompAnnTypeForAssign(rightType, leftType) {
+			if a.CompAnnTypeForBinop(rightType, leftType) {
 				hasMatch = true
 				break
 			}
@@ -51,11 +63,11 @@ func (a *Analysis) checkAssignTypeSame(leftNode ast.Exp, rightNode ast.Exp) {
 
 	if !hasMatch {
 		//标记了常量，却赋值
-		loc := common.GetExpLoc(leftNode)
+		loc := common.GetExpLoc(node)
 		leftTypeVecStr := strings.Join(leftTypeVec, "|")
 		rightTypeStr := strings.Join(rightTypeVec, "|")
 
-		errStr := fmt.Sprintf("Type '%s' can not be assigned '%s'", leftTypeVecStr, rightTypeStr)
-		a.curResult.InsertError(common.CheckErrorAssignType, errStr, loc)
+		errStr := fmt.Sprintf("Binary expression has different type, '%s' with '%s'", leftTypeVecStr, rightTypeStr)
+		a.curResult.InsertError(common.CheckErrorBinopType, errStr, loc)
 	}
 }

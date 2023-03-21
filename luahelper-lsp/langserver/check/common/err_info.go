@@ -84,6 +84,9 @@ const (
 	// 复制表达式改变了类型
 	CheckErrorAssignType = 26
 
+	// 二元运算表达式类型不同
+	CheckErrorBinopType = 27
+
 	// CheckErrorMax
-	CheckErrorMax = 27
+	CheckErrorMax = 28
 )
