@@ -115,7 +115,7 @@ export class LuaPath {
     }
 
     // 获取用户lua 二进制位置与cpath库的后缀路径
-    // strPath 为传人的用户设置的lua二进制位置
+    // strPath 为传入的用户设置的lua二进制位置
     // vSCodeExtensionPath 为插件运行的目录
     public GetLuaExeCpathStr(strPath: string, vSCodeExtensionPath: string): string[] {
         let strVect: string[] = ["", ""];

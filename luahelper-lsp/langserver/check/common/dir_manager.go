@@ -16,10 +16,10 @@ import (
 
 // DirManager 所有的目录管理
 type DirManager struct {
-	// 插件前端传人的工程的根目录
+	// 插件前端传入的工程的根目录
 	vSRootDir string
 
-	// 插件前端传人的所有次级目录，目前VScode支持多目录文件夹
+	// 插件前端传入的所有次级目录，目前VScode支持多目录文件夹
 	subDirVec []string
 
 	// luahelper.json文件包含的相对路径，如果没有luahelper.json，该值默认为./
@@ -267,7 +267,7 @@ func dirents(run *ParallelRun, dir string) []os.FileInfo {
 }
 
 // 递归获取目录下面所有的lua文件
-// dirStr 传人的子目录的原始路径
+// dirStr 传入的子目录的原始路径
 // ignoreFlag 表示是否需要判断忽略文件
 func getAllFile(run *ParallelRun, pathname string, dirStr string, ignoreFlag bool, fileChan chan<- string) {
 	defer run.Done()
@@ -426,7 +426,7 @@ func (d *DirManager) IsInDir(strFile string) bool {
 	return false
 }
 
-// GetCompletePath 传人目录和后面文件名，拼接成完整的路径
+// GetCompletePath 传入目录和后面文件名，拼接成完整的路径
 func (d *DirManager) GetCompletePath(baseDir string, fileName string) string {
 	strPath := baseDir
 	if !strings.HasSuffix(baseDir, "/") {
@@ -598,7 +598,7 @@ func calcMatchStrScore(fileName string, referFileName string, condidateStr strin
 // allFilesMap 为项目中所有包含的lua文件
 // 返回值为匹配最合适的文件
 func GetBestMatchReferFile(curFile string, referFile string, allFilesMap map[string]string, fileIndexInfo *FileIndexInfo) (findStr string) {
-	// 首先判断传人的文件是否带有后缀的
+	// 首先判断传入的文件是否带有后缀的
 	suffixFlag := false
 	seperateIndex := strings.Index(referFile, ".")
 	if seperateIndex >= 0 {

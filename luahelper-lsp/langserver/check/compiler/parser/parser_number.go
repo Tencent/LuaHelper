@@ -227,8 +227,8 @@ func parseLuajitNum(str string) (int64, bool) {
 	}
 
 	if !strings.Contains(str, "0x") { // decimal
-		i, err := strconv.ParseInt(str, 10, 64)
-		return i, err == nil
+		i, err := strconv.ParseUint(str, 10, 64)
+		return int64(i), err == nil
 	}
 
 	// hex

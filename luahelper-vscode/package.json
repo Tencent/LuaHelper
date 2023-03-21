@@ -2,7 +2,7 @@
     "name": "luahelper",
     "displayName": "Lua",
     "description": "LuaHelper, Intellisense, Linting, Debugging, Code formatting, High-performance, and more.",
-    "version": "0.2.19",
+    "version": "0.2.21",
     "publisher": "yinfei",
     "author": {
         "name": "yinfei",
@@ -679,7 +679,7 @@
                     "description": "%luahelper.Warn.CheckGotoLable%"
                 },
                 "luahelper.Warn.CheckFuncParam": {
-                    "default": true,
+                    "default": false,
                     "scope": "resource",
                     "type": "boolean",
                     "description": "%luahelper.Warn.CheckFuncParam%"

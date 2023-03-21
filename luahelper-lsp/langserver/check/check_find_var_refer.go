@@ -106,7 +106,7 @@ func (a *AllProject) createAnnotateSymbol(strName string, varInfo *common.VarInf
 	return symbol
 }
 
-// 传人位置和变量名，进一步查找对应的变量
+// 传入位置和变量名，进一步查找对应的变量
 func (a *AllProject) findLocReferSymbol(fileResult *results.FileResult, posLine int, posChar int, luaInFile string,
 	strName string, loc lexer.Location, gFlag bool, comParam *CommonFuncParam,
 	findExpList *[]common.FindExpFile) (symbol *common.Symbol) {
@@ -710,7 +710,7 @@ func (a *AllProject) selfChangeStrName(luaInFile string, loc lexer.Location) (st
 	return firstColonFunc.RelateVar.StrName
 }
 
-// GetImportReferByCallExp 根据传人的exp，判断是否为导入的函数调用
+// GetImportReferByCallExp 根据传入的exp，判断是否为导入的函数调用
 func (a *AllProject) getImportReferSymbol(luaInFile string, funcExp *ast.FuncCallExp,
 	comParam *CommonFuncParam, findExpList *[]common.FindExpFile) (symbol *common.Symbol) {
 	symbol = nil

@@ -79,6 +79,15 @@ func TestParseJitNumber(t *testing.T) {
 	}
 }
 
+func TestParseLuajitNum(t *testing.T) {
+	n, ok:=parseLuajitNum("18446744073709551615ULL")
+	if !ok {
+		t.Fatalf("parser token err")
+	}
+
+	t.Logf("num:%v", n)
+}
+
 func TestParseIllegalToken(t *testing.T) {
 	parser := CreateParser([]byte("local a = 1\n 尹飞 \n local b = 1"), "test")
 	block, _, errList := parser.BeginAnalyze()

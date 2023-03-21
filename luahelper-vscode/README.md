@@ -1,11 +1,11 @@
 
 # LuaHelper Guide
 
-[![version](https://vsmarketplacebadge.apphb.com/version-short/yinfei.luahelper.svg)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
-[![rating](https://vsmarketplacebadge.apphb.com/rating-short/yinfei.luahelper.svg)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
-[![installs](https://vsmarketplacebadge.apphb.com/installs-short/yinfei.luahelper.svg)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
-[![GitHub stars](https://img.shields.io/github/stars/Tencent/LuaHelper.svg?style=flat-square&label=github%20stars)](https://github.com/Tencent/LuaHelper)
-[![GitHub Contributors](https://img.shields.io/github/contributors/Tencent/LuaHelper.svg?style=flat-square)](https://github.com/Tencent/LuaHelper/graphs/contributors)
+[![version](https://vsmarketplacebadges.dev/version-short/yinfei.luahelper.png)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
+[![rating](https://vsmarketplacebadges.dev/rating-short/yinfei.luahelper.png)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
+[![installs](https://vsmarketplacebadges.dev/installs-short/yinfei.luahelper.png)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
+[![GitHub stars](https://img.shields.io/github/stars/Tencent/LuaHelper.png?style=flat-square&label=github%20stars)](https://github.com/Tencent/LuaHelper)
+[![GitHub Contributors](https://img.shields.io/github/contributors/Tencent/LuaHelper.png?style=flat-square)](https://github.com/Tencent/LuaHelper/graphs/contributors)
 
 LuaHelper is a High-performance lua plugin, Language Server Protocol for lua.
 - [Github:](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper

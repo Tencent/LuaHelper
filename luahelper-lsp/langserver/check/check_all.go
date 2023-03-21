@@ -65,13 +65,13 @@ func CreateAllProject(allFilesList []string, entryFileArr []string, clientExpPat
 		fileIndexInfo:     common.CreateFileIndexInfo(),
 	}
 
-	// 传人的所有文件列表转换成map
+	// 传入的所有文件列表转换成map
 	for _, fileName := range allFilesList {
 		allProject.allFilesMap[fileName] = common.CompleteFilePathToPreStr(fileName)
 		allProject.fileIndexInfo.InsertOneFile(fileName)
 	}
 
-	// 传人的插件客户端额外的文件列表转换成map
+	// 传入的插件客户端额外的文件列表转换成map
 	for _, fileName := range clientExpPathList {
 		allProject.clientExpFileMap[fileName] = struct{}{}
 	}

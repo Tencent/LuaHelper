@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.21 (Mar 7, 2023)
++ 修复了部分用户反馈的bug
++ 增加了类型的检查
++ 后台二进制采用go1.20.1版本编译
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.19 (July 29, 2022)
 + 合入外网提交的todo highlight on multi dashes(5m1Ly)
 + 修复允许设置对大表的分析 ([issues:112](https://github.com/Tencent/LuaHelper/issues/112))
