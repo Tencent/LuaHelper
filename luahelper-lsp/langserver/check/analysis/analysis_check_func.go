@@ -135,3 +135,77 @@ func (a *Analysis) funcReturnCheck(retInfo *common.ReturnInfo) {
 		}
 	}
 }
+
+func (a *Analysis) checkLocFuncCall() {
+
+	// 如果是一轮校验，判断是否要校验局部变量是否定义未使用
+	if !a.isFirstTerm() || a.realTimeFlag {
+		return
+	}
+
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorLocFuncNotCall) {
+		return
+	}
+
+	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorLocFuncNotCall]; !ok {
+		return
+	}
+
+	scope := a.curScope
+	if scope == nil {
+		return
+	}
+
+	fileResult := a.curResult
+
+	// 扫描当前scope，判断哪些局部函数定义了未使用
+	for varName, varInfoList := range scope.LocVarMap {
+		// _ 局部变量忽略, _G也忽略
+		if varName == "_" || varName == "_G" {
+			continue
+		}
+
+		for _, oneVar := range varInfoList.VarVec {
+			if oneVar.IsUse || oneVar.IsClose {
+				continue
+			}
+
+			//只看局部函数
+			if oneVar.ReferFunc == nil {
+				continue
+			}
+
+			// 判断指向的关联变量，是否为系统的函数或模块
+			// 例如 local math = math 这样的忽略掉
+			expName := common.GetExpName(oneVar.ReferExp)
+
+			// 1) 判断是否直接关联到的系统模块或函数
+			oneStr := common.GetExpSubKey(expName)
+			if oneStr != "" {
+				if common.GConfig.IsInSysNotUseMap(oneStr) {
+					// 为系统的模块或函数名，忽略掉
+					continue
+				}
+			}
+
+			// 2) 判断是否关联到系统模块的成员， 例如：local concat = table.concat
+			flagG, strRet := common.StrRemovePreG(expName)
+			if flagG {
+				expName = "!" + strRet
+			}
+			moduleName, keyName := common.GetTableStrTwoStr(expName)
+			if moduleName != "" && keyName != "" {
+				if common.GConfig.IsInSysNotUseMap(moduleName) {
+					// 为系统的模块或函数名，忽略掉
+					continue
+				}
+			}
+
+			errorStr := fmt.Sprintf("Unused local function %s ", varName)
+			fileResult.InsertError(common.CheckErrorLocFuncNotCall, errorStr, oneVar.Loc)
+
+			// 清除掉
+			oneVar.NoUseAssignLocs = nil
+		}
+	}
+}

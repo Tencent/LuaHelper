@@ -87,6 +87,12 @@ const (
 	// 二元运算表达式类型不同
 	CheckErrorBinopType = 27
 
+	// loc函数未调用
+	CheckErrorLocFuncNotCall = 28
+
+	// 全局函数未调用
+	CheckErrorFuncNotCall = 29
+
 	// CheckErrorMax
-	CheckErrorMax = 28
+	CheckErrorMax = 30
 )

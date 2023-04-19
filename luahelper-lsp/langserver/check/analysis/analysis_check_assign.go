@@ -50,7 +50,6 @@ func (a *Analysis) checkAssignTypeSame(leftNode ast.Exp, rightNode ast.Exp) {
 	}
 
 	if !hasMatch {
-		//标记了常量，却赋值
 		loc := common.GetExpLoc(leftNode)
 		leftTypeVecStr := strings.Join(leftTypeVec, "|")
 		rightTypeStr := strings.Join(rightTypeVec, "|")

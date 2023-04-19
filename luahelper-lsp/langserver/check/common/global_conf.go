@@ -63,7 +63,7 @@ type GlobalConfig struct {
 	// 全局忽略错误类型, 配置读取，如果没有配置，会默认设置一些值
 	IgnoreErrorTypeMap map[CheckErrorType]bool
 
-	// 开启的检查类型, 配置读取，用于灰度测试
+	// 开启的检查类型（白名单）, 配置读取，用于灰度测试
 	OpenErrorTypeMap map[CheckErrorType]bool
 
 	// 需要忽略分析的lua文件夹， 配置文件读取，包含文件名或go的正则
