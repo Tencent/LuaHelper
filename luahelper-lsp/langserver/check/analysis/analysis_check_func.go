@@ -201,7 +201,7 @@ func (a *Analysis) checkLocFuncCall() {
 				}
 			}
 
-			errorStr := fmt.Sprintf("Unused local function %s ", varName)
+			errorStr := fmt.Sprintf("Unused local function '%s' ", varName)
 			fileResult.InsertError(common.CheckErrorLocFuncNotCall, errorStr, oneVar.Loc)
 
 			// 清除掉
