@@ -60,13 +60,13 @@ const (
 	// CheckErrorAnnotate 注解系统引入的错误
 	CheckErrorAnnotate = 18
 
-	// CheckErrorDuplicateIf 分支条件重复
+	// 分支条件重复
 	CheckErrorDuplicateIf = 19
 
-	// CheckErrorSelfAssign 变量自身赋值
+	// 变量自身赋值
 	CheckErrorSelfAssign = 20
 
-	// CheckErrorFloatEq 浮点数做等于或不等于判断
+	// 浮点数做等于或不等于判断
 	CheckErrorFloatEq = 21
 
 	// 错误的成员变量
@@ -87,12 +87,9 @@ const (
 	// 二元运算表达式类型不同
 	CheckErrorBinopType = 27
 
-	// loc函数未调用
+	// local函数未调用(可选，由于lua中可以隐式调用函数，所以不一定准确，全局函数，rpc函数更是如此)
 	CheckErrorLocFuncNotCall = 28
 
-	// 全局函数未调用
-	CheckErrorFuncNotCall = 29
-
 	// CheckErrorMax
-	CheckErrorMax = 30
+	CheckErrorMax = 29
 )
