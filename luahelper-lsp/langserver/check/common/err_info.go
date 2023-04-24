@@ -81,7 +81,7 @@ const (
 	// 函数返回值类型出错
 	CheckErrorFuncRetErr = 25
 
-	// 复制表达式改变了类型
+	// 赋值表达式改变了类型
 	CheckErrorAssignType = 26
 
 	// 二元运算表达式类型不同
