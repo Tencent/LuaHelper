@@ -349,7 +349,10 @@ export class LuaDebugSession extends LoggingDebugSession {
                         env: {}, 
                     });
     
-                    let progaamCmdwithArgs = args.program;
+                    let progaamCmdwithArgs = '"' + args.program + '"';
+                    if (os.type() === "Windows_NT") {
+                        progaamCmdwithArgs = '& ' + progaamCmdwithArgs;
+                    }
                     for (const arg of args.args) {
                         progaamCmdwithArgs = progaamCmdwithArgs + " " + arg;
                     }
