@@ -15,7 +15,7 @@ import (
 )
 
 // 插件定义的版本号
-var clientVerStr string = "0.2.20"
+var clientVerStr string = "0.2.22"
 
 type serverState int
 
@@ -168,17 +168,17 @@ type commFileRequest struct {
 }
 
 // beginFileRequest 通用的文件处理请求预处理
-func (l *LspServer) beginFileRequest(url lsp.DocumentURI, pos lsp.Position) (fileRequest commFileRequest) {
+func (g *LspServer) beginFileRequest(url lsp.DocumentURI, pos lsp.Position) (fileRequest commFileRequest) {
 	fileRequest.result = false
 
 	strFile := pathpre.VscodeURIToString(string(url))
-	project := l.getAllProject()
+	project := g.getAllProject()
 	if !project.IsNeedHandle(strFile) {
 		log.Debug("not need to handle strFile=%s", strFile)
 		return
 	}
 
-	fileCache := l.getFileCache()
+	fileCache := g.getFileCache()
 	contents, found := fileCache.GetFileContent(strFile)
 	if !found {
 		log.Error("file %s not find contents", strFile)

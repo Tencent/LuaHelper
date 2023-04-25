@@ -2,7 +2,7 @@
     "name": "luahelper",
     "displayName": "Lua",
     "description": "LuaHelper, Intellisense, Linting, Debugging, Code formatting, High-performance, and more.",
-    "version": "0.2.21",
+    "version": "0.2.22",
     "publisher": "yinfei",
     "author": {
         "name": "yinfei",
@@ -277,7 +277,7 @@
                             "request": "launch",
                             "name": "LuaHelper-Attach",
                             "description": "通用模式,通常调试项目请选择此模式",
-                            "cwd": "${workspaceFolder}",
+                            "cwd": "^\"${workspaceFolder}\"",
                             "luaFileExtension": "",
                             "connectionPort": 8818,
                             "stopOnEntry": true,
