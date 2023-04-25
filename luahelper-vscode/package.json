@@ -277,7 +277,7 @@
                             "request": "launch",
                             "name": "LuaHelper-Attach",
                             "description": "通用模式,通常调试项目请选择此模式",
-                            "cwd": "${workspaceFolder}",
+                            "cwd": "^\"${workspaceFolder}\"",
                             "luaFileExtension": "",
                             "connectionPort": 8818,
                             "stopOnEntry": true,
