@@ -229,7 +229,7 @@ function string.sub(s, i, j) end
 ---@param fmt  string
 ---@param s    string
 ---@param pos? integer
----@return string
+---@return any
 --[`View online doc`](https://www.lua.org/manual/5.4/manual.html#pdf-string.unpack)  |  [`View local doc`](command:extension.luahelper.doc?["en-us/54/manual.html/pdf-string.unpack"])
 function string.unpack(fmt, s, pos) end
 
