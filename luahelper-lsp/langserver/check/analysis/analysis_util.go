@@ -218,6 +218,12 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 		return varType
 	}
 
+	if varInfo.ReferFunc != nil && !isFuncCall {
+		// 如果是函数 但不是函数调用 返回function类型 而非函数返回值类型
+		retVec = append(retVec, "function")
+		return retVec
+	}
+
 	//优先取变量定义处的注解类型
 	defAnnTypeVec := a.Projects.GetAnnotateTypeString(varInfo, varName, keyName, varIdx)
 	if len(defAnnTypeVec) > 0 {
@@ -234,6 +240,11 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 			return
 		}
 	} else {
+		if varInfo.ReferFunc != nil && isFuncCall {
+			// 如果是函数调用 且函数没有返回值注解 直接返回any类型
+			retVec = append(retVec, "any")
+			return retVec
+		}
 		argType = common.GetAnnTypeFromLuaType(varInfo.VarType)
 	}
 
@@ -265,7 +276,7 @@ func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) 
 
 // 加载函数的参数与返回值的注解类型
 func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
-	if referFunc == nil || len(referFunc.ParamType) > 0 || len(referFunc.ReturnVecs) > 0 {
+	if referFunc == nil || len(referFunc.ParamType) > 0 || len(referFunc.ReturnType) > 0 {
 		return
 	}
 
@@ -320,9 +331,13 @@ func (a *Analysis) CompAnnTypeAndCodeType(annType string, codeType string) bool 
 		return true
 	}
 
-	if codeType == "LuaTypeRefer" || codeType == "function" {
+	if codeType == "LuaTypeRefer" {
 		return true
 	}
+
+	// if codeType == "function" {
+	// 	return true
+	// }
 
 	//number与interger相等
 	if (annType == "number" && codeType == "integer") ||
