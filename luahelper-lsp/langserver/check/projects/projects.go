@@ -38,6 +38,8 @@ type Projects interface {
 
 	IsMemberOfAnnotateClassByLoc(strFile string, strFieldNamelist []string, lineForGetAnnotate int) (isMemberMap map[string]bool, className string)
 
+	GetFieldAnnotateType(strFile string, lineForGetAnnotate int, retFieldTypeMap map[string][]string)
+
 	IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool)
 
 	GetAnnotateTypeString(varInfo *common.VarInfo, varName string, keyName string, idx int) (retVec []string)

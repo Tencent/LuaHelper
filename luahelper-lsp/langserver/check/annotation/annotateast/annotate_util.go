@@ -171,6 +171,13 @@ func GetAllNormalStrList(astType Type) (strList []string) {
 	case *NormalType:
 		strList = append(strList, subAst.StrName)
 		return strList
+
+	case *TableType:
+		strList = append(strList, "table")
+		return strList
+	case *FuncType:
+		strList = append(strList, "function")
+		return strList
 	}
 
 	return

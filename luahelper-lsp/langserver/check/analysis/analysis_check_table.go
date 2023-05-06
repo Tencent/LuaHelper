@@ -6,10 +6,79 @@ import (
 	"luahelper-lsp/langserver/check/compiler/ast"
 	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/log"
+	"strings"
 )
 
 // CheckTableDecl 根据注解判断table成员合法性 在 t={f1=1,f1=2,} 时使用
 func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string, nodeLoc *lexer.Location, node *ast.TableConstructorExp) {
+
+	a.CheckTableClassField(strTableName, strFieldNamelist, nodeLoc, node)
+	a.CheckTableDeclAssign(node, nodeLoc)
+}
+
+// CheckTableDecl 根据注解判断table成员合法性 在 t={f1=1,f1=2,} 时使用
+func (a *Analysis) CheckTableDeclAssign(tcExp *ast.TableConstructorExp, loc *lexer.Location) {
+	if !a.isNeedCheck() || a.realTimeFlag {
+		return
+	}
+
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorAssignType) {
+		return
+	}
+
+	if _, ok := common.GConfig.OpenErrorTypeMap[common.CheckErrorAssignType]; !ok {
+		return
+	}
+
+	retFieldTypeMap := map[string][]string{}
+	a.Projects.GetFieldAnnotateType(a.curResult.Name, loc.StartLine-1, retFieldTypeMap)
+
+	for i, key := range tcExp.KeyExps {
+		if i >= len(tcExp.ValExps) {
+			break
+		}
+
+		strKey := common.GetExpName(key)
+		keyTypes, ok := retFieldTypeMap[strKey]
+		if !ok {
+			continue
+		}
+
+		// var keyTypes []string
+		// for _, keyAnnType := range keyAnnTypes {
+		// 	keyTypes = append(keyTypes, annotateast.GetAstTypeName(keyAnnType))
+		// }
+
+		valueTypes := a.GetAnnTypeByExp(tcExp.ValExps[i], -1)
+
+		if len(keyTypes) == 0 || len(valueTypes) == 0 {
+			//字段或者值取不到类型时 不检查
+			continue
+		}
+
+		hasMatch := false
+		for _, valueType := range valueTypes {
+			for _, keyType := range keyTypes {
+				if a.CompAnnTypeForAssign(keyType, valueType) {
+					hasMatch = true
+					break
+				}
+			}
+		}
+
+		if !hasMatch {
+			loc := common.GetExpLoc(key)
+			keyTypesStr := strings.Join(keyTypes, "|")
+			valueTypesStr := strings.Join(valueTypes, "|")
+
+			errStr := fmt.Sprintf("Type '%s' can not be assigned '%s'", keyTypesStr, valueTypesStr)
+			a.curResult.InsertError(common.CheckErrorAssignType, errStr, loc)
+		}
+	}
+}
+
+// CheckTableDecl 根据注解判断table成员合法性 在 t={f1=1,f1=2,} 时使用
+func (a *Analysis) CheckTableClassField(strTableName string, strFieldNamelist []string, nodeLoc *lexer.Location, node *ast.TableConstructorExp) {
 	if !a.isNeedCheck() || a.realTimeFlag {
 		return
 	}
@@ -27,7 +96,7 @@ func (a *Analysis) CheckTableDecl(strTableName string, strFieldNamelist []string
 	}
 
 	isMemberMap, className := a.Projects.IsMemberOfAnnotateClassByLoc(a.curResult.Name, strFieldNamelist, nodeLoc.StartLine-1)
-	if len(isMemberMap) == 0 || len(className) == 0 || (className) == "any" {
+	if len(isMemberMap) == 0 || len(className) == 0 || (className) == "any" || (className) == "table" {
 		return
 	}
 
@@ -100,7 +169,7 @@ func (a *Analysis) checkTableAccess(node *ast.TableAccessExp) {
 		useKeyName = varName
 	}
 
-	if isMember || len(className) == 0 || (className) == "any" {
+	if isMember || len(className) == 0 || (className) == "any" || (className) == "table" {
 		return
 	}
 
