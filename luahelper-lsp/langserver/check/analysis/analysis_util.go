@@ -387,10 +387,13 @@ func (a *Analysis) CompAnnTypeForAssign(leftType string, rightType string) bool 
 		return true
 	}
 
-	if leftType == "LuaTypeRefer" || rightType == "LuaTypeRefer" ||
-		leftType == "function" || rightType == "function" {
+	if leftType == "LuaTypeRefer" || rightType == "LuaTypeRefer" {
 		return true
 	}
+
+	// if leftType == "function" || rightType == "function" {
+	// 	return true
+	// }
 
 	//number与interger相等
 	if (leftType == "number" && rightType == "integer") ||
