@@ -54,7 +54,8 @@ func (l *LspServer) RunLocalDiagnostices(localpath string) {
 
 	for file, info := range fileErrorMap {
 		for _, errinfo := range info {
-			fmt.Printf("%v`%v`%v\n", file, errinfo.Loc.StartLine, errinfo.ErrStr)
+			fmt.Printf("%v, line=%v, errType=%v, errStr=%s\n", file, errinfo.Loc.StartLine, (int)(errinfo.ErrType),
+				errinfo.ErrStr)
 		}
 	}
 }
