@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-//函数调用处的参数类型检查
+// 函数调用处的参数类型检查
 func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *common.FuncInfo, findTerm int) {
 
 	// 第二轮或第三轮函数参数check
@@ -33,7 +33,10 @@ func (a *Analysis) funcCallParamTypeCheck(node *ast.FuncCallStat, referFunc *com
 			break
 		}
 
+		mutex.Lock()
 		allAnnTypeVec, ok := referFunc.ParamType[referFunc.ParamList[i]]
+		mutex.Unlock()
+
 		if !ok {
 			//该参数没写注解
 			continue

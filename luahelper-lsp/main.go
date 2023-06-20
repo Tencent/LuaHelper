@@ -56,7 +56,7 @@ func main() {
 	}
 }
 
-//cmd 的方式运行rpc
+// cmd 的方式运行rpc
 func cmdRPC() {
 	log.Debug("local stat running ....")
 	Server := langserver.CreateServer()

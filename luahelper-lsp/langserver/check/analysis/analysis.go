@@ -5,6 +5,7 @@ import (
 	"luahelper-lsp/langserver/check/projects"
 	"luahelper-lsp/langserver/check/results"
 	"luahelper-lsp/langserver/log"
+	"sync"
 )
 
 // IgnoreInfo 忽略的信息
@@ -55,6 +56,9 @@ type Analysis struct {
 	// 第一阶段也需要，当前lua文件引入了其他文件的符号，例如require("one") 或是dofile("one.lua")
 	Projects projects.Projects
 }
+
+// 注解互斥锁
+var mutex sync.Mutex
 
 // CreateAnalysis 创建一个分析的结构
 func CreateAnalysis(checkTerm results.CheckTerm, entryFile string) *Analysis {

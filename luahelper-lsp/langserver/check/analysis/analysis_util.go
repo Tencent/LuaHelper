@@ -14,7 +14,9 @@ func (a *Analysis) findVarDefine(varName string, varLoc lexer.Location) (find bo
 	if find {
 		if varInfo.IsParam {
 			// 如果是函数参数 同时返回参数类型
+			mutex.Lock()
 			varType, ok := a.curFunc.ParamType[varName]
+			mutex.Unlock()
 			if ok {
 				return find, varInfo, varType
 			}
@@ -138,7 +140,7 @@ func (a *Analysis) findVarDefineWithPre(preName string, varName string, preLoc l
 	return find, varInfo, false, varType
 }
 
-//GetAnnTypeByExp 获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
+// GetAnnTypeByExp 获取表达式类型字符串，如果是引用，则递归查找，(即支持类型传递)
 func (a *Analysis) GetAnnTypeByExp(referExp ast.Exp, idx int) (retVec []string) {
 	expType := common.GetExpType(referExp)
 	argType := common.GetAnnTypeFromLuaType(expType)
@@ -283,16 +285,17 @@ func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
 	paramTypeMap := a.Projects.GetFuncParamType(referFunc.FileName, referFunc.Loc.StartLine-1)
 	if len(paramTypeMap) > 0 {
 		//从函数上方获取到了注解
+		mutex.Lock()
 		for _, paramName := range referFunc.ParamList {
 			if annTypeVec, ok := paramTypeMap[paramName]; ok {
 				referFunc.ParamType[paramName] = []string{}
 				for _, annTypeOne := range annTypeVec {
 					typeOne := annotateast.GetAstTypeName(annTypeOne)
 					referFunc.ParamType[paramName] = append(referFunc.ParamType[paramName], typeOne)
-
 				}
 			}
 		}
+		mutex.Unlock()
 
 		//继续获取返回值注解
 		referFunc.ReturnType = a.Projects.GetFuncReturnTypeVec(referFunc.FileName, referFunc.Loc.StartLine-1)
@@ -314,7 +317,11 @@ func (a *Analysis) loadFuncParamAnnType(referFunc *common.FuncInfo) {
 		}
 
 		// 根据注解找成员函数
-		referFunc.ParamType = a.Projects.GetFuncParamTypeByClass(classTypeStr, referFunc.FuncName)
+		params := a.Projects.GetFuncParamTypeByClass(classTypeStr, referFunc.FuncName)
+		mutex.Lock()
+		referFunc.ParamType = params
+		mutex.Unlock()
+
 		referFunc.ReturnType = a.Projects.GetFuncReturnTypeByClass(classTypeStr, referFunc.FuncName)
 
 		return
