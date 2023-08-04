@@ -15,7 +15,7 @@ import (
 )
 
 // 插件定义的版本号
-var clientVerStr string = "0.2.22"
+var clientVerStr string = "0.2.23"
 
 type serverState int
 
