@@ -1,9 +1,10 @@
 
 # LuaHelper Guide
 
-[![version](https://vsmarketplacebadges.dev/version-short/yinfei.luahelper.png)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
-[![rating](https://vsmarketplacebadges.dev/rating-short/yinfei.luahelper.png)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
-[![installs](https://vsmarketplacebadges.dev/installs-short/yinfei.luahelper.png)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
+[![version](https://img.shields.io/visual-studio-marketplace/v/yinfei.luahelper)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
+[![rating](https://img.shields.io/visual-studio-marketplace/r/yinfei.luahelper)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
+[![installs](https://img.shields.io/visual-studio-marketplace/i/yinfei.luahelper)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
+[![downloads](https://img.shields.io/visual-studio-marketplace/d/yinfei.luahelper)](https://marketplace.visualstudio.com/items?itemName=yinfei.luahelper)
 [![GitHub stars](https://img.shields.io/github/stars/Tencent/LuaHelper.png?style=flat-square&label=github%20stars)](https://github.com/Tencent/LuaHelper)
 [![GitHub Contributors](https://img.shields.io/github/contributors/Tencent/LuaHelper.png?style=flat-square)](https://github.com/Tencent/LuaHelper/graphs/contributors)
 
