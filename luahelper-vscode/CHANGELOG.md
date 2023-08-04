@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.23 (Aug 4, 2023)
++ 修复插件崩溃bug
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.22 (Apr 25, 2023)
 + 后台增加了新的类型的检查
 + [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
