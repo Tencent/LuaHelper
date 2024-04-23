@@ -480,17 +480,31 @@ async function copyLuaSocket() {
 
             vscode.window.showInformationMessage("copy lua socket " + selectWord.label + " lib success.");
         } else if (process.platform === "darwin") {
-            srcCopyDir = path.join(Tools.VSCodeExtensionPath, '/debugger/luasocket/mac/' + selectWord.label + "/socket");
-            let cmdStr1 = "cp -R " + srcCopyDir + " " + dstPath + "/";
-            console.log("cmdStr:%s", cmdStr1);
-            child_process.execSync(cmdStr1);
+            if (process.arch === "arm64") {
+                srcCopyDir = path.join(Tools.VSCodeExtensionPath, '/debugger/luasocket/mac/arm64/' + selectWord.label + "/socket");
+                let cmdStr1 = "cp -R " + srcCopyDir + " " + dstPath + "/";
+                console.log("cmdStr:%s", cmdStr1);
+                child_process.execSync(cmdStr1);
 
-            srcCopyDir = path.join(Tools.VSCodeExtensionPath, '/debugger/luasocket/mac/' + selectWord.label + "/mime");
-            let cmdStr2 = "cp -R " + srcCopyDir + " " + dstPath + "/";
-            console.log("cmdStr:%s", cmdStr2);
-            child_process.execSync(cmdStr2);
+                srcCopyDir = path.join(Tools.VSCodeExtensionPath, '/debugger/luasocket/mac/arm64/' + selectWord.label + "/mime");
+                let cmdStr2 = "cp -R " + srcCopyDir + " " + dstPath + "/";
+                console.log("cmdStr:%s", cmdStr2);
+                child_process.execSync(cmdStr2);
 
-            vscode.window.showInformationMessage("copy lua socket " + selectWord.label + " lib success.");
+                vscode.window.showInformationMessage("copy lua socket " + selectWord.label + " lib success.");
+            } else {
+                srcCopyDir = path.join(Tools.VSCodeExtensionPath, '/debugger/luasocket/mac/x64/' + selectWord.label + "/socket");
+                let cmdStr1 = "cp -R " + srcCopyDir + " " + dstPath + "/";
+                console.log("cmdStr:%s", cmdStr1);
+                child_process.execSync(cmdStr1);
+
+                srcCopyDir = path.join(Tools.VSCodeExtensionPath, '/debugger/luasocket/mac/x64/' + selectWord.label + "/mime");
+                let cmdStr2 = "cp -R " + srcCopyDir + " " + dstPath + "/";
+                console.log("cmdStr:%s", cmdStr2);
+                child_process.execSync(cmdStr2);
+
+                vscode.window.showInformationMessage("copy lua socket " + selectWord.label + " lib success.");
+            }
         } else if (process.platform === "linux") {
             srcCopyDir = path.join(Tools.VSCodeExtensionPath, '/debugger/luasocket/linux/' + selectWord.label + "/socket");
             let cmdStr1 = "cp -a " + srcCopyDir + " " + dstPath + "/";
