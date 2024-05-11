@@ -404,7 +404,7 @@ func (a *AllProject) FindVarDefine(strFile string, varStruct *common.DefineVarSt
 		return
 	}
 
-	if varStruct.StrVec[0] == "require" && varStruct.IsFuncVec[0] && varStruct.Exp != nil {
+	if (varStruct.StrVec[0] == "require" || varStruct.StrVec[0] == "import") && varStruct.IsFuncVec[0] && varStruct.Exp != nil {
 		findExpList := []common.FindExpFile{}
 		oldSymbol = a.FindVarReferSymbol(comParam.fileResult.Name, varStruct.Exp, comParam, &findExpList, 1)
 

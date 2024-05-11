@@ -730,7 +730,7 @@ func recurseExpToDefine(exp ast.Exp, defineVar *common.DefineVarStruct) {
 		defineVar.IsFuncVec = append(defineVar.IsFuncVec, false)
 	case *ast.FuncCallExp:
 		if subExp, flag := expV.PrefixExp.(*ast.NameExp); flag {
-			if subExp.Name == "require" {
+			if subExp.Name == "require" || subExp.Name == "import" {
 				defineVar.Exp = exp
 			}
 		}
@@ -767,7 +767,7 @@ func ExpToDefineVarStruct(exp ast.Exp) (defineVar common.DefineVarStruct) {
 	case *ast.FuncCallExp:
 		defineVar.ValidFlag = true
 		if subExp, flag := expV.PrefixExp.(*ast.NameExp); flag {
-			if subExp.Name == "require" {
+			if subExp.Name == "require" || subExp.Name == "import" {
 				defineVar.Exp = exp
 			}
 		}
