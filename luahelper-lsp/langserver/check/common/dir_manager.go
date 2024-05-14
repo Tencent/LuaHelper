@@ -531,6 +531,11 @@ func (d *DirManager) GetAllCompleFile(pathname string, referType ReferType,
 		if !strings.HasSuffix(pathname, "/") {
 			completeStr += "/"
 		}
+
+		if len(mainDir)+1 >= len(completeStr) {
+			continue
+		}
+
 		pathBeforeStr := completeStr[len(mainDir)+1:]
 
 		// 判断是否要处理
