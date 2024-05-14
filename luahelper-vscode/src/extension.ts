@@ -265,7 +265,7 @@ async function doStartServer() {
     if (lspStr !== "cmd rpc") {
         DEBUG_MODE = true;
     }
-
+    
     // 调试模式，通过socket链接lsp后台程序
     if (DEBUG_MODE) {
         const connectionInfo = {
@@ -305,9 +305,9 @@ async function doStartServer() {
                 break;
             case "darwin":
                 if (process.arch === "arm64") {
-                    cp = path.resolve(savedContext.extensionPath, "server", "maclualsp");
-                } else {
                     cp = path.resolve(savedContext.extensionPath, "server", "armmaclualsp");
+                } else {
+                    cp = path.resolve(savedContext.extensionPath, "server", "maclualsp");
                 }
                 break;
         }
