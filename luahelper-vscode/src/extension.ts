@@ -304,7 +304,11 @@ async function doStartServer() {
                 cp = path.resolve(savedContext.extensionPath, "server", "linuxlualsp");
                 break;
             case "darwin":
-                cp = path.resolve(savedContext.extensionPath, "server", "maclualsp");
+                if (process.arch === "arm64") {
+                    cp = path.resolve(savedContext.extensionPath, "server", "maclualsp");
+                } else {
+                    cp = path.resolve(savedContext.extensionPath, "server", "armmaclualsp");
+                }
                 break;
         }
 
