@@ -67,6 +67,22 @@ func (a *AllProject) FindVarReferSymbol(luaInFile string, node ast.Exp, comParam
 	case *ast.NameExp:
 		// 获取这个引用的变量名，关联的VarInfo
 		symbol = a.findStrReferSymbol(luaInFile, exp.Name, exp.Loc, false, comParam, findExpList)
+		// 当使用 ---@generic V 声明的方法时，所包含的变量，仅处于使用位置声明时，会找不到的问题
+		// 例如：在 global.lua 中有个全局方法 clone，
+		// ---@generic V
+		// ---@param object V
+		// ---@return V
+		// function clone(object)
+		// end
+		// 然后在 test.lua 中，有如下语句：
+		// local ActivityVo = require('Game.vos.ActivityVo')
+		// local cloneVo = clone(ActivityVo)
+		// 此时，cloneVo 的提示会返回 'local cloneVo : V'
+		// 因为当解析完 clone 之后，luaInFile 会变为 global.lua，上方的语句会变为仅从 global.lua 中寻找 ActivityVo 类型定义
+		// 所以在定义找不到以后，这里尝试从代码的源头位置 findExpList[0] 额外搜寻一次，也就是 test.lua 中尝试寻找
+		if symbol == nil && len(*findExpList) > 0 {
+			symbol = a.findStrReferSymbol((*findExpList)[0].FileName, exp.Name, exp.Loc, false, comParam, findExpList)
+		}
 		return symbol
 	case *ast.BinopExp:
 		if exp.Op == lexer.TkOpOr {
