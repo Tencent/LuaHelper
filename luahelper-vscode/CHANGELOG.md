@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.2.26 (Mar 14, 2024)
++ 支持mac环境下arm64版本
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
+## 0.2.25 (Mar 14, 2024)
++ 修复linux平台下软链接递归循环的bug
++ 修复了其他的崩溃
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.24 (Aug 4, 2023)
 + 修复插件崩溃bug
 + readme文件更新
