@@ -1175,6 +1175,175 @@ func TestHover13(t *testing.T) {
 	}
 }
 
+// 泛型类型
+func TestHover14(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/hover"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "hover_generic.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+	openParams := lsp.DidOpenTextDocumentParams{
+		TextDocument: lsp.TextDocumentItem{
+			URI:  lsp.DocumentURI(fileName),
+			Text: string(data),
+		},
+	}
+	err1 := lspServer.TextDocumentDidOpen(context, openParams)
+	if err1 != nil {
+		t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+	}
+
+	var resultList []string = []string{}
+	var positionList []lsp.Position = []lsp.Position{}
+	// 全局方法定义测试
+	positionList = append(positionList, lsp.Position{
+		Line:      46,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      47,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      48,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      49,
+		Character: 8,
+	})
+	resultList = append(resultList, "local cloneGoods1 : EmptyObject")
+	resultList = append(resultList, "local cloneGoods2 : GoodsModule")
+	resultList = append(resultList, "local cloneGoods3 : GoodsModule")
+	resultList = append(resultList, "local cloneGoods4 : GoodsModule")
+	// 局部方法定义测试
+	positionList = append(positionList, lsp.Position{
+		Line:      51,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      52,
+		Character: 8,
+	})
+	resultList = append(resultList, "local classGoods1 : GoodsModule")
+	resultList = append(resultList, "local classGoods2 : GoodsModule")
+	// 字符串泛型定义测试
+	positionList = append(positionList, lsp.Position{
+		Line:      54,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      55,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      56,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      57,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      58,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      59,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      60,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      61,
+		Character: 8,
+	})
+	resultList = append(resultList, "local nameGoods1 : GoodsModule")
+	resultList = append(resultList, "local nameGoods2 : GoodsModule")
+	resultList = append(resultList, "local nameGoods3 : GoodsModule")
+	resultList = append(resultList, "local nameGoods4 : GoodsModule")
+	resultList = append(resultList, "local nameGoods5 : GoodsModule")
+	resultList = append(resultList, "local nameGoods6 : GoodsModule")
+	resultList = append(resultList, "local nameGoods7 : GoodsModule")
+	resultList = append(resultList, "local nameGoods8 : GoodsModule")
+	// 数组泛型定义测试
+	positionList = append(positionList, lsp.Position{
+		Line:      63,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      64,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      65,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      66,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      67,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      68,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      69,
+		Character: 8,
+	})
+	positionList = append(positionList, lsp.Position{
+		Line:      70,
+		Character: 8,
+	})
+	resultList = append(resultList, "local goodsList1 : GoodsModule[]")
+	resultList = append(resultList, "local goodsList2 : GoodsModule[]")
+	resultList = append(resultList, "local goodsList3 : GoodsModule[]")
+	resultList = append(resultList, "local goodsList4 : GoodsModule[]")
+	resultList = append(resultList, "local goodsList5 : GoodsModule[]")
+	resultList = append(resultList, "local goodsList6 : GoodsModule[]")
+	resultList = append(resultList, "local goodsList7 : GoodsModule[]")
+	resultList = append(resultList, "local goodsList8 : GoodsModule[]")
+
+	for index, onePoisiton := range positionList {
+		hoverParams := lsp.TextDocumentPositionParams{
+			TextDocument: lsp.TextDocumentIdentifier{
+				URI: lsp.DocumentURI(fileName),
+			},
+			Position: onePoisiton,
+		}
+		hoverReturn1, err1 := lspServer.TextDocumentHover(context, hoverParams)
+		if err1 != nil {
+			t.Fatalf("TextDocumentHover file:%s err=%s", fileName, err1.Error())
+		}
+
+		hoverMarkUpReturn1, _ := hoverReturn1.(MarkupHover)
+		t.Log(hoverMarkUpReturn1.Contents.Value)
+
+		oneStr := resultList[index]
+		if !strings.Contains(hoverMarkUpReturn1.Contents.Value, oneStr) {
+			t.Fatalf("hover error, not find str=%s, index=%d", oneStr, index)
+		}
+
+	}
+}
+
 // expand local 扩展变量，出现了的变量
 func TestHoverExpandLocal(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)

@@ -89,6 +89,13 @@ type AnnotateGenericState struct {
 	CommentLoc     lexer.Location   // 注释内容的位置信息
 }
 
+// AnnotateGenericVarState 泛型变量的结构
+type AnnotateGenericVarState struct {
+	NormalStr   string // 可能的字符串
+	IsBacktick  bool   // 是否字符串表达式变量
+	IsArrayType bool   // 是否为数组类型
+}
+
 // AnnotateVarargState 可变参数的结构
 type AnnotateVarargState struct {
 	VarargType Type           // 定义的类型
