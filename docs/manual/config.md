@@ -165,7 +165,7 @@ a = a and false   -- and表达式右边包含false，表达式结果始终为fal
     "IgnoreErrorTypes": [
         4
 	],
-	"IgnoreFileOrFloder": [
+	"IgnoreFileOrFolder": [
 		"port/on.*lua",
 		"tests/",
 		"one.lua"
@@ -246,7 +246,7 @@ lua工程经常需要调用C++等其他宿主语言导入的符号，这里需�
   填写的值为整型，为上面的代码检查种类：1-14</br>
   例如上面填写的4，表示忽略告警类型4(局部变量定义了，未使用)。
 
-* IgnoreFileOrFloder:[],
+* IgnoreFileOrFolder:[],
     ```json
     "IgnoreFileOrFloder": [
     	"port/on.*lua",
