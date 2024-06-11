@@ -23,7 +23,7 @@
     ],
     "IgnoreErrorTypes": [
 	],
-	"IgnoreFileOrFloder": [
+	"IgnoreFileOrFolder": [
 		"lobby/on.*lua",
 		"tests/",
 		"robot/",
