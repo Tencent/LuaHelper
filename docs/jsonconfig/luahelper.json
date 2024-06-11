@@ -22,7 +22,7 @@
 		"config/act.lua"
     ],
     "IgnoreErrorTypes": [4],
-	"IgnoreFileOrFloder": [
+	"IgnoreFileOrFolder": [
 		"port/on.*lua",
 		"tests/",
 		"one.lua"
