@@ -737,6 +737,20 @@
                     ]
                 },
                 {
+                    "begin": "(?<=---\\s*)@enum",
+                    "beginCaptures": {
+                        "0": {
+                            "name": "storage.type.annotation.lua"
+                        }
+                    },
+                    "end": "(?=\\n)",
+                    "patterns": [
+                        {
+                            "include": "#luadoc.type"
+                        }
+                    ]
+                },
+                {
                     "begin": "(?<=---)\\|\\s*[\\>\\+]?",
                     "beginCaptures": {
                         "0": {

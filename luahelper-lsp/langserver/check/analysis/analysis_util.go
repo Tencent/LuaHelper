@@ -92,9 +92,9 @@ func (a *Analysis) findVarDefineGlobal(varName string) (find bool, varInfo *comm
 // 如果preName空，查找varName
 // 如果preName是import值 查找varName
 // 如果preName非import值 根据findSub 查找preName定义或者preName的成员即varName的定义
-func (a *Analysis) findVarDefineWithPre(preName string, varName string, preLoc lexer.Location, varLoc lexer.Location, findSub bool) (find bool, varInfo *common.VarInfo, isPreImport bool, varType []string) {
+func (a *Analysis) findVarDefineWithPre(preName string, varName string, preLoc lexer.Location, varLoc lexer.Location,
+	findSub bool) (find bool, varInfo *common.VarInfo, isPreImport bool, varType []string) {
 	find = false
-
 	if preName != "" {
 		//有前缀
 

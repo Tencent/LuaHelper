@@ -26,13 +26,14 @@ type AnnotateOverloadState struct {
 
 // AnnotateTypeState 定义的类型
 // 一行可能定义多个，例如下面的例子
-//---@type [const] number, [const] stirng
-//local a, b
+// ---@type [const] number, [const] stirng
+// local a, b
 type AnnotateTypeState struct {
 	ListType   []Type         // 多个类型，放在list里面
 	Comment    string         // 其他所有的注释内容
 	CommentLoc lexer.Location // 注释内容的位置信息
 	ListConst  []bool         // 是否const
+	ListEnum   []bool         // 是否为枚举的
 }
 
 // AnnotateClassState 定义的class
@@ -46,7 +47,7 @@ type AnnotateClassState struct {
 }
 
 // AnnotateFieldState 定义的成员结构
-//---@field [public|protected|private] field_name FIELD_TYPE[|OTHER_TYPE] [@comment]
+// ---@field [public|protected|private] field_name FIELD_TYPE[|OTHER_TYPE] [@comment]
 type AnnotateFieldState struct {
 	Name           string         // 成员结构的名称
 	NameLoc        lexer.Location // field的名称位置
@@ -78,7 +79,7 @@ type AnnotateReturnState struct {
 }
 
 // AnnotateGenericState 泛型的结构
-//---@generic T1 [: PARENT_TYPE] [, T2 [: PARENT_TYPE]] @comment @comment
+// ---@generic T1 [: PARENT_TYPE] [, T2 [: PARENT_TYPE]] @comment @comment
 // todo 泛型还没有处理
 type AnnotateGenericState struct {
 	NameList       []string         // 可能一行定义多个
@@ -92,6 +93,21 @@ type AnnotateGenericState struct {
 // AnnotateVarargState 可变参数的结构
 type AnnotateVarargState struct {
 	VarargType Type           // 定义的类型
+	Comment    string         // 其他所有的注释内容
+	CommentLoc lexer.Location // 注释内容的位置信息
+}
+
+// AnnotateEnumState 枚举的结构
+type AnnotateEnumState struct {
+	EnumLoc    lexer.Location // enum位置
+	EnumType   EnumType       // 枚举的类型
+	Comment    string         // 其他所有的注释内容
+	CommentLoc lexer.Location // 注释内容的位置信息
+}
+
+// AnnotateEnumEndState 枚举的结构
+type AnnotateEnumEndState struct {
+	EnumLoc    lexer.Location // enum位置
 	Comment    string         // 其他所有的注释内容
 	CommentLoc lexer.Location // 注释内容的位置信息
 }

@@ -90,6 +90,9 @@ const (
 	// local函数未调用(可选，由于lua中可以隐式调用函数，所以不一定准确，全局函数，rpc函数更是如此)
 	CheckErrorLocFuncNotCall = 28
 
+	// 枚举代码段中的指向的变量值不能重复
+	CheckErrorEnumValue = 29
+
 	// CheckErrorMax
-	CheckErrorMax = 29
+	CheckErrorMax = 30
 )

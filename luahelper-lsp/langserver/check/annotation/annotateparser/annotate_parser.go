@@ -134,6 +134,8 @@ func parserOneState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState {
 		return parserGenericState(l)
 	case annotatelexer.ATokenKwVararg:
 		return parserVarargState(l)
+	case annotatelexer.ATokenKwEnum:
+		return parserEnumState(l)
 	}
 
 	return &annotateast.AnnotateNotValidState{}

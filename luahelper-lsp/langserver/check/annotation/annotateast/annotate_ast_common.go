@@ -34,3 +34,19 @@ const (
 	// ---@field FuncA fun(self:A) : void
 	FieldColonHide = 2
 )
+
+// EnumType 枚举类型start或end
+type EnumType uint8
+
+const (
+	_ EnumType = iota
+
+	// EnumTypeNone 非枚举类型
+	EnumTypeNone = 0
+
+	// EnumTypeStart 枚举类型的开始
+	EnumTypeStart = 1
+
+	// EnumTypeEnd 枚举类型的结束
+	EnumTypeEnd = 2
+)

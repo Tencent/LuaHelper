@@ -41,7 +41,7 @@ func (a *AllProject) HandleFileEventChanges(fileEventVec []FileEventStruct) (cha
 		if fileEvents.Type == FileEventCreated {
 			a.allFilesMap[strFile] = common.CompleteFilePathToPreStr(strFile)
 			a.fileIndexInfo.InsertOneFile(strFile)
-			
+
 			needAgainFileVec = append(needAgainFileVec, strFile)
 			if dirManager.IsInDir(strFile) {
 				needReferFileMap[strFile] = struct{}{}
@@ -186,6 +186,9 @@ func (a *AllProject) HandleFileEventChanges(fileEventVec []FileEventStruct) (cha
 	a.rebuidCreateTypeMap()
 
 	a.checkAllAnnotate()
+
+	// 8) 检查所有的枚举注释代码段是否有重复的值
+	a.checkAllAnnotateEnum()
 	return true
 }
 
