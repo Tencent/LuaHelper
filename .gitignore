@@ -4,6 +4,7 @@ luahelper-lsp/luahelper-lsp.exe
 luahelper-lsp/.idea/luahelper-lsp.iml
 luahelper-lsp/.idea/modules.xml
 luahelper-lsp/.idea/vcs.xml
+luahelper-lsp/__debug_bin
 luahelper-lsp/pkg/
 luahelper-lsp/bin/
 pkg/
