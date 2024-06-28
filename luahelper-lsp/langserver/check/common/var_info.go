@@ -621,6 +621,14 @@ func CheckExpRefIsSample(exp1 ast.Exp, exp2 ast.Exp) bool {
 		} else {
 			return false
 		}
+
+	case *ast.TrueExp:
+		_, ok := exp2.(*ast.TrueExp)
+		return ok
+
+	case *ast.FalseExp:
+		_, ok := exp2.(*ast.FalseExp)
+		return ok
 	}
 
 	return false
