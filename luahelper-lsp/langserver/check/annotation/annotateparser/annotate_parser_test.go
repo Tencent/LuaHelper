@@ -402,3 +402,81 @@ func TestAnnotateParserCandidate1(t *testing.T) {
 		t.Fatalf("parser annotate type stats is not equal")
 	}
 }
+
+func TestAnnotateParserEnum1(t *testing.T) {
+	commentInfo := &lexer.CommentInfo{
+		LineVec: []lexer.CommentLine{
+			{
+				Str:  "-@enum start",
+				Line: 1,
+				Col:  0,
+			},
+			{
+				Str:  "-@enum end",
+				Line: 2,
+				Col:  0,
+			},
+			{
+				Str:  "-@enum fsf",
+				Line: 3,
+				Col:  0,
+			},
+			{
+				Str:  "-@enum start sfsfd",
+				Line: 4,
+				Col:  0,
+			},
+			{
+				Str:  "-@enum start @sfsfjo",
+				Line: 5,
+				Col:  0,
+			},
+		},
+	}
+	fragent, errVec := ParseCommentFragment(commentInfo)
+	if len(errVec) != 0 {
+		t.Fatalf("parser annotate return fatal, errstr=%s", errVec[0].ShowStr)
+	}
+	if len(fragent.Stats) != 4 {
+		t.Fatalf("parser annotate type stats is not equal")
+	}
+}
+
+func TestAnnotateParserEnum2(t *testing.T) {
+	commentInfo := &lexer.CommentInfo{
+		LineVec: []lexer.CommentLine{
+			{
+				Str:  "-@type const enum table",
+				Line: 1,
+				Col:  0,
+			},
+			{
+				Str:  "-@type enum const table",
+				Line: 2,
+				Col:  0,
+			},
+			{
+				Str:  "-@type enum table",
+				Line: 3,
+				Col:  0,
+			},
+			{
+				Str:  "-@type const table",
+				Line: 4,
+				Col:  0,
+			},
+			{
+				Str:  "-@type table",
+				Line: 5,
+				Col:  0,
+			},
+		},
+	}
+	fragent, errVec := ParseCommentFragment(commentInfo)
+	if len(errVec) != 0 {
+		t.Fatalf("parser annotate return fatal, errstr=%s", errVec[0].ShowStr)
+	}
+	if len(fragent.Stats) != 5 {
+		t.Fatalf("parser annotate type stats is not equal")
+	}
+}

@@ -35,6 +35,9 @@ const (
 	ATokenKwIdentifier                   // identifier
 	ATokenKwConst                        // const
 	ATokenKwOther                        // other token， not valid
+	ATokenKwEnum                         // enum 枚举段关键值
+	ATokenKwEnumStart                    // start enum后面跟着的开始关键字，例如完整的为enum start
+	ATokenKwEnumEnd                      // end enum后面跟着的结束关键字，例如完整的为enum end
 )
 
 var keywords = map[string]ATokenType{
@@ -53,4 +56,5 @@ var keywords = map[string]ATokenType{
 	"private":   ATokenKwPrivate,
 	"vararg":    ATokenKwVararg,
 	"const":     ATokenKwConst,
+	"enum":      ATokenKwEnum,
 }

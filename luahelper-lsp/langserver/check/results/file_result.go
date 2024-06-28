@@ -7,6 +7,7 @@ import (
 	"luahelper-lsp/langserver/check/compiler/lexer"
 	"luahelper-lsp/langserver/log"
 	"luahelper-lsp/langserver/pathpre"
+	"sort"
 	"strings"
 )
 
@@ -744,4 +745,76 @@ func (f *FileResult) GetForLineVarString(line int) (strList []string) {
 	mainScope := f.MainFunc.MainScope
 	strList = mainScope.ForLineVarString(line)
 	return
+}
+
+// CheckScopeDuplicateVar 校验文件指定代码块内，是否有指向相同的枚举值
+func (f *FileResult) CheckScopeDuplicateEnumVar(startLine, endLine int) {
+	var oldEnumVacList enumVacList
+
+	// 1）查找所有的这些全局变量定义指向的值是否为相同
+	for key, value := range f.GlobalMaps {
+		if value == nil {
+			continue
+		}
+
+		if !(value.Loc.StartLine >= startLine && value.Loc.EndLine <= endLine) {
+			continue
+		}
+		oldEnumVacList.AddEnumVar(key, value)
+	}
+
+	// 变量的顺序处理
+	sort.Sort(&oldEnumVacList)
+	f.checkScopeEnumVacList(oldEnumVacList)
+
+	// 2) 查找指定区域的局部变量指向的值是否为相同
+	oldEnumVacList = enumVacList{}
+	miniScope := f.MainFunc.MainScope.FindMinScope(startLine, 0)
+	if miniScope == nil {
+		miniScope = f.MainFunc.MainScope
+	}
+	if miniScope == nil {
+		return
+	}
+
+	for key, values := range miniScope.LocVarMap {
+		for _, value := range values.VarVec {
+			if !(value.Loc.StartLine >= startLine && value.Loc.EndLine <= endLine) {
+				continue
+			}
+
+			oldEnumVacList.AddEnumVar(key, value)
+		}
+	}
+	// 变量的顺序处理
+	sort.Sort(&oldEnumVacList)
+	f.checkScopeEnumVacList(oldEnumVacList)
+}
+
+// CheckScopeDuplicateVar 校验文件指定代码块内，是否有指向相同的枚举值
+func (f *FileResult) checkScopeEnumVacList(oldEnumVacList enumVacList) {
+	var newEnumVacList enumVacList
+	for _, enumVar := range oldEnumVacList.enumVarVec {
+		key := enumVar.varStr
+		value := enumVar.varInfo
+		oldStr, oldVar, flag := newEnumVacList.CheckEnumVar(key, value)
+		if !flag {
+			newEnumVacList.AddEnumVar(key, value)
+			continue
+		}
+
+		errStr := fmt.Sprintf("enum %s and %s contains duplicate value", oldStr, key)
+		oldValueLoc := common.GetExpLoc(oldVar.ReferExp)
+		oldRangeLoc := lexer.GetRangeLoc(&oldVar.Loc, &oldValueLoc)
+		var relateVec []common.RelateCheckInfo
+		relateVec = append(relateVec, common.RelateCheckInfo{
+			LuaFile: f.Name,
+			ErrStr:  errStr,
+			Loc:     oldRangeLoc,
+		})
+
+		valueLoc := common.GetExpLoc(value.ReferExp)
+		rangeLoc := lexer.GetRangeLoc(&value.Loc, &valueLoc)
+		f.InsertRelateError(common.CheckErrorEnumValue, errStr, rangeLoc, relateVec)
+	}
 }

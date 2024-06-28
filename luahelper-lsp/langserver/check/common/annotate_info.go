@@ -50,6 +50,7 @@ type FragmentTypeInfo struct {
 	TypeList    []annotateast.Type // 每个AnnotateTypeState的TypeList拼接在这里面
 	CommentList []string           // 所有的类型的注释
 	ConstList   []bool             // 是否标记常量
+	EnumList    []bool             // 是否标记枚举
 }
 
 // FragementParamInfo 单个块所对应的所有参数信息, 一个注释块，允许有多个 AnnotateParamState
@@ -243,6 +244,19 @@ func (s *resultSortFragement) Swap(i, j int) {
 	s.results[i], s.results[j] = s.results[j], s.results[i]
 }
 
+type resultSortEnumVec struct {
+	enumVec []*annotateast.AnnotateEnumState
+}
+
+func (s *resultSortEnumVec) Len() int { return len(s.enumVec) }
+func (s *resultSortEnumVec) Less(i, j int) bool {
+	iscore, jscore := s.enumVec[i].EnumLoc.StartLine, s.enumVec[j].EnumLoc.StartLine
+	return iscore < jscore
+}
+func (s *resultSortEnumVec) Swap(i, j int) {
+	s.enumVec[i], s.enumVec[j] = s.enumVec[j], s.enumVec[i]
+}
+
 // CreateTypeInfo 所有产生一个新类型的结构
 // 注释什么class 或 alias时候，会产生一个新的类型结构
 type CreateTypeInfo struct {
@@ -288,13 +302,21 @@ func (cl *CreateTypeList) IsRepeateTypeInfo(createTypeInfo *CreateTypeInfo) bool
 	return false
 }
 
+// EnumFragment 枚举的注释块段，包括开始与结束
+type EnumFragment struct {
+	StartEnum *annotateast.AnnotateEnumState // 枚举段的开始
+	EndEnum   *annotateast.AnnotateEnumState // 枚举段的结束
+}
+
 // AnnotateFile 单个文件生成的核心注解信息
 type AnnotateFile struct {
-	FragementMap  map[int]*FragementInfo    // 文件对应的所有注释块信息
-	CreateTypeMap map[string]CreateTypeList // 文件管理的所有定义新产生的类信息
-	sortFragement *resultSortFragement      // 用于根据行号排序的内部结构
-	LuaFile       string                    // 这个文件对应的lua名称
-	checkErrVec   []CheckError              // 注解检测到的错误信息
+	FragementMap    map[int]*FragementInfo    // 文件对应的所有注释块信息
+	CreateTypeMap   map[string]CreateTypeList // 文件管理的所有定义新产生的类信息
+	sortFragement   *resultSortFragement      // 用于根据行号排序的内部结构
+	LuaFile         string                    // 这个文件对应的lua名称
+	checkErrVec     []CheckError              // 注解检测到的错误信息
+	EnumFragmentVec []EnumFragment            // 所有的枚举段落
+	IsEnumType      bool                      // 是否有枚举类型的type定义信息
 }
 
 // CreateAnnotateFile 创建文件的所有注解信息
@@ -305,7 +327,8 @@ func CreateAnnotateFile(luaFile string) *AnnotateFile {
 		sortFragement: &resultSortFragement{
 			results: []*FragementInfo{},
 		},
-		LuaFile: luaFile,
+		LuaFile:    luaFile,
+		IsEnumType: false,
 	}
 }
 
@@ -466,6 +489,7 @@ func (af *AnnotateFile) analysisAnnotateFragement(lastLine int, annotateFragment
 				typeInfo.TypeList = append(typeInfo.TypeList, subType)
 				typeInfo.CommentList = append(typeInfo.CommentList, state.Comment)
 				typeInfo.ConstList = append(typeInfo.ConstList, state.ListConst[i])
+				typeInfo.EnumList = append(typeInfo.EnumList, state.ListEnum[i])
 			}
 		case *annotateast.AnnotateReturnState:
 			returnInfo.ReturnTypeList = append(returnInfo.ReturnTypeList, state.ReturnTypeList...)
@@ -835,6 +859,8 @@ func (af *AnnotateFile) RelateTypeVarInfo(globalMaps map[string]*VarInfo, mainSc
 
 // AnalysisAllComment 这个文件的所有注释进行分析
 func (af *AnnotateFile) AnalysisAllComment(commentMap map[int]*lexer.CommentInfo) {
+	var enumVec []*annotateast.AnnotateEnumState
+
 	// 1) 遍历所有块的注释，提取有用的注释信息
 	for lastLine, commentInfo := range commentMap {
 		// 只处理头部注释
@@ -844,8 +870,16 @@ func (af *AnnotateFile) AnalysisAllComment(commentMap map[int]*lexer.CommentInfo
 
 		// 注释块解析成注释段落
 		annotateFragment, parseErrVec := annotateparser.ParseCommentFragment(commentInfo)
+
 		// 分析单个注释的段落
 		af.analysisAnnotateFragement(lastLine, &annotateFragment)
+
+		// 提取所有的枚举段落的开始与结束
+		for _, oneState := range annotateFragment.Stats {
+			if enumState, ok := oneState.(*annotateast.AnnotateEnumState); ok {
+				enumVec = append(enumVec, enumState)
+			}
+		}
 
 		// 判断是否忽略注解类型告警
 		if GConfig.IsGlobalIgnoreErrType(CheckErrorAnnotate) {
@@ -873,6 +907,67 @@ func (af *AnnotateFile) AnalysisAllComment(commentMap map[int]*lexer.CommentInfo
 
 	// 3) 按行号遍历所有的注释块信息，生成这个文件内所有产生的新符号
 	af.generateNewType()
+
+	resultSortEnumVec := resultSortEnumVec{
+		enumVec: enumVec,
+	}
+	sort.Sort(&resultSortEnumVec)
+
+	// 4) 枚举段落的开始与结束拼接
+	af.mergeEnumFragment(resultSortEnumVec.enumVec)
+
+	// 5) 计算是否有枚举类型
+	af.calcIsEnumType()
+}
+
+func (af *AnnotateFile) calcIsEnumType() {
+	for _, fragement := range af.FragementMap {
+		if fragement.TypeInfo == nil {
+			continue
+		}
+
+		for _, enumFlag := range fragement.TypeInfo.EnumList {
+			if enumFlag == true {
+				af.IsEnumType = true
+				return
+			}
+		}
+	}
+}
+
+// mergeEnumFragment 枚举段落的开始与结束拼接
+func (af *AnnotateFile) mergeEnumFragment(enumVec []*annotateast.AnnotateEnumState) {
+	af.EnumFragmentVec = []EnumFragment{}
+
+	if len(enumVec) == 0 {
+		return
+	}
+
+	var enumStack AnnotateEnumStack
+	for _, oneEnum := range enumVec {
+		if oneEnum.EnumType == annotateast.EnumTypeStart {
+			enumStack.Push(oneEnum)
+		} else if oneEnum.EnumType == annotateast.EnumTypeEnd {
+
+			// 枚举段落的结束
+			startEnum := enumStack.Pop()
+			if startEnum == nil {
+				log.Error("enum end not find start, line:%d", oneEnum.EnumLoc.StartLine)
+				continue
+			}
+
+			af.EnumFragmentVec = append(af.EnumFragmentVec, EnumFragment{
+				StartEnum: startEnum,
+				EndEnum:   oneEnum,
+			})
+		}
+	}
+
+	if enumStack.Len() > 0 {
+		for _, oneEnum := range enumStack.Slice {
+			log.Error("enum start not find end, line:%d", oneEnum.EnumLoc.StartLine)
+		}
+	}
 }
 
 // GetLineFragementInfo 获取这个注解文件指定行号的注解块信息
@@ -915,4 +1010,9 @@ func (af *AnnotateFile) GetBestCreateTypeInfo(strName string, lastLine int) (cre
 
 	// 返回优先级最高的CreateTypeInfo
 	return resultCreate.results[0]
+}
+
+// IsHasEnumType 判断是否含义枚举类型
+func (af *AnnotateFile) IsHasEnumType() bool {
+	return af.IsEnumType
 }

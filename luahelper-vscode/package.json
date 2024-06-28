@@ -2,7 +2,7 @@
     "name": "luahelper",
     "displayName": "Lua",
     "description": "LuaHelper, Intellisense, Linting, Debugging, Code formatting, High-performance, and more.",
-    "version": "0.2.26",
+    "version": "0.2.27",
     "publisher": "yinfei",
     "author": {
         "name": "yinfei",

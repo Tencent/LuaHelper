@@ -130,11 +130,14 @@ func (a *AllProject) HandleCheck() {
 	a.rebuidCreateTypeMap()
 	a.checkAllAnnotate()
 
+	// 5) 检查所有的枚举注释代码段是否有重复的值
+	a.checkAllAnnotateEnum()
+
 	ftime := time.Since(time1).Milliseconds()
 	log.Debug("HandleCheck,  all time=%d, first=%d, second=%d, third=%d", ftime, ftime1, ftime2, ftime3)
 }
 
-//  重新创建所有的createTypeMap 注释类型
+// 重新创建所有的createTypeMap 注释类型
 func (a *AllProject) rebuidCreateTypeMap() {
 	time1 := time.Now()
 

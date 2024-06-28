@@ -1,6 +1,5 @@
 package annotateast
 
-
 // 分析注释功能
 
 // 自带的type类型有下面的
@@ -19,7 +18,6 @@ package annotateast
 // 可能是MY_TYPE 也有可能是OTHER_TYPE
 // Since lua is dynamic-typed, a variable may be of different types
 // use | to list all possible types
-
 
 // 描述多个的时候
 // ---@type MY_TYPE[|OTHER_TYPE], MY_TYPE[|OTHER_TYPE] [@comment] [@comment]
@@ -67,7 +65,7 @@ function table.concat(list, sep, i, j) end
 
 // 7 @param 函数参数
 //---@param param_name MY_TYPE[|other_type] [@comment]
-// 7.1 例子 
+// 7.1 例子
 //---@param car Car
 //function setCar(car) end
 
@@ -85,7 +83,6 @@ function table.concat(list, sep, i, j) end
 //---@type string | number[]  表示类型为string或是number的列表
 //---@type (string | number)[] 表示类型为string的列表或是number的列表
 //---@type string[] | number[] 表示类型为string的列表或是number的列表
-
 
 // 9 table type
 //---@type table<KEY_TYPE[, KEY_OTHER_TYPE], VALUE_TYPE[, VAULE_OTHER_TYPE]>
@@ -107,3 +104,6 @@ function table.concat(list, sep, i, j) end
 //---@return T
 //function test(param1, param2)
 
+// 12 enum 枚举段类型【一个枚举段中定义的变量的值不能重复】
+//---@enum start @comment  表示枚举段的开始
+//---@enum end @comment  表示枚举段的结束

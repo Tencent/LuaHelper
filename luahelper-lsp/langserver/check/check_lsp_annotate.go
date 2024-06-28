@@ -14,7 +14,6 @@ import (
 
 // 引入注解系统，一些方法
 
-//
 func (a *AllProject) checkOneFileType(annotateFile *common.AnnotateFile, fragemnet *common.FragementInfo,
 	oneType annotateast.Type) {
 	strList, locList := annotateast.GetAllStrAndLocList(oneType)
@@ -112,6 +111,29 @@ func (a *AllProject) checkFileAnnotate(fileStruct *results.FileStruct) {
 	annotateFile.RankCheckError()
 }
 
+// checkFileEnum 检查当前文件的enum枚举段定义是否有重复的值
+func (a *AllProject) checkFileEnum(fileStruct *results.FileStruct) {
+	annotateFile := fileStruct.AnnotateFile
+	if annotateFile == nil || fileStruct.FileResult == nil {
+		return
+	}
+
+	fileStruct.CheckMapEnum()
+
+	if len(annotateFile.EnumFragmentVec) == 0 {
+		return
+	}
+
+	for _, oneEnumFragment := range annotateFile.EnumFragmentVec {
+		startLine := oneEnumFragment.StartEnum.EnumLoc.StartLine
+		endLine := oneEnumFragment.EndEnum.EnumLoc.StartLine
+		log.Debug("startLine: %d, endLine: %d", startLine, endLine)
+
+		// 检查是否有重复的值
+		fileStruct.FileResult.CheckScopeDuplicateEnumVar(startLine, endLine)
+	}
+}
+
 // 判断定义的注解类型是否重复
 func (a *AllProject) checkCreateTypeListDuplicate(str string, createList common.CreateTypeList) {
 	lenList := len(createList.List)
@@ -163,6 +185,27 @@ func (a *AllProject) getNotCacheAnnotateFile(strFile string) (annotateFile *comm
 	}
 
 	return annotateFile
+}
+
+// checkAllAnnotateEnum 检查所有的枚举注释代码段是否有重复的值
+func (a *AllProject) checkAllAnnotateEnum() {
+	if len(a.fileStructMap) == 0 {
+		return
+	}
+
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorEnumValue) {
+		return
+	}
+
+	time1 := time.Now()
+
+	// 1) 首先统一校验是type是否有定义
+	for _, fileStruct := range a.fileStructMap {
+		a.checkFileEnum(fileStruct)
+	}
+
+	ftime := time.Since(time1).Milliseconds()
+	log.Debug("checkAllAnnotateEnum time:%d", ftime)
 }
 
 // 检查所有的注解类型系统，进行告警
@@ -360,7 +403,7 @@ func (a *AllProject) GetFuncParamInfo(fileName string, lastLine int) (paramInfo 
 	return fragmentInfo.ParamInfo
 }
 
-//  获取前面注释行的所有返回值
+// 获取前面注释行的所有返回值
 func (a *AllProject) GetFuncReturnInfo(fileName string, lastLine int) (paramInfo *common.FragementReturnInfo) {
 	annotateFile := a.getAnnotateFile(fileName)
 	if annotateFile == nil {

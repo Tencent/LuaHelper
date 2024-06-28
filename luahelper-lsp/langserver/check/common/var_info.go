@@ -559,3 +559,77 @@ func (varInfo *VarInfo) IsHasReferTableKey(strTableKey string, line int, charact
 
 	return false
 }
+
+// CheckVarIsSample 判断两个变量指向的成员是否为一样
+func (varInfo *VarInfo) CheckVarIsSample(otherVarInfo *VarInfo) bool {
+	if varInfo.VarType != otherVarInfo.VarType {
+		return false
+	}
+
+	return CheckExpRefIsSample(varInfo.ReferExp, otherVarInfo.ReferExp)
+}
+
+// 判断两个exp是否指向同一个对象
+func CheckExpRefIsSample(exp1 ast.Exp, exp2 ast.Exp) bool {
+	if exp1 == nil || exp2 == nil {
+		return false
+	}
+
+	exp2New, ok := exp2.(*ast.ParensExp)
+	if ok {
+		return CheckExpRefIsSample(exp1, exp2New)
+	}
+
+	switch exp := exp1.(type) {
+	case *ast.ParensExp:
+		CheckExpRefIsSample(exp.Exp, exp2)
+	case *ast.NameExp:
+		exp2New, ok := exp2.(*ast.NameExp)
+		if ok {
+			return exp.Name == exp2New.Name
+		} else {
+			return false
+		}
+	case *ast.IntegerExp:
+		exp2New, ok := exp2.(*ast.IntegerExp)
+		if ok {
+			return exp.Val == exp2New.Val
+		} else {
+			return false
+		}
+
+	case *ast.FloatExp:
+		exp2New, ok := exp2.(*ast.FloatExp)
+		if ok {
+			return exp.Val == exp2New.Val
+		} else {
+			return false
+		}
+
+	case *ast.LuajitNum:
+		exp2New, ok := exp2.(*ast.LuajitNum)
+		if ok {
+			return exp.Val == exp2New.Val
+		} else {
+			return false
+		}
+
+	case *ast.StringExp:
+		exp2New, ok := exp2.(*ast.StringExp)
+		if ok {
+			return exp.Str == exp2New.Str
+		} else {
+			return false
+		}
+
+	case *ast.TrueExp:
+		_, ok := exp2.(*ast.TrueExp)
+		return ok
+
+	case *ast.FalseExp:
+		_, ok := exp2.(*ast.FalseExp)
+		return ok
+	}
+
+	return false
+}
