@@ -186,6 +186,32 @@ func (a *AllProject) getNotCacheAnnotateFile(strFile string) (annotateFile *comm
 }
 
 // checkAllAnnotateEnum 检查所有的枚举注释代码段是否有重复的值
+func (a *AllProject) checkFileMapAnnotateEnum(enumFileMap map[string]struct{}) {
+	if len(enumFileMap) == 0 {
+		return
+	}
+
+	if common.GConfig.IsGlobalIgnoreErrType(common.CheckErrorEnumValue) {
+		return
+	}
+
+	time1 := time.Now()
+
+	// 1) 首先统一校验是type是否有定义
+	for strFile := range enumFileMap {
+		fileStruct, _ := a.GetCacheFileStruct(strFile)
+		if fileStruct == nil {
+			continue
+		}
+
+		a.checkFileEnum(fileStruct)
+	}
+
+	ftime := time.Since(time1).Milliseconds()
+	log.Debug("checkAllAnnotateEnum time:%d", ftime)
+}
+
+// checkAllAnnotateEnum 检查所有的枚举注释代码段是否有重复的值
 func (a *AllProject) checkAllAnnotateEnum() {
 	if len(a.fileStructMap) == 0 {
 		return
