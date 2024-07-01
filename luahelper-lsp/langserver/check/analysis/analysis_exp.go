@@ -204,6 +204,8 @@ func (a *Analysis) cgTableConstructorExp(node *ast.TableConstructorExp, parentVa
 			tabKeyMap[strKey] = loc
 		}
 	}
+
+	a.checkEnum(node)
 }
 
 // r[a] := op exp

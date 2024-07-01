@@ -116,7 +116,8 @@ func (a *AllProject) checkFileEnum(fileStruct *results.FileStruct) {
 		return
 	}
 
-	fileStruct.CheckMapEnum()
+	// 注释掉table标记的enum检查
+	// fileStruct.CheckMapEnum()
 
 	if len(annotateFile.EnumFragmentVec) == 0 {
 		return

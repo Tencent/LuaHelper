@@ -371,6 +371,30 @@ func (a *AllProject) GetAnnClassInfo(className string) *common.CreateTypeInfo {
 	return createTypeList.List[0]
 }
 
+// IsLineFragementEnum 获取当前行关联是否有enum注解类型
+func (a *AllProject) IsLineFragementEnum(fileName string, startLine int) (isEnum bool) {
+	isEnum = false
+
+	// 1) 获取文件对应的annotateFile
+	annotateFile := a.getAnnotateFile(fileName)
+	if annotateFile == nil {
+		log.Error("GetAnnotateType annotateFile is nil, file=%s", fileName)
+		return isEnum
+	}
+
+	if !annotateFile.IsHasEnumType() {
+		return isEnum
+	}
+
+	fragmentInfo := annotateFile.GetLineFragementInfo(startLine - 1)
+	if fragmentInfo == nil || fragmentInfo.TypeInfo == nil || len(fragmentInfo.TypeInfo.EnumList) == 0 {
+		return isEnum
+	}
+
+	isEnum = fragmentInfo.TypeInfo.EnumList[0]
+	return isEnum
+}
+
 // 获取注解 ---type
 func (a *AllProject) IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool) {
 	isConst = false

@@ -749,7 +749,7 @@ func (f *FileResult) GetForLineVarString(line int) (strList []string) {
 
 // CheckScopeDuplicateVar 校验文件指定代码块内，是否有指向相同的枚举值
 func (f *FileResult) CheckScopeDuplicateEnumVar(startLine, endLine int) {
-	var oldEnumVacList enumVacList
+	var oldEnumVacList common.EnumVacList
 
 	// 1）查找所有的这些全局变量定义指向的值是否为相同
 	for key, value := range f.GlobalMaps {
@@ -768,7 +768,7 @@ func (f *FileResult) CheckScopeDuplicateEnumVar(startLine, endLine int) {
 	f.checkScopeEnumVacList(oldEnumVacList)
 
 	// 2) 查找指定区域的局部变量指向的值是否为相同
-	oldEnumVacList = enumVacList{}
+	oldEnumVacList = common.EnumVacList{}
 	miniScope := f.MainFunc.MainScope.FindMinScope(startLine, 0)
 	if miniScope == nil {
 		miniScope = f.MainFunc.MainScope
@@ -792,11 +792,11 @@ func (f *FileResult) CheckScopeDuplicateEnumVar(startLine, endLine int) {
 }
 
 // CheckScopeDuplicateVar 校验文件指定代码块内，是否有指向相同的枚举值
-func (f *FileResult) checkScopeEnumVacList(oldEnumVacList enumVacList) {
-	var newEnumVacList enumVacList
-	for _, enumVar := range oldEnumVacList.enumVarVec {
-		key := enumVar.varStr
-		value := enumVar.varInfo
+func (f *FileResult) checkScopeEnumVacList(oldEnumVacList common.EnumVacList) {
+	var newEnumVacList common.EnumVacList
+	for _, enumVar := range oldEnumVacList.EnumVarVec {
+		key := enumVar.VarStr
+		value := enumVar.VarInfo
 		oldStr, oldVar, flag := newEnumVacList.CheckEnumVar(key, value)
 		if !flag {
 			newEnumVacList.AddEnumVar(key, value)
