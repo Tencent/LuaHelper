@@ -811,7 +811,12 @@ func (a *AllProject) getFuncGenericVarInfo(oldSymbol *common.Symbol, fragment *c
 				continue
 			}
 
-			for index, strParam := range funcInfo.ParamList {
+			var paramList = funcInfo.ParamList
+			if len(funcInfo.ParamList) > 0 && funcInfo.ParamList[0] == "self" {
+				paramList = funcInfo.ParamList[1:]
+			}
+
+			for index, strParam := range paramList {
 				if strParam == oneParam.Name {
 					findIndex = index
 					break
@@ -880,13 +885,16 @@ func (a *AllProject) getFuncGenericVarInfo(oldSymbol *common.Symbol, fragment *c
 				if paramVarFile != nil {
 					// 如果定义类型为引用，例如：
 					// local nameGlobal  = GoodsDefine.BaseGoods
-					// 则额外获取一次最终的值结果：'GoodsModule'
+					// 则额外获取一次 GoodsDefine.BaseGoods 的值结果：'GoodsModule'
 					referExp := paramVarFile.VarInfo.ReferExp
 					if _, ok := referExp.(*ast.TableAccessExp); ok {
-						paramVarFile = a.FindVarReferSymbol(oldSymbol.FileName, referExp, comParam, findExpList, 1)
+						if tempSymbol := a.FindVarReferSymbol(oldSymbol.FileName, referExp, comParam, findExpList, 1); tempSymbol != nil {
+							paramVarFile = tempSymbol
+						}
 					}
 				}
 				if paramVarFile != nil {
+					// 根据字符串值，求导对应的声明定义
 					referExp := paramVarFile.VarInfo.ReferExp
 					multiType.Loc = common.GetExpLoc(referExp)
 					multiType.TypeList = append(multiType.TypeList, &annotateast.NormalType{
@@ -894,7 +902,6 @@ func (a *AllProject) getFuncGenericVarInfo(oldSymbol *common.Symbol, fragment *c
 						NameLoc:   common.GetExpLoc(referExp),
 						ShowColor: false,
 					})
-
 				}
 			}
 
@@ -923,12 +930,37 @@ func (a *AllProject) getFuncGenericVarInfo(oldSymbol *common.Symbol, fragment *c
 		} else {
 			paramVarFile := tempFindVarReferSymbol(oldSymbol.FileName, paramExp, comParam, findExpList, 1)
 			if paramVarFile != nil {
+				// 如果定义类型为引用，例如：
+				// local classGlobal = GoodsClass.BaseClass
+				// 则额外获取一次最终的值结果：'GoodsModule'
+				referExp := paramVarFile.VarInfo.ReferExp
+				if _, ok := referExp.(*ast.TableAccessExp); ok {
+					if tempSymbol := a.FindVarReferSymbol(oldSymbol.FileName, referExp, comParam, findExpList, 1); tempSymbol != nil {
+						paramVarFile = tempSymbol
+					}
+				}
+			}
+			if paramVarFile != nil {
+				// 如果是 require 求导类型，可能会遇到 findExpList 中存在查找记录，从而返回 nil 的情况。例如：
+				// local classLocal  = require('hover_generic_class')
+				// local goodsIns12 = Instances.GoodsIns.CloneGoods(classLocal)
+				// 从左向右会先求导 Instances.GoodsIns 的结果，文件 hover_generic_config.lua 中定义的 require('hover_generic_class') 的查找位置就会被记录进 findExpList
+				// 继续执行到后面 classLocal 类型的求导时，会因为 a.FindVarReferSymbol 中的 isHasFindExpFile 方法，验证为同一位置的重复的检索，从而返回 nil结果，不能正确的推导出结果
+				// 所以，这里尝试传入空的查找记录，让 a.FindVarReferSymbol 新去检索推导结果
+				referExp := paramVarFile.VarInfo.ReferExp
+				if _, ok := referExp.(*ast.FuncCallExp); ok {
+					subFindExpList := []common.FindExpFile{}
+					if tempSymbol := a.FindVarReferSymbol(oldSymbol.FileName, referExp, comParam, &subFindExpList, 1); tempSymbol != nil {
+						paramVarFile = tempSymbol
+					}
+				}
+			}
+			if paramVarFile != nil {
 				if oneVar.IsArrayType {
 
 					// 如果是需要推导的类型，就先推导出结果，再让下面套上数据结构
 					if paramVarFile.AnnotateType == nil {
-						tempVarFile := a.FindVarReferSymbol(paramVarFile.FileName, paramVarFile.VarInfo.ReferExp, comParam, findExpList, 1)
-						if tempVarFile != nil {
+						if tempVarFile := a.FindVarReferSymbol(paramVarFile.FileName, paramVarFile.VarInfo.ReferExp, comParam, findExpList, 1); tempVarFile != nil {
 							paramVarFile = tempVarFile
 						}
 					}

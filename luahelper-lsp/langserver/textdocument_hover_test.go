@@ -1207,70 +1207,28 @@ func TestHover14(t *testing.T) {
 	var resultList []string = []string{}
 	var positionList []lsp.Position = []lsp.Position{}
 	// 全局方法定义测试
-	positionList = append(positionList, lsp.Position{
-		Line:      46,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      47,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      48,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      49,
-		Character: 8,
-	})
+	positionList = append(positionList, lsp.Position{Line: 46, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 47, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 48, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 49, Character: 8})
 	resultList = append(resultList, "local cloneGoods1 : EmptyObject")
 	resultList = append(resultList, "local cloneGoods2 : GoodsModule")
 	resultList = append(resultList, "local cloneGoods3 : GoodsModule")
 	resultList = append(resultList, "local cloneGoods4 : GoodsModule")
 	// 局部方法定义测试
-	positionList = append(positionList, lsp.Position{
-		Line:      51,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      52,
-		Character: 8,
-	})
+	positionList = append(positionList, lsp.Position{Line: 51, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 52, Character: 8})
 	resultList = append(resultList, "local classGoods1 : GoodsModule")
 	resultList = append(resultList, "local classGoods2 : GoodsModule")
 	// 字符串泛型定义测试
-	positionList = append(positionList, lsp.Position{
-		Line:      54,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      55,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      56,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      57,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      58,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      59,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      60,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      61,
-		Character: 8,
-	})
+	positionList = append(positionList, lsp.Position{Line: 54, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 55, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 56, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 57, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 58, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 59, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 60, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 61, Character: 8})
 	resultList = append(resultList, "local nameGoods1 : GoodsModule")
 	resultList = append(resultList, "local nameGoods2 : GoodsModule")
 	resultList = append(resultList, "local nameGoods3 : GoodsModule")
@@ -1280,38 +1238,14 @@ func TestHover14(t *testing.T) {
 	resultList = append(resultList, "local nameGoods7 : GoodsModule")
 	resultList = append(resultList, "local nameGoods8 : GoodsModule")
 	// 数组泛型定义测试
-	positionList = append(positionList, lsp.Position{
-		Line:      63,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      64,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      65,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      66,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      67,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      68,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      69,
-		Character: 8,
-	})
-	positionList = append(positionList, lsp.Position{
-		Line:      70,
-		Character: 8,
-	})
+	positionList = append(positionList, lsp.Position{Line: 63, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 64, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 65, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 66, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 67, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 68, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 69, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 70, Character: 8})
 	resultList = append(resultList, "local goodsList1 : GoodsModule[]")
 	resultList = append(resultList, "local goodsList2 : GoodsModule[]")
 	resultList = append(resultList, "local goodsList3 : GoodsModule[]")
@@ -1320,6 +1254,39 @@ func TestHover14(t *testing.T) {
 	resultList = append(resultList, "local goodsList6 : GoodsModule[]")
 	resultList = append(resultList, "local goodsList7 : GoodsModule[]")
 	resultList = append(resultList, "local goodsList8 : GoodsModule[]")
+	// 类成员方法定义测试
+	positionList = append(positionList, lsp.Position{Line: 72, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 73, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 74, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 75, Character: 8})
+	resultList = append(resultList, "local goodsIns11 : EmptyObject")
+	resultList = append(resultList, "local goodsIns12 : GoodsModule")
+	resultList = append(resultList, "local goodsIns13 : GoodsModule")
+	resultList = append(resultList, "local goodsIns14 : GoodsModule")
+	positionList = append(positionList, lsp.Position{Line: 76, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 77, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 78, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 79, Character: 8})
+	resultList = append(resultList, "local goodsIns21 : GoodsModule")
+	resultList = append(resultList, "local goodsIns22 : GoodsModule")
+	resultList = append(resultList, "local goodsIns23 : GoodsModule")
+	resultList = append(resultList, "local goodsIns24 : GoodsModule")
+	positionList = append(positionList, lsp.Position{Line: 80, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 81, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 82, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 83, Character: 8})
+	resultList = append(resultList, "local goodsIns31 : EmptyObject")
+	resultList = append(resultList, "local goodsIns32 : GoodsModule")
+	resultList = append(resultList, "local goodsIns33 : GoodsModule")
+	resultList = append(resultList, "local goodsIns34 : GoodsModule")
+	positionList = append(positionList, lsp.Position{Line: 84, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 85, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 86, Character: 8})
+	positionList = append(positionList, lsp.Position{Line: 87, Character: 8})
+	resultList = append(resultList, "local goodsIns41 : GoodsModule[]")
+	resultList = append(resultList, "local goodsIns42 : GoodsModule[]")
+	resultList = append(resultList, "local goodsIns43 : GoodsModule[]")
+	resultList = append(resultList, "local goodsIns44 : GoodsModule[]")
 
 	for index, onePoisiton := range positionList {
 		hoverParams := lsp.TextDocumentPositionParams{
