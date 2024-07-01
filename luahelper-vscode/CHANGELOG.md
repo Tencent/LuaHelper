@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.2.27 (June 28, 2024)
+## 0.2.27 (July 1, 2024)
 + 增加枚举类型段的重复定义的值的告警
 + [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
 
