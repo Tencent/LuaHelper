@@ -333,8 +333,9 @@ export class LuaDebugSession extends LoggingDebugSession {
               let runCMD = pathCMD + cpathCMD + reqCMD + doFileCMD;
   
               let LuaCMD = strVect[0] + " -e ";
-              this._debugFileTermianl.sendText(LuaCMD + runCMD, true);
               this._debugFileTermianl.show();
+              //兼容terminal启动耗时较长的情况，延迟发送命令
+              setTimeout(() => this._debugFileTermianl.sendText(LuaCMD + runCMD, true), 2000);
         }
         else{
             // 非单文件调试模式下，拉起program
