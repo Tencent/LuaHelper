@@ -17,7 +17,7 @@ import * as Net from 'net';
 import { DataProcessor } from './dataProcessor';
 import { DebugLogger } from '../common/logManager';
 //import { StatusBarManager } from '../common/statusBarManager';
-import { LineBreakpoint, ConditionBreakpoint, LogPoint } from './breakpoint';
+import { LineBreakpoint, ConditionBreakpoint, LogPoint } from './breakPoint';
 import { Tools } from '../common/tools';
 //import { UpdateManager } from './updateManager';
 import { ThreadManager } from '../common/threadManager';
