@@ -84,7 +84,7 @@ func (f *FileStruct) checkScopeEnumVar(scopeInfo *common.ScopeInfo) {
 }
 
 func (f *FileStruct) checkVarAnnotateEnum(varInfo *common.VarInfo) {
-	var tableEnumList tableEnumList
+	var tableEnumList common.TableEnumList
 	expTable, ok := varInfo.ReferExp.(*ast.TableConstructorExp)
 	if !ok {
 		return
@@ -114,11 +114,11 @@ func (f *FileStruct) checkVarAnnotateEnum(varInfo *common.VarInfo) {
 			continue
 		}
 
-		errStr := fmt.Sprintf("table: enum %s and %s contains duplicate value", itemNum.fieldStr, strKeySimple)
+		errStr := fmt.Sprintf("table: enum %s and %s contains duplicate value", itemNum.FieldStr, strKeySimple)
 
 		var relateVec []common.RelateCheckInfo
-		oldKeyLoc := common.GetExpLoc(itemNum.keyExp)
-		oldValueLoc := common.GetExpLoc(itemNum.valueExp)
+		oldKeyLoc := common.GetExpLoc(itemNum.KeyExp)
+		oldValueLoc := common.GetExpLoc(itemNum.ValueExp)
 		oldRangeLoc := lexer.GetRangeLoc(&oldKeyLoc, &oldValueLoc)
 
 		relateVec = append(relateVec, common.RelateCheckInfo{

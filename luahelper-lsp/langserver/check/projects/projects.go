@@ -40,6 +40,9 @@ type Projects interface {
 
 	GetFieldAnnotateType(strFile string, lineForGetAnnotate int, retFieldTypeMap map[string][]string)
 
+	// IsLineFragementEnum 获取当前行关联是否有enum注解类型
+	IsLineFragementEnum(fileName string, startLine int) (isEnum bool)
+
 	IsAnnotateTypeConst(name string, varInfo *common.VarInfo) (isConst bool)
 
 	GetAnnotateTypeString(varInfo *common.VarInfo, varName string, keyName string, idx int) (retVec []string)
