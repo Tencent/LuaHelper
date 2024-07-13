@@ -355,7 +355,9 @@ func (a *AllProject) getVarInfoCompleteExt(symbol *common.Symbol, colonFlag bool
 		for _, oneClass := range classList {
 			a.convertClassInfoToCompleteVecs(oneClass, colonFlag)
 		}
-		return
+
+		// 注释掉，同时补全注解类型与变量的类型
+		// return
 	}
 
 	// 2) 没有注解的模式
