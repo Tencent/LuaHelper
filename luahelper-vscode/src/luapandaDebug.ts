@@ -72,8 +72,9 @@ export class LuaConfigurationProvider implements vscode.DebugConfigurationProvid
 
             let LuaCMD = strVect[0] + " -e ";
 
-            LuaConfigurationProvider.RunFileTerminal.sendText(LuaCMD + runCMD, true);
             LuaConfigurationProvider.RunFileTerminal.show();
+            //兼容terminal启动耗时较长的情况，延迟发送命令
+            setTimeout(() => LuaConfigurationProvider.RunFileTerminal.sendText(LuaCMD + runCMD, true), 2000);
             return;
         }
 

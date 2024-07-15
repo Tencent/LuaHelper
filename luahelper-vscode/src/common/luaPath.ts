@@ -74,6 +74,7 @@ export class LuaPath {
         let retStr: string = "";
         let suffixStr: string = "";
         let platform: string = os.platform();
+        let arch = os.machine();
         switch (platform) {
             case "win32":
                 let suffixVerStr: string = luaVersionStr.replace(".", "");
@@ -83,7 +84,11 @@ export class LuaPath {
                 suffixStr = "/debugger/luasocket/linux/lua" + luaVersionStr + "/lua";
                 break;
             case "darwin":
-                suffixStr = "/debugger/luasocket/mac/lua" + luaVersionStr + "/lua";
+                if (arch === "arm64") {
+                    suffixStr = "/debugger/luasocket/mac/arm64/lua" + luaVersionStr + "/lua";
+                } else {
+                    suffixStr = "/debugger/luasocket/mac/x64/lua" + luaVersionStr + "/lua";
+                }
                 break;
         }
         retStr = stdPath + suffixStr;
@@ -99,6 +104,7 @@ export class LuaPath {
         let retStr: string = "";
         let suffixStr: string = "";
         let platform: string = os.platform();
+        let arch = os.machine();
         switch (platform) {
             case "win32":
                 suffixStr = "/debugger/luasocket/win/x64/lua" + luaVersionStr + "/?.dll";
@@ -107,7 +113,11 @@ export class LuaPath {
                 suffixStr = "/debugger/luasocket/linux/lua" + luaVersionStr + "/?.so";
                 break;
             case "darwin":
-                suffixStr = "/debugger/luasocket/mac/lua" + luaVersionStr + "/?.so";
+                if (arch === "arm64") {
+                    suffixStr = "/debugger/luasocket/mac/arm64/lua" + luaVersionStr + "/?.so";
+                } else {
+                    suffixStr = "/debugger/luasocket/mac/x64/lua" + luaVersionStr + "/?.so";
+                }
                 break;
         }
         retStr = stdPath + suffixStr;
