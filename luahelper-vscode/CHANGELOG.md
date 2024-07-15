@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.29 (July 15, 2024)
++ 变量同时有注解类型与特有类型时，代码提示优化
++ [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
+
 ## 0.2.28 (July 1, 2024)
 + 枚举类型告警整体优化
 + [Github](https://github.com/Tencent/LuaHelper)  https://github.com/Tencent/LuaHelper
