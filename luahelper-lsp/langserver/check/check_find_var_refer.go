@@ -811,7 +811,7 @@ func (a *AllProject) getFuncRelateSymbol(luaInFile string, node *ast.FuncCallExp
 	if nameExp, ok := node.PrefixExp.(*ast.NameExp); ok && node.NameExp == nil {
 		strName := nameExp.Name
 		// 这两个函数，在变量的referInfo里面已经存在了
-		if strName == "require" || common.GConfig.IsFrameReferOtherFile(strName) {
+		if (strName == "require" || strName == "import") || common.GConfig.IsFrameReferOtherFile(strName) {
 			//return nil
 			referSymbol := a.getImportReferSymbol(luaInFile, node, comParam, findExpList)
 			return referSymbol
