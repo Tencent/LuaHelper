@@ -3083,3 +3083,135 @@ func TestCompleteIntelligent3(t *testing.T) {
 		}
 	}
 }
+
+// 变量同时有类型也有注解
+func TestCompleteVarAndAnnotate(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	paths, _ := filepath.Split(filename)
+
+	strRootPath := paths + "../testdata/complete"
+	strRootPath, _ = filepath.Abs(strRootPath)
+
+	strRootURI := "file://" + strRootPath
+	lspServer := createLspTest(strRootPath, strRootURI)
+	context := context.Background()
+
+	fileName := strRootPath + "/" + "test10.lua"
+	data, err := ioutil.ReadFile(fileName)
+
+	if err != nil {
+		t.Fatalf("read file:%s err=%s", fileName, err.Error())
+	}
+
+	var testCompleteList []TestCompleteInfo = []TestCompleteInfo{}
+	var oneComplete TestCompleteInfo
+
+	// 0)
+	{
+		oneComplete.changeRange = lsp.Range{
+			Start: lsp.Position{
+				Line:      7,
+				Character: 0,
+			},
+		}
+		oneComplete.changeRange.End = oneComplete.changeRange.Start
+		oneComplete.changText = "dd."
+		oneComplete.compLoc = lsp.Position{
+			Line:      oneComplete.changeRange.Start.Line,
+			Character: oneComplete.changeRange.Start.Character + (uint32)(len(oneComplete.changText)),
+		}
+		oneComplete.resultList = []string{"a", "b", "c"}
+		testCompleteList = append(testCompleteList, oneComplete)
+	}
+
+	for index, oneComplete := range testCompleteList {
+		openParams := lsp.DidOpenTextDocumentParams{
+			TextDocument: lsp.TextDocumentItem{
+				URI:  lsp.DocumentURI(fileName),
+				Text: string(data),
+			},
+		}
+		err1 := lspServer.TextDocumentDidOpen(context, openParams)
+		if err1 != nil {
+			t.Fatalf("didopen file:%s err=%s", fileName, err1.Error())
+		}
+
+		changParams := lsp.DidChangeTextDocumentParams{
+			TextDocument: lsp.VersionedTextDocumentIdentifier{
+				TextDocumentIdentifier: lsp.TextDocumentIdentifier{
+					URI: lsp.DocumentURI(fileName),
+				},
+			},
+			ContentChanges: []lsp.TextDocumentContentChangeEvent{
+				{
+					Range:       &oneComplete.changeRange,
+					RangeLength: 0,
+					Text:        oneComplete.changText,
+				},
+			},
+		}
+
+		lspServer.TextDocumentDidChange(context, changParams)
+
+		completionParams := lsp.CompletionParams{
+			TextDocumentPositionParams: lsp.TextDocumentPositionParams{
+				TextDocument: lsp.TextDocumentIdentifier{
+					URI: lsp.DocumentURI(fileName),
+				},
+				Position: oneComplete.compLoc,
+			},
+			Context: lsp.CompletionContext{
+				TriggerKind: lsp.CompletionTriggerKind(1),
+			},
+		}
+
+		completionReturn, err2 := lspServer.TextDocumentComplete(context, completionParams)
+		if err2 != nil {
+			t.Fatalf("complete file:%s err=%s", fileName, err2.Error())
+		}
+
+		completionListTmp, _ := completionReturn.(CompletionListTmp)
+		var oneItem CompletionItemTmp
+		for _, resultStr := range oneComplete.resultList {
+			findFlag := false
+			for _, oneCompReturn := range completionListTmp.Items {
+				if resultStr == oneCompReturn.Label {
+					findFlag = true
+					oneItem = oneCompReturn
+				}
+			}
+
+			if !findFlag {
+				t.Fatalf("not find complete index=%d, str=%s", index, resultStr)
+			}
+		}
+
+		var inputItem lsp.CompletionItem = lsp.CompletionItem{
+			Label: oneItem.Label,
+			Kind:  oneItem.Kind,
+			Data:  oneItem.Data,
+		}
+
+		resultItem, err3 := lspServer.TextDocumentCompleteResolve(context, inputItem)
+		if err3 != nil {
+			t.Fatalf("TextDocumentCompleteResolve err, index=%d", index)
+		}
+
+		if len(oneComplete.resolveList) == 0 {
+			continue
+		}
+
+		resolveFlag := false
+		for _, oneStr := range oneComplete.resolveList {
+			if strings.Contains(resultItem.Documentation.Value, oneStr) {
+				resolveFlag = true
+			}
+		}
+		if !resolveFlag {
+			t.Fatalf("TextDocumentCompleteResolve file=%s, index=%d", fileName, index)
+		}
+		if strings.Contains(resultItem.InsertText, "\"") || strings.Contains(resultItem.InsertText, "'") {
+			t.Fatalf("TextDocumentCompleteResolve file=%s, index=%d contains err", fileName, index)
+		}
+	}
+}
