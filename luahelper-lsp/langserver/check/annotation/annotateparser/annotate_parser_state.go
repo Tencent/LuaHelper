@@ -124,8 +124,11 @@ func parserClassState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState 
 		for {
 			// 解析多个父类
 			oneParentName := l.NextFieldName()
-			classState.ParentNameList = append(classState.ParentNameList, oneParentName)
-			classState.ParentLocList = append(classState.ParentLocList, l.GetNowLoc())
+			// 如果自己的类型与父类型一样，会导致递归出错，忽略该父类型。
+			if oneParentName != classState.Name {
+				classState.ParentNameList = append(classState.ParentNameList, oneParentName)
+				classState.ParentLocList = append(classState.ParentLocList, l.GetNowLoc())
+			}
 
 			if l.LookAheadKind() == annotatelexer.ATokenSepComma {
 				// 是逗号， 表示有多个父类
