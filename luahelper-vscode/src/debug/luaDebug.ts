@@ -17,7 +17,7 @@ import * as Net from 'net';
 import { DataProcessor } from './dataProcessor';
 import { DebugLogger } from '../common/logManager';
 //import { StatusBarManager } from '../common/statusBarManager';
-import { LineBreakpoint, ConditionBreakpoint, LogPoint } from './breakpoint';
+import { LineBreakpoint, ConditionBreakpoint, LogPoint } from './breakPoint';
 import { Tools } from '../common/tools';
 //import { UpdateManager } from './updateManager';
 import { ThreadManager } from '../common/threadManager';
@@ -349,15 +349,15 @@ export class LuaDebugSession extends LoggingDebugSession {
                         env: {}, 
                     });
     
-                    let progaamCmdwithArgs = '"' + args.program + '"';
-                    if (os.type() === "Windows_NT") {
-                        progaamCmdwithArgs = '& ' + progaamCmdwithArgs;
+                    let programCmdWithArgs = '"' + args.program + '"';
+                    if (this.isPowerShellTerminal()) {
+                        programCmdWithArgs = '& ' + programCmdWithArgs;
                     }
                     for (const arg of args.args) {
-                        progaamCmdwithArgs = progaamCmdwithArgs + " " + arg;
+                        programCmdWithArgs = programCmdWithArgs + " " + arg;
                     }
                     
-                    this._programTermianl.sendText(progaamCmdwithArgs , true);
+                    this._programTermianl.sendText(programCmdWithArgs , true);
                     this._programTermianl.show(); 
                 }else{
                     let progError = "[Warning] 配置文件 launch.json 中的 program 路径有误: \n";
@@ -369,7 +369,12 @@ export class LuaDebugSession extends LoggingDebugSession {
             }
         }
     }
-
+    
+    private isPowerShellTerminal(): boolean {
+        const config = vscode.workspace.getConfiguration();
+        const shellPath = config.get<string>("terminal.integrated.shell.windows");
+        return shellPath && shellPath.toLowerCase().includes("powershell.exe");
+    }
     private startServer(sendArgs){
         this.connectionFlag = false;
         //3. 启动Adapter的socket   |   VSCode = Server ; Debugger = Client
