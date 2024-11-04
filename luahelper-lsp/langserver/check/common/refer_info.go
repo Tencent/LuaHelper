@@ -82,6 +82,8 @@ func StrToReferType(referTypeStr string) (referType ReferType) {
 		referType = ReferTypeLoadfile
 	} else if referTypeStr == "require" {
 		referType = ReferTypeRequire
+	} else if referTypeStr == "import" {
+		referType = ReferTypeRequire
 	} else {
 		if GConfig.IsFrameReferOtherFile(referTypeStr) {
 			referType = ReferTypeFrame

@@ -1,6 +1,7 @@
 package check
 
 import (
+	"fmt"
 	"luahelper-lsp/langserver/check/annotation/annotateast"
 	"luahelper-lsp/langserver/check/common"
 	"luahelper-lsp/langserver/check/compiler/ast"
@@ -21,6 +22,7 @@ func (a *AllProject) checkOneFileType(annotateFile *common.AnnotateFile, fragemn
 	if fragemnet.GenericInfo != nil {
 		for _, oneGeneric := range fragemnet.GenericInfo.GenericInfoList {
 			genericMap[oneGeneric.Name] = struct{}{}
+			genericMap[fmt.Sprintf("`%s`", oneGeneric.Name)] = struct{}{}
 		}
 	}
 
@@ -772,8 +774,9 @@ func (a *AllProject) getFuncGenericVarInfo(oldSymbol *common.Symbol, fragment *c
 		return
 	}
 
-	normalStrList := annotateast.GetAllNormalStrList(funcAnnotateType)
-	for _, oneStr := range normalStrList {
+	normalVarList := annotateast.GetAllGenericVarList(funcAnnotateType)
+	for _, oneVar := range normalVarList {
+		var oneStr = oneVar.NormalStr
 		// 判断这个字符串是否有关联到泛型
 		flag := false
 		for _, genericInfo := range fragment.GenericInfo.GenericInfoList {
@@ -803,11 +806,18 @@ func (a *AllProject) getFuncGenericVarInfo(oldSymbol *common.Symbol, fragment *c
 		var findIndex int = -1
 		for _, oneParam := range fragment.ParamInfo.ParamList {
 			strParamNormalType := annotateast.TraverseOneType(oneParam.ParamType)
-			if strParamNormalType != oneStr {
+			oneVar.IsBacktick = strParamNormalType[0] == '`'
+
+			if strParamNormalType != oneStr && strParamNormalType != fmt.Sprintf("`%s`", oneStr) {
 				continue
 			}
 
-			for index, strParam := range funcInfo.ParamList {
+			var paramList = funcInfo.ParamList
+			if len(funcInfo.ParamList) > 0 && funcInfo.ParamList[0] == "self" {
+				paramList = funcInfo.ParamList[1:]
+			}
+
+			for index, strParam := range paramList {
 				if strParam == oneParam.Name {
 					findIndex = index
 					break
@@ -829,10 +839,151 @@ func (a *AllProject) getFuncGenericVarInfo(oldSymbol *common.Symbol, fragment *c
 			break
 		}
 
+		tempFindVarReferSymbol := func(luaInFile string, node ast.Exp, comParam *CommonFuncParam, findExpList *[]common.FindExpFile, varIndex uint8) *common.Symbol {
+			tempSymbol := a.FindVarReferSymbol(luaInFile, node, comParam, findExpList, varIndex)
+			// 当使用有 ---@generic V 标注的方法时，如果传入的变量声明于使用的文件时，会出现找不到定义的问题
+			//
+			// 例如：在 hover_generic_define.lua 中有个全局方法 clone
+			// ---@generic V
+			// ---@param obj V
+			// ---@return V
+			// function clone(obj)
+			// end
+			//
+			// 然后在 hover_generic.lua 中，有如下语句：
+			// local classLocal  = require('hover_generic_class')
+			// local cloneGoods2 = clone(classLocal)
+			// 此时，cloneGoods2 的提示会返回 'local cloneGoods2 : V'
+			//
+			// 因为当解析完 clone 之后，luaInFile 会变为 hover_generic_define.lua
+			// 上面的求导语句会变为仅从 hover_generic_define.lua 中寻找 classLocal 类型定义
+			//
+			// 所以下面补充逻辑：当上方定义找不到后，这里尝试从代码的源头位置 findExpList[0] 额外搜寻一次，也就是 hover_generic.lua 中尝试寻找
+			if tempSymbol == nil && len(*findExpList) > 0 {
+				tempSymbol = a.FindVarReferSymbol((*findExpList)[0].FileName, node, comParam, findExpList, varIndex)
+			}
+			return tempSymbol
+		}
+
 		paramExp := node.Args[findIndex]
-		paramVarFile := a.FindVarReferSymbol(oldSymbol.FileName, paramExp, comParam, findExpList, 1)
-		if paramVarFile != nil {
-			return paramVarFile
+		// 是否为字符串表达式类型的参数 ---@param V `T`
+		if oneVar.IsBacktick {
+			multiType := &annotateast.MultiType{}
+
+			// 如果参数是字符串，则直接返回字面表达的类型
+			// 例如：GoodsBuildByName('GoodsModule')，则返回 GoodsModule 类型进行查找定义
+			if exp, ok := paramExp.(*ast.StringExp); ok {
+				multiType.Loc = lexer.GetRangeLoc(&exp.Loc, &exp.Loc)
+				multiType.TypeList = append(multiType.TypeList, &annotateast.NormalType{
+					StrName:   exp.Str,
+					NameLoc:   exp.Loc,
+					ShowColor: false,
+				})
+
+			} else {
+				// 传入的是常量定义，先获取常量定义的值结果
+				paramVarFile := tempFindVarReferSymbol(oldSymbol.FileName, paramExp, comParam, findExpList, 1)
+				if paramVarFile != nil {
+					// 如果定义类型为引用，例如：
+					// local nameGlobal  = GoodsDefine.BaseGoods
+					// 则额外获取一次 GoodsDefine.BaseGoods 的值结果：'GoodsModule'
+					referExp := paramVarFile.VarInfo.ReferExp
+					if _, ok := referExp.(*ast.TableAccessExp); ok {
+						if tempSymbol := a.FindVarReferSymbol(oldSymbol.FileName, referExp, comParam, findExpList, 1); tempSymbol != nil {
+							paramVarFile = tempSymbol
+						}
+					}
+				}
+				if paramVarFile != nil {
+					// 根据字符串值，求导对应的声明定义
+					referExp := paramVarFile.VarInfo.ReferExp
+					multiType.Loc = common.GetExpLoc(referExp)
+					multiType.TypeList = append(multiType.TypeList, &annotateast.NormalType{
+						StrName:   common.GetExpName(referExp),
+						NameLoc:   common.GetExpLoc(referExp),
+						ShowColor: false,
+					})
+				}
+			}
+
+			// 解析结果额外套一层数组类型
+			if oneVar.IsArrayType {
+				multiType = &annotateast.MultiType{
+					Loc: common.GetExpLoc(funcAnnotateType),
+					TypeList: []annotateast.Type{
+						&annotateast.ArrayType{
+							Loc:      common.GetExpLoc(funcAnnotateType),
+							ItemType: multiType,
+						},
+					},
+				}
+			}
+
+			findSymbol = &common.Symbol{
+				FileName:     oldSymbol.FileName, // todo这里的文件名不太准确
+				VarInfo:      nil,
+				AnnotateType: multiType,
+				VarFlag:      common.FirstVarFlag,                 // 默认还是先获取的变量
+				AnnotateLine: oldSymbol.VarInfo.Loc.StartLine - 1, // todo这里的行号不太准确
+			}
+			return findSymbol
+
+		} else {
+			paramVarFile := tempFindVarReferSymbol(oldSymbol.FileName, paramExp, comParam, findExpList, 1)
+			if paramVarFile != nil {
+				// 如果定义类型为引用，例如：
+				// local classGlobal = GoodsClass.BaseClass
+				// 则额外获取一次最终的值结果：'GoodsModule'
+				referExp := paramVarFile.VarInfo.ReferExp
+				if _, ok := referExp.(*ast.TableAccessExp); ok {
+					if tempSymbol := a.FindVarReferSymbol(oldSymbol.FileName, referExp, comParam, findExpList, 1); tempSymbol != nil {
+						paramVarFile = tempSymbol
+					}
+				}
+			}
+			if paramVarFile != nil {
+				// 如果是 require 求导类型，可能会遇到 findExpList 中存在查找记录，从而返回 nil 的情况。例如：
+				// local classLocal  = require('hover_generic_class')
+				// local goodsIns12 = Instances.GoodsIns.CloneGoods(classLocal)
+				// 从左向右会先求导 Instances.GoodsIns 的结果，文件 hover_generic_config.lua 中定义的 require('hover_generic_class') 的查找位置就会被记录进 findExpList
+				// 继续执行到后面 classLocal 类型的求导时，会因为 a.FindVarReferSymbol 中的 isHasFindExpFile 方法，验证为同一位置的重复的检索，从而返回 nil结果，不能正确的推导出结果
+				// 所以，这里尝试传入空的查找记录，让 a.FindVarReferSymbol 新去检索推导结果
+				referExp := paramVarFile.VarInfo.ReferExp
+				if _, ok := referExp.(*ast.FuncCallExp); ok {
+					subFindExpList := []common.FindExpFile{}
+					if tempSymbol := a.FindVarReferSymbol(oldSymbol.FileName, referExp, comParam, &subFindExpList, 1); tempSymbol != nil {
+						paramVarFile = tempSymbol
+					}
+				}
+			}
+			if paramVarFile != nil {
+				if oneVar.IsArrayType {
+
+					// 如果是需要推导的类型，就先推导出结果，再让下面套上数据结构
+					if paramVarFile.AnnotateType == nil {
+						if tempVarFile := a.FindVarReferSymbol(paramVarFile.FileName, paramVarFile.VarInfo.ReferExp, comParam, findExpList, 1); tempVarFile != nil {
+							paramVarFile = tempVarFile
+						}
+					}
+
+					// 解析结果额外套一层数组类型
+					paramVarFile.AnnotateType = &annotateast.MultiType{
+						Loc: common.GetExpLoc(funcAnnotateType),
+						TypeList: []annotateast.Type{
+							&annotateast.ArrayType{
+								Loc:      common.GetExpLoc(funcAnnotateType),
+								ItemType: paramVarFile.AnnotateType,
+							},
+						},
+					}
+
+					return paramVarFile
+
+				} else {
+
+					return paramVarFile
+				}
+			}
 		}
 	}
 
