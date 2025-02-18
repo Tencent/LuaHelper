@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from "path";
 import * as child_process from "child_process";
+import * as fs from "fs";
 
 function needShowFormatErr(): boolean {
     let formatErrConfig = vscode.workspace.getConfiguration("luahelper.base", null).get("formatErrShow");
@@ -57,9 +58,21 @@ function getFormatBoolStr(itemStr: string): string {
 }
 
 // 获取格式化配置的参数
-function getFormatConfigStrTable(): string[] {
-    let strAllResult: string[] = [];
+function getFormatConfigStrTable(fileName: string): string[] {
 
+    if (vscode.workspace.workspaceFolders) {
+        for (let i = 0; i < vscode.workspace.workspaceFolders.length; i++) {
+            const folder = vscode.workspace.workspaceFolders[i];
+            if (fileName.startsWith(folder.uri.fsPath)) {
+                const c = path.join(folder.uri.fsPath, ".lua-format");
+                if (fs.existsSync(c)){
+                    return ["-c", c];
+                }
+            }
+        }
+    }
+
+    let strAllResult: string[] = [];
     let oneStr: string = "";
     oneStr = getFormatIntStr("column_limit");
     if (oneStr !== "") {
@@ -244,7 +257,7 @@ export class LuaFormatRangeProvider implements vscode.DocumentRangeFormattingEdi
         let data = document.getText();
         data = data.substring(document.offsetAt(range.start), document.offsetAt(range.end));
         let formatErrshow = needShowFormatErr();
-        let formatConfigStrTable: string[] = getFormatConfigStrTable();
+        let formatConfigStrTable: string[] = getFormatConfigStrTable(document.fileName);
         return new Promise((resolve, reject) => {
             let binaryPath = GetLuaFmtPath(this.context);
             if (binaryPath === "") {
@@ -305,7 +318,7 @@ export class LuaFormatProvider implements vscode.DocumentFormattingEditProvider 
         var data = document.getText();
 
         let formatErrshow = needShowFormatErr();
-        let formatConfigStrTable: string[] = getFormatConfigStrTable();
+        let formatConfigStrTable: string[] = getFormatConfigStrTable(document.fileName);
         return new Promise((resolve, reject) => {
             let binaryPath = GetLuaFmtPath(this.context);
             if (binaryPath === "") {
