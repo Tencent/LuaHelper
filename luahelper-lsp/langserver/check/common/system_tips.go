@@ -239,6 +239,14 @@ func (g *GlobalConfig) InitSystemTips() {
 	g.SystemTipsMap["require"] = requireNoticeInfo
 	g.insertSysVarInfo("require", &requireNoticeInfo, nil)
 
+	importNoticeInfo := SystemNoticeInfo{
+		Detail:        "[_G] import(modname)",
+		Documentation: "Loads the given module",
+		FuncParamVec:  []FuncParamInfo{{"modname", "modname : string"}},
+	}
+	g.SystemTipsMap["import"] = importNoticeInfo
+	g.insertSysVarInfo("import", &importNoticeInfo, nil)
+
 	selectNoticeInfo := SystemNoticeInfo{
 		Detail:        "[_G] select(index, ...)",
 		Documentation: "If `index` is a number, returns all arguments after argument number, `index`. a negative number indexes from the end (-1 is the last argument).",

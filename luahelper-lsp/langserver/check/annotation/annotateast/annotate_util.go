@@ -183,6 +183,50 @@ func GetAllNormalStrList(astType Type) (strList []string) {
 	return
 }
 
+// GetAllGenericVarList 获取泛型变量的所有结构
+func GetAllGenericVarList(astType Type) (varList []AnnotateGenericVarState) {
+	switch subAst := astType.(type) {
+	case *MultiType:
+		if len(subAst.TypeList) == 0 {
+			return
+		}
+
+		// 有多种类型，是或者的关系，因此获取多个
+		for _, oneType := range subAst.TypeList {
+			tmpList := GetAllGenericVarList(oneType)
+			varList = append(varList, tmpList...)
+		}
+
+		return varList
+
+	case *NormalType:
+		varList = append(varList, AnnotateGenericVarState{
+			NormalStr: subAst.StrName,
+		})
+		return varList
+
+	case *TableType:
+		varList = append(varList, AnnotateGenericVarState{
+			NormalStr: "table",
+		})
+		return varList
+
+	case *FuncType:
+		varList = append(varList, AnnotateGenericVarState{
+			NormalStr: "function",
+		})
+		return varList
+
+	case *ArrayType:
+		varList = append(varList, AnnotateGenericVarState{
+			NormalStr:   TypeConvertStr(subAst.ItemType),
+			IsArrayType: true,
+		})
+		return varList
+	}
+	return
+}
+
 // GetAllFuncType 判断是否指向的是一个函数的类型
 func GetAllFuncType(astType Type) (funcType Type) {
 	switch subAst := astType.(type) {

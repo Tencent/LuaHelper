@@ -190,7 +190,7 @@ func (l *AnnotateLexer) NextTokenStruct() {
 	}
 
 	c := l.chunk[0]
-	if c == '_' || isLetter(c) || isDigit(c) {
+	if c == '_' || isLetter(c) || isDigit(c) || isBacktick(c) {
 		token := l.scanIdentifier()
 		if kind, found := keywords[token]; found {
 			l.setNowToken(kind, token)
@@ -296,7 +296,7 @@ func (l *AnnotateLexer) scanIdentifier() string {
 	i := 1
 	for ; i < len(l.chunk); i++ {
 		c := l.chunk[i]
-		if isLetter(c) || isDigit(c) || c == '_' || c == '.' {
+		if isLetter(c) || isDigit(c) || isBacktick(c) || c == '_' || c == '.' {
 			continue
 		}
 
@@ -455,4 +455,8 @@ func isLetter(c byte) bool {
 
 func isDigit(c byte) bool {
 	return c >= '0' && c <= '9'
+}
+
+func isBacktick(c byte) bool {
+	return c == '`'
 }

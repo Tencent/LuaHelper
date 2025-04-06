@@ -196,6 +196,10 @@ func parserFieldState(l *annotatelexer.AnnotateLexer) annotateast.AnnotateState 
 	if l.LookAheadKind() == annotatelexer.ATokenSepColon {
 		l.NextToken()
 		fieldState.FieldColonType = annotateast.FieldColonYes
+		// 判断是否为可选的 ？
+	} else if l.LookAheadKind() == annotatelexer.ATokenOption {
+		fieldState.IsOptional = true
+		l.NextToken()
 	}
 
 	// 获取对应的type

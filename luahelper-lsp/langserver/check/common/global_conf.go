@@ -328,6 +328,7 @@ func (g *GlobalConfig) setSysNotUseMap() {
 	g.ignoreSysNoUseMap["rawlen"] = true
 	g.ignoreSysNoUseMap["rawset"] = true
 	g.ignoreSysNoUseMap["require"] = true
+	g.ignoreSysNoUseMap["import"] = true
 	g.ignoreSysNoUseMap["select"] = true
 	g.ignoreSysNoUseMap["setmetatable"] = true
 	g.ignoreSysNoUseMap["tonumber"] = true
@@ -821,7 +822,7 @@ func (g *GlobalConfig) InsertIngoreSystemModule() {
 	g.IgnoreVarMap["warn"] = "function"
 	g.IgnoreVarMap["xpcall"] = "function"
 	g.IgnoreVarMap["unpack"] = "function"
-	g.IgnoreVarMap["require"] = "function"
+	g.IgnoreVarMap["import"] = "function"
 }
 
 // InsertIngoreSystemAnnotateType 当为本地运行时，忽略系统的注解类型type。批量插入
@@ -1241,6 +1242,7 @@ func (g *GlobalConfig) GetAllReferFileTypes() (strArray []string) {
 	strArray = append(strArray, "dofile")
 	strArray = append(strArray, "loadfile")
 	strArray = append(strArray, "require")
+	strArray = append(strArray, "import")
 	for _, oneReferFrame := range GConfig.ReferFrameFiles {
 		strArray = append(strArray, oneReferFrame.Name)
 	}

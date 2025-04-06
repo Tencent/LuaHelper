@@ -570,10 +570,13 @@
                     "end": "(?=\\n)",
                     "patterns": [
                         {
-                            "begin": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b",
+                            "begin": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(\\??)",
                             "beginCaptures": {
-                                "0": {
+                                "1": {
                                     "name": "entity.name.variable.lua"
+                                },
+                                "2": {
+                                    "name": "keyword.operator.lua"
                                 }
                             },
                             "end": "(?=\\n)",
@@ -800,7 +803,7 @@
                     ]
                 },
                 {
-                    "begin": "(?=[a-zA-Z_\\.\\*\"'])",
+                    "begin": "(?=[a-zA-Z_\\.\\*\"'`])",
                     "end": "(?=[\\s\\),\\?])",
                     "patterns": [
                         {
@@ -923,10 +926,13 @@
                     "end": "(?=\\n)",
                     "patterns": [
                         {
-                            "begin": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b",
+                            "begin": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(\\??)",
                             "beginCaptures": {
-                                "0": {
+                                "1": {
                                     "name": "entity.name.variable.lua"
+                                },
+                                "2": {
+                                    "name": "keyword.operator.lua"
                                 }
                             },
                             "end": "(?=\\n)",
