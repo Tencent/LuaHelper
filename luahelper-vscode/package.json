@@ -340,6 +340,11 @@
                     "default": true,
                     "markdownDescription": "%luahelper.base.enableReport%"
                 },
+                "luahelper.base.classFuncInference": {
+                    "type": "boolean",
+                    "default": false,
+                    "markdownDescription": "%luahelper.base.classFuncInference%"
+                },
                 "luahelper.base.lsp": {
                     "type": "string",
                     "default": "cmd rpc",

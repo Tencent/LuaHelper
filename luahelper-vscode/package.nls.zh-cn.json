@@ -81,5 +81,6 @@
     "luahelper.format.spaces_around_equals_in_field": "Inserts spaces around the equal sign in key/value fields. Other assignments are not affected, though they may be affected by other options or behavior of the formatter [here](https://github.com/Koihik/LuaFormatter/blob/master/docs/Style-Config.md#spaces_around_equals_in_field).\n",
     "luahelper.format.line_breaks_after_function_body": "函数体后换行数. [here](https://github.com/Koihik/LuaFormatter/blob/master/docs/Style-Config.md#line_breaks_after_function_body).\n",
     "luahelper.base.PreviewFieldsNum": "当代码提示预览一个table时, 显示table最多的成员数量",
-    "luahelper.base.enableReport": "上报用户数"
+    "luahelper.base.enableReport": "上报用户数",
+    "luahelper.base.classFuncInference": "启用 class() 面向对象写法的类型推导（如 cocos2d-x）。开启后，`Foo = class('Foo', Base)` 将被识别为类声明，并支持继承成员跳转。"
 }

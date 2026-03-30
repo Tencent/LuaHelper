@@ -136,6 +136,10 @@ type GlobalConfig struct {
 	ReferenceDefineFlag bool // 查找引用时候，是否需要显示定义
 	PreviewFieldsNum    int  // 当hover一个table时，显示最多field的数量
 
+	// 是否启用 class("Name", Base...) 面向对象写法的类型推导支持
+	// 开启后将自动识别 cocos2d-x 等框架的 class() 写法，推导类型和继承关系
+	ClassFuncInferenceFlag bool
+
 	// 查询_G.a 这样的全局符号，a是否会扩大到全局符号定义
 	// 例如前面定义了a=1,  那么此时_G.a 会指向前面的a=1
 	GVarExtendGlobalFlag bool

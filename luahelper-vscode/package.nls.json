@@ -81,5 +81,6 @@
     "luahelper.format.spaces_around_equals_in_field": "Inserts spaces around the equal sign in key/value fields. Other assignments are not affected, though they may be affected by other options or behavior of the formatter [here](https://github.com/Koihik/LuaFormatter/blob/master/docs/Style-Config.md#spaces_around_equals_in_field).\n",
     "luahelper.format.line_breaks_after_function_body": "Line breaks after the function body [here](https://github.com/Koihik/LuaFormatter/blob/master/docs/Style-Config.md#line_breaks_after_function_body).\n",
     "luahelper.base.PreviewFieldsNum": "When hovering to view a table, limits the maximum number of previews for fields.",
-    "luahelper.base.enableReport": "Report the number of users."
+    "luahelper.base.enableReport": "Report the number of users.",
+    "luahelper.base.classFuncInference": "Enable type inference for class() OOP pattern (e.g. cocos2d-x). When enabled, `Foo = class('Foo', Base)` will be recognized as a class declaration with inheritance support."
 }

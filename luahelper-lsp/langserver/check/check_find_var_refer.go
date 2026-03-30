@@ -249,7 +249,17 @@ func (a *AllProject) getClassInfoSubMem(classInfo *common.OneClassInfo, strKey s
 		}
 	}
 
-	// todo 这里是否要考虑到引用的信息，参考函数：varInfoHasSubKey
+	// 在当前类及其注解 FieldMap / SubMaps 中均未命中，沿继承链向上查找父类成员。
+	// 父类名来源：---@class Name : Parent1, Parent2 注解中的 ParentNameList。
+	for _, parentName := range classInfo.ClassState.ParentNameList {
+		parentTypeInfo := a.GetAnnClassInfo(parentName)
+		if parentTypeInfo == nil || parentTypeInfo.ClassInfo == nil {
+			continue
+		}
+		if parentSymbol := a.getClassInfoSubMem(parentTypeInfo.ClassInfo, strKey); parentSymbol != nil {
+			return parentSymbol
+		}
+	}
 
 	return
 }
@@ -442,6 +452,17 @@ func (a *AllProject) symbolHasSubKey(oldSymbol *common.Symbol, strKey string,
 	// 如果是非简单的字符串或没有变量信息，直接返回
 	if !simpleStrFlag || oldSymbol.VarInfo == nil {
 		return
+	}
+
+	// 当 AnnotateType 为空，但变量是通过 class("Name",...) 声明的（ClassDeclName 非空），
+	// 尝试直接从 createTypeMap 中查找该类的 OneClassInfo，以支持继承链查找。
+	// 此路径解决：无 ---@class 注解时，父类成员（含继承链）仍可被找到。
+	if common.GConfig.ClassFuncInferenceFlag && oldSymbol.VarInfo.ClassDeclName != "" {
+		if classDeclTypeInfo := a.GetAnnClassInfo(oldSymbol.VarInfo.ClassDeclName); classDeclTypeInfo != nil && classDeclTypeInfo.ClassInfo != nil {
+			if subSymbol := a.getClassInfoSubMem(classDeclTypeInfo.ClassInfo, strKey); subSymbol != nil {
+				return subSymbol
+			}
+		}
 	}
 
 	// 判断这个注解类型是否包含子key

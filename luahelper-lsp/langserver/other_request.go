@@ -61,6 +61,7 @@ type BaseParams struct {
 	ReferenceDefineFlag  bool     `json:"ReferenceIncudeDefine,omitempty"`
 	PreviewFieldsNum     int      `json:"PreviewFieldsNum,omitempty"`
 	EnableReport         bool     `json:"Report,omitempty"`
+	ClassFuncInference   bool     `json:"classFuncInference,omitempty"`
 }
 
 // WarnParams 引用的设置
@@ -156,6 +157,7 @@ func (l *LspServer) ChangeConfiguration(ctx context.Context, vs ChangeConfigurat
 	base := vs.Settings.Luahelper.Base
 	setConfigSet(base.ReferenceMaxNum, base.ReferenceDefineFlag)
 	l.enableReport = base.EnableReport
+	common.GConfig.ClassFuncInferenceFlag = base.ClassFuncInference
 
 	// 设置预览table成员的数量
 	common.GConfig.SetPreviewFieldsNum(base.PreviewFieldsNum)

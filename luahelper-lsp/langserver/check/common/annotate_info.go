@@ -1016,3 +1016,82 @@ func (af *AnnotateFile) GetBestCreateTypeInfo(strName string, lastLine int) (cre
 func (af *AnnotateFile) IsHasEnumType() bool {
 	return af.IsEnumType
 }
+
+// PropagateClassRelateVarToGlobal 修正注解绑定错位：
+// 当 ---@class X 写在 local cls = X 的前一行时，RelateTypeVarInfo 会把 RelateVar 绑定到局部变量 cls。
+// 本方法检测这种情况并将 RelateVar 改为指向全局变量 X，使注解路径与 SubMaps 路径均能命中。
+func (af *AnnotateFile) PropagateClassRelateVarToGlobal(globalMaps map[string]*VarInfo) {
+	for _, typeList := range af.CreateTypeMap {
+		for _, typeInfo := range typeList.List {
+			if typeInfo.ClassInfo == nil {
+				continue
+			}
+			oneClassInfo := typeInfo.ClassInfo
+			if oneClassInfo.RelateVar == nil {
+				continue
+			}
+			className := oneClassInfo.ClassState.Name
+			referName := oneClassInfo.RelateVar.GetReferVarName()
+			if referName != className {
+				continue
+			}
+			globalVar, exists := globalMaps[className]
+			if !exists || globalVar == oneClassInfo.RelateVar {
+				continue
+			}
+			// 将 RelateVar 从局部别名改为它所引用的全局变量
+			oneClassInfo.RelateVar = globalVar
+		}
+	}
+}
+
+// SynthesizeClassFromDecl 根据 class("Name", Base...) 赋值语句合成类型信息。
+// 对 ClassDeclName 非空的全局变量，若 CreateTypeMap 中尚无对应条目则自动生成，
+// 若已有条目但 RelateVar 为空则补充 RelateVar；同时将父类名写入 ParentNameList。
+func (af *AnnotateFile) SynthesizeClassFromDecl(globalMaps map[string]*VarInfo) {
+	for varName, varInfo := range globalMaps {
+		if varInfo.ClassDeclName == "" {
+			continue
+		}
+		className := varInfo.ClassDeclName
+		// 确保变量名与声明的类名一致（class("Foo") 赋给 Foo）
+		if varName != className {
+			continue
+		}
+
+		typeList, exists := af.CreateTypeMap[className]
+		if exists && len(typeList.List) > 0 {
+			// 已有注解条目：若 RelateVar 为空则补充，同时合并父类名
+			for _, typeInfo := range typeList.List {
+				if typeInfo.ClassInfo == nil {
+					continue
+				}
+				oneClass := typeInfo.ClassInfo
+				if oneClass.RelateVar == nil {
+					oneClass.RelateVar = varInfo
+				}
+				// 若注解中未声明父类，则从 class() 参数补充
+				if len(oneClass.ClassState.ParentNameList) == 0 && len(varInfo.ClassParentNames) > 0 {
+					oneClass.ClassState.ParentNameList = varInfo.ClassParentNames
+				}
+			}
+		} else {
+			// 无注解条目：合成一个 OneClassInfo 并注册
+			classState := &annotateast.AnnotateClassState{
+				Name:           className,
+				ParentNameList: varInfo.ClassParentNames,
+			}
+			oneClassInfo := &OneClassInfo{
+				ClassState: classState,
+				FieldMap:   map[string]*annotateast.AnnotateFieldState{},
+				RelateVar:  varInfo,
+				LuaFile:    varInfo.FileName,
+			}
+			typeInfo := &CreateTypeInfo{
+				LastLine:  varInfo.Loc.StartLine,
+				ClassInfo: oneClassInfo,
+			}
+			af.insertNewType(className, typeInfo)
+		}
+	}
+}

@@ -108,6 +108,8 @@ type VarInfo struct {
 	IsExpEmpty      bool                // 默认为false，指向的ReferExp是否为empty，例如定义的时候 a = nil， 那么IsExpEmpty为true, 当被赋值后，就不为true
 	IsMemFlag       bool                // 是否为其他的变量的成员变量，默认为false
 	IsClose         bool                // 是否为lua5.4 close熟悉的变量
+	ClassDeclName    string             // 若此变量由 class("Name",...) 赋值，存储类名 "Name"
+	ClassParentNames []string           // class() 第二个参数起的父类名列表，用于继承链查找
 }
 
 // VarGetFlag 变量信息获取的方式
@@ -329,6 +331,15 @@ func (varInfo *VarInfo) InsertSubMember(strName string, subSymbol *VarInfo) {
 
 	subSymbol.IsMemFlag = true
 	varInfo.SubMaps[strName] = subSymbol
+}
+
+// GetReferVarName 若 ReferExp 是一个简单变量名引用，返回该名称；否则返回空字符串。
+// 用于判断 local cls = SomeGlobal 这种写法中 cls 所引用的全局变量名。
+func (varInfo *VarInfo) GetReferVarName() string {
+	if nameExp, ok := varInfo.ReferExp.(*ast.NameExp); ok {
+		return nameExp.Name
+	}
+	return ""
 }
 
 // IsGlobal 判断是否为全局变量

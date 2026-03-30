@@ -50,6 +50,7 @@ type InitializationOptions struct {
 	IgnoreFileOrDirError           []string `json:"IgnoreFileOrDirError,omitempty"`
 	RequirePathSeparator           string   `json:"RequirePathSeparator,omitempty"`
 	EnableReport                   bool     `json:"EnableReport,omitempty"`
+	ClassFuncInference             bool     `json:"ClassFuncInference,omitempty"`
 }
 
 // InitializeParams 初始化参数
@@ -88,6 +89,11 @@ func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.In
 	// 按顺序插入
 	checkFlagList := getCheckFlagList(initOptions)
 
+	// 在项目分析开始前设置所有 flag，确保分析过程中能读到正确的值
+	common.GConfig.SetRequirePathSeparator(initOptions.RequirePathSeparator)
+	l.enableReport = initOptions.EnableReport
+	common.GConfig.ClassFuncInferenceFlag = initOptions.ClassFuncInference
+
 	initErr := l.initialCheckProject(ctx, checkFlagList, initOptions.Client, workspaceFolderNum, vs.WorkspaceFolders,
 		initOptions.LocalRun, initOptions.IgnoreFileOrDir, initOptions.IgnoreFileOrDirError)
 	if initErr != nil {
@@ -95,10 +101,6 @@ func (l *LspServer) Initialize(ctx context.Context, vs InitializeParams) (lsp.In
 		return lsp.InitializeResult{}, initErr
 	}
 	log.Debug("initial luahelper ok")
-
-	// 设置require其他lua文件的路径分割
-	common.GConfig.SetRequirePathSeparator(initOptions.RequirePathSeparator)
-	l.enableReport = initOptions.EnableReport
 
 	return lsp.InitializeResult{
 		Capabilities: lsp.ServerCapabilities{

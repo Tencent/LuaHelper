@@ -194,6 +194,12 @@ async function doStartServer() {
         enableReportFlag = <boolean><any>enableReportConfig;
     }
 
+    let classFuncInferenceConfig = vscode.workspace.getConfiguration("luahelper.base", null).get("classFuncInference");
+    var classFuncInferenceFlag = false;
+    if (classFuncInferenceConfig !== undefined) {
+        classFuncInferenceFlag = <boolean><any>classFuncInferenceConfig;
+    }
+
     // 定义所有的监控文件后缀的关联
     var filesWatchers: vscode.FileSystemWatcher[] = new Array<vscode.FileSystemWatcher>();
     filesWatchers.push(vscode.workspace.createFileSystemWatcher("**/*.lua"));
@@ -255,6 +261,7 @@ async function doStartServer() {
             IgnoreFileOrDirError: ignoreFileOrDirErrArr,
             RequirePathSeparator: requirePathSeparator,
             EnableReport: enableReportFlag,
+            ClassFuncInference: classFuncInferenceFlag,
         },
         markdown: {
             isTrusted: true,
