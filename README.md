@@ -4,7 +4,7 @@
 
 LuaHelper is a High-performance lua plugin, Language Server Protocol for lua.
 
-Lua is very popular in game development because of its simple syntax and flexible use. However, its ecology is not perfect, and IDE  tools and  support are few, which affects Lua's development efficiency and quality. LuaHelper complies with Microsoft Language Server Protocol and is a cross-platform Lua code editing and testing tool developed in go language.
+Lua is very popular in game development because of its simple syntax and flexible use. However, its ecosystem is not perfect, and IDE  tools and  support are few, which affects Lua's development efficiency and quality. LuaHelper complies with Microsoft Language Server Protocol and is a cross-platform Lua code editing and testing tool developed in go language.
 Compared with other Lua plugins currently on the market, it has the following **improvements**:
 
 - [X] 1. Coroutine development, real-time detection, millisecond output detection results
